@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- Ägäis Friedensspiel · Copyright (c) 2026 cembot90 · Alle Rechte vorbehalten. Fremdbibliotheken: siehe THIRD_PARTY_NOTICES.md -->
 <html lang="tr">
 <head>
 <meta charset="utf-8">
@@ -7,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@500;700;800;900&display=swap" rel="stylesheet">
 <style>
-  :root { --gr:#2f7bff; --tr:#ff3b3b; --panel:rgba(4,22,38,.66); --sh:0 2px 6px rgba(0,0,0,.6); --gold:#ffd54a; }
+  :root { --gr:#2f7bff; --tr:#ff3b3b; --panel:rgba(4,22,38,.66); --sh:0 2px 6px rgba(0,0,0,.6); --gold:#ffd54a; --bi:0px; }
   * { box-sizing:border-box; margin:0; padding:0; }
   html,body { width:100%; height:100%; overflow:hidden; background:#06263d; font-family:Inter,system-ui,sans-serif; color:#fff; }
   canvas#c { position:fixed; inset:0; width:100%; height:100%; display:block; }
@@ -61,11 +62,22 @@
   .hc .bars { flex:1; display:flex; flex-direction:column; gap:2px; min-width:0; }
   .hb { position:relative; height:5px; border-radius:99px; background:rgba(255,255,255,.14); overflow:hidden; }
   .hb i { position:absolute; left:0; top:0; bottom:0; border-radius:99px; transition:width .4s; }
+  #goal { display:flex; align-items:center; gap:7px; margin-top:6px; padding:3px 9px; border-radius:10px; background:rgba(60,40,0,.62); font-size:10.5px; font-weight:800; }
+  #goalBar { flex:1; height:7px; border-radius:99px; background:rgba(255,255,255,.15); overflow:hidden; }
+  #goalFill { height:100%; width:0; background:linear-gradient(90deg,#ffb300,#ffe27a); transition:width .5s; }
+  #goalTxt { font-variant-numeric:tabular-nums; }
+  .hc .master { display:flex; align-items:center; gap:3px; font-size:8.5px; font-weight:800; opacity:.9; white-space:nowrap; overflow:hidden; }
+  #cease { display:none; margin-top:6px; text-align:center; font-size:12px; font-weight:900; padding:5px; border-radius:10px; background:linear-gradient(90deg,rgba(255,255,255,.85),rgba(200,230,255,.85)); color:#06263d; }
+  #cease.on { display:block; }
+  #tap { position:fixed; right:8px; top:262px; display:none; flex-direction:column; gap:5px; z-index:5; }
+  #tap button { font:800 11px Inter,sans-serif; color:#fff; background:rgba(3,20,35,.85); border:1.5px solid var(--c,#fff); border-radius:10px; padding:6px 8px; cursor:pointer; text-align:left; }
+  #tap button:active { transform:scale(.95); }
+  #tap button:focus-visible { outline:2px solid var(--gold); }
   #crisis { display:none; margin-top:6px; text-align:center; font-size:12px; font-weight:900; padding:5px; border-radius:10px; background:linear-gradient(90deg,rgba(255,170,0,.85),rgba(255,90,0,.85)); animation:pulse2 .7s infinite alternate; }
   #crisis.on { display:block; }
   @keyframes pulse2 { to { filter:brightness(1.25); } }
 
-  #feed { position:fixed; left:8px; bottom:166px; width:min(66vw,350px); display:flex; flex-direction:column-reverse; gap:4px; pointer-events:none; }
+  #feed { position:fixed; left:8px; bottom:calc(166px + var(--bi)); width:min(66vw,350px); display:flex; flex-direction:column-reverse; gap:4px; pointer-events:none; }
   .ev { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; padding:3px 9px 3px 3px; border-radius:999px; background:var(--panel); border-left:3px solid var(--c,#fff); text-shadow:0 1px 2px rgba(0,0,0,.6); animation:in .25s ease-out; }
   .ev.noav { padding-left:9px; }
   .ev.big { background:rgba(70,45,0,.78); border-left-color:var(--gold); }
@@ -73,7 +85,7 @@
   .ev.hero { background:linear-gradient(90deg,rgba(90,60,0,.9),rgba(40,25,0,.8)); border-left-color:var(--gold); font-weight:900; }
   @keyframes in { from { transform:translateX(-24px); opacity:0; } }
 
-  #board { position:fixed; left:8px; right:8px; bottom:66px; display:grid; grid-template-columns:1fr 1fr; gap:6px; pointer-events:none; }
+  #board { position:fixed; left:8px; right:8px; bottom:calc(66px + var(--bi)); display:grid; grid-template-columns:1fr 1fr; gap:6px; pointer-events:none; }
   .col { padding:5px 6px; border-radius:10px; background:var(--panel); border-top:3px solid var(--c); min-height:30px; }
   .col h4 { font-size:9.5px; letter-spacing:.1em; opacity:.85; margin:0 0 3px 3px; }
   .pl { display:flex; align-items:center; gap:5px; font-size:11px; font-weight:800; margin-bottom:1px; line-height:1.1; }
@@ -82,7 +94,10 @@
   .pl .sc { font-variant-numeric:tabular-nums; }
   .pl .medal { width:14px; text-align:center; }
 
-  #help { position:fixed; left:6px; right:6px; bottom:8px; display:flex; flex-wrap:wrap; justify-content:center; gap:4px; pointer-events:none; }
+  #help { position:fixed; left:6px; right:6px; bottom:calc(8px + var(--bi)); pointer-events:none; }
+  #help .set { display:flex; flex-wrap:wrap; justify-content:center; gap:4px; animation:fade .5s; }
+  #help .set[hidden] { display:none; }
+  #help .set.gifts span { background:rgba(70,45,0,.82); border:1px solid rgba(255,213,74,.5); }
   #help span { font-size:10px; font-weight:800; padding:4px 8px; border-radius:999px; background:rgba(3,20,35,.75); }
 
   #showcase { position:fixed; left:50%; top:33%; transform:translate(-50%,-50%) scale(.6); opacity:0; display:flex; align-items:center; gap:12px; padding:10px 18px 10px 10px; border-radius:999px; background:linear-gradient(90deg,rgba(80,50,0,.92),rgba(40,25,0,.92)); border:2px solid var(--gold); box-shadow:0 0 30px rgba(255,200,60,.5); transition:transform .3s cubic-bezier(.2,1.6,.4,1), opacity .25s; pointer-events:none; max-width:94vw; }
@@ -95,12 +110,13 @@
 
   #finale { position:fixed; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; gap:9px; padding:20px; text-align:center; background:radial-gradient(circle at 50% 42%, rgba(255,255,255,.2), rgba(0,10,25,.82)); }
   body.fin #labels, body.fin #feed { opacity:.15; transition:opacity 1s; }
+  body.fin #tap { display:none !important; }
   #finale.on { display:flex; animation:fade 1s ease-out; }
   @keyframes fade { from { opacity:0; } }
   #finale .big { font-family:Cinzel,serif; font-size:clamp(34px,11vw,70px); font-weight:900; line-height:1.05; text-shadow:0 0 30px rgba(255,255,255,.6), 0 6px 20px rgba(0,0,0,.6); }
   #finale .langs { font-size:19px; font-weight:800; letter-spacing:.05em; }
   #finale .flags { font-size:42px; }
-  #finale .card { display:flex; align-items:center; gap:10px; padding:8px 16px 8px 8px; border-radius:999px; background:rgba(0,0,0,.45); border:2px solid var(--c,#fff); font-weight:800; font-size:14px; text-align:left; }
+  #finale .card { max-width:94vw; display:flex; align-items:center; gap:10px; padding:8px 16px 8px 8px; border-radius:999px; background:rgba(0,0,0,.45); border:2px solid var(--c,#fff); font-weight:800; font-size:14px; text-align:left; }
   #finale .card small { display:block; font-size:11px; opacity:.8; }
   #finale .heroes { border-color:var(--gold); background:rgba(70,45,0,.6); }
   #finale .row { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
@@ -109,6 +125,7 @@
   #langBtn { position:fixed; right:8px; top:206px; display:flex; gap:2px; padding:2px; border-radius:8px; background:rgba(3,20,35,.8); z-index:5; }
   #langBtn button { font:800 11px Inter,sans-serif; color:#fff; background:transparent; border:0; padding:4px 7px; border-radius:6px; cursor:pointer; }
   #langBtn button.on { background:#fff; color:#06263d; }
+  #langBtn .sep { width:1px; background:rgba(255,255,255,.25); margin:2px 2px; }
   #langBtn button:focus-visible { outline:2px solid var(--gold); }
   #demo { position:fixed; right:8px; top:232px; font-size:10px; font-weight:900; letter-spacing:.1em; padding:3px 7px; border-radius:6px; background:#b3261e; display:none; }
   #status { position:fixed; left:8px; top:210px; font-size:10px; opacity:.6; }
@@ -126,8 +143,10 @@
   </div>
   <div id="tug"><div id="tugGr"></div></div>
   <div id="peace"><span class="dove">🕊</span><div class="txt"><span data-i="peace"></span><small data-i="peaceHint"></small></div><div id="peaceBar"><div id="peaceFill"></div></div><span id="peacePct">0%</span></div>
+  <div id="goal"><span>🎯 <span data-i="goal"></span></span><div id="goalBar"><div id="goalFill"></div></div><span id="goalTxt"></span></div>
   <div id="heroes"></div>
   <div id="crisis" data-i="crisisBar"></div>
+  <div id="cease" data-i="ceaseBar"></div>
 </div>
 
 <div id="feed"></div>
@@ -136,18 +155,23 @@
   <div class="col" style="--c:var(--tr)"><h4>🇹🇷 <span data-i="topCaps"></span></h4><div id="lbTr"></div></div>
 </div>
 <div id="help">
-  <span data-i="helpJoin"></span>
-  <span data-i="helpTarget"></span>
-  <span data-i="helpLike"></span>
-  <span data-i="helpGift"></span>
-  <span data-i="helpHero"></span>
-  <span data-i="helpPeace"></span>
+  <div class="set" id="helpA"><span data-i="helpJoin"></span><span data-i="helpTarget"></span><span data-i="helpLike"></span><span data-i="helpGift"></span><span data-i="helpHero"></span><span data-i="helpPeace"></span></div>
+  <div class="set gifts" id="helpB" hidden><span data-i="giftMenu1"></span><span data-i="giftMenu2"></span><span id="giftMenu3"></span><span data-i="giftMenu4"></span><span data-i="giftMenu5"></span></div>
 </div>
 
 <div id="showcase"><span id="scAv"></span><div><div class="who" id="scWho"></div><div class="what" id="scWhat"></div></div></div>
 <div id="banner"></div>
 <div id="finale"></div>
-<div id="langBtn" role="group" aria-label="Dil / Sprache"><button type="button" id="btnTr">🇹🇷 TR</button><button type="button" id="btnDe">🇩🇪 DE</button></div>
+<div id="langBtn" role="group" aria-label="Dil / Sprache"><button type="button" id="btnTr">🇹🇷 TR</button><button type="button" id="btnDe">🇩🇪 DE</button><span class="sep"></span><button type="button" id="btnSnd" aria-label="Ton">🔊</button></div>
+<div id="tap">
+  <button type="button" data-tap="q" style="--c:var(--gr)">🎁 🇬🇷</button>
+  <button type="button" data-tap="w" style="--c:var(--tr)">🎁 🇹🇷</button>
+  <button type="button" data-tap="u" style="--c:#ffd54a">⚔ UĞURCAN</button>
+  <button type="button" data-tap="c" style="--c:#7ef0ff">⚔ CEM</button>
+  <button type="button" data-tap="k" style="--c:#ffd54a">👑 99 💎</button>
+  <button type="button" data-tap="f" style="--c:#fff">🕊 <span data-i="tapPeace"></span></button>
+  <button type="button" data-tap="p" style="--c:#fff">🏁 <span data-i="tapFinale"></span></button>
+</div>
 <div id="demo" data-i="demo"></div>
 <div id="status"></div>
 
@@ -168,17 +192,24 @@ const CONFIG = {
   finaleSeconds: 16,
   heroCharge: 25,         // Ruf-Punkte, bis ein Held erscheint (Kommentar = 1, Geschenk = 1 pro Diamant)
   heroTroops: 140, heroPower: 2, heroHops: 3, heroCooldown: 40,
+  stormLength: 10, stormSlow: 0.45, shieldLength: 20,   // Fähigkeiten der Helden
+  patronDiamonds: 99,     // so viele Diamanten in einer Runde → eigenes Legendenschiff (fester Wert, kein Zufall)
+  giftGoal: +(params.get('goal') || 500), // Diamanten-Ziel pro Runde → Feuerwerk + Dank an alle Schenkenden
+  ceasefireNeed: 3, ceasefireLength: 8, ceasefireCooldown: 45, // „barış“ von beiden Seiten → Waffenruhe
+  bottomInset: +(params.get('bottom') || 0), // Pixel Abstand unten, falls der TikTok-Chat das Spiel verdeckt
+  sound: params.get('sound') !== '0',
   defaultLang: 'tr',      // 'tr' oder 'de'
   wsUrl: params.get('ws') || `ws://${location.hostname || 'localhost'}:${params.get('port') || 8787}`,
   // Auf einer Webseite (z. B. GitHub Pages) gibt es keinen lokalen server.js: dann direkt Demo-Modus
   forceDemo: params.get('demo') === '1' || (!params.get('ws') && location.protocol === 'https:'),
+  allowDemo: params.get('demo') !== '0', // ?demo=0: niemals simulierte Zuschauer (empfohlen für die OBS-Quelle im echten Stream)
   showLangButton: params.get('ui') !== '0',
 };
 
 // Die zwei Helden. side: null = beide Seiten können sie rufen; 0 = nur Griechenland, 1 = nur Türkei
 const HEROES = [
-  { id:'ugurcan', name:'UĞURCAN', keys:['ugurcan'], side:null, css:'#ffd54a', cape:'#ff3b3b' },
-  { id:'cem',     name:'CEM',     keys:['cem'],     side:null, css:'#7ef0ff', cape:'#2f7bff' },
+  { id:'ugurcan', name:'UĞURCAN', keys:['ugurcan'], side:null, css:'#ffd54a', cape:'#ff3b3b', ability:'storm' },  // Sturm: Gegner langsamer
+  { id:'cem',     name:'CEM',     keys:['cem'],     side:null, css:'#7ef0ff', cape:'#2f7bff', ability:'shield' }, // Schild: eine Insel geschützt
 ];
 
 // =====================================================================
@@ -212,7 +243,14 @@ const I18N = {
     heroSink:'⚔ {hero} bir filoyu batırdı!', heroActive:'SAHADA {flag}', heroRest:'dinleniyor {s} sn', heroCall:'çağır: „{key}“',
     heroFinale:'🤝 {a} & {b} barış anlaşmasını imzaladı', heroFinaleSub:'İki kahraman el sıkıştı',
     st_waiting:'TikTok bekleniyor…', st_connected:'● CANLI: @{user}', st_failed:'Bağlantı başarısız (canlı mısın?), 15 sn sonra tekrar',
-    st_ended:'Yayın bitti', st_disconnected:'Bağlantı koptu, 15 sn sonra tekrar', st_noServer:'server.js bağlantısı yok', st_open:'● bağlı',
+    st_ended:'Yayın bitti', st_disconnected:'Bağlantı koptu, 15 sn sonra tekrar', st_noServer:'server.js bağlantısı yok', st_open:'● bağlı', st_reconnect:'⟳ yeniden bağlanıyor…',
+    giftMenu1:'🌹 Gül = 5 asker', giftMenu2:'🍩 30 💎 = 150 asker', giftMenu3:'👑 {n} 💎 = kendi efsane gemin', giftMenu4:'⚔ Hediye = kahraman puanı', giftMenu5:'🎯 Hedef dolunca havai fişek',
+    goal:'Hediye hedefi', goalDone:'🎆 HEDİYE HEDEFİ TAMAM! 🎆<small>Teşekkürler {names}!</small>', goalFeed:'🎆 Hediye hedefi doldu! Teşekkürler!',
+    patron:'👑 EFSANE GEMİSİ 👑<small>{nick} · {flag}</small>', patronFeed:'👑 {nick} efsane gemisiyle denizde! {flag}', patronShow:'Efsane gemisi · {n} asker {flag}',
+    storm:'🌪 {hero} FIRTINASI! 🌪<small>Düşman gemileri yavaşladı</small>', shield:'🛡 {hero} KALKANI! 🛡<small>{isl} korunuyor</small>',
+    stormFeed:'🌪 {hero} fırtına çıkardı!', shieldFeed:'🛡 {hero}, {isl} adasını koruyor', shieldHit:'🛡 Kalkan saldırıyı durdurdu!',
+    ceasefire:'🕊 ATEŞKES! 🕊<small>İki taraf da barış istedi</small>', ceaseBar:'🕊 ATEŞKES: gemiler bekliyor 🕊', ceaseFeed:'🕊 Ateşkes: iki taraf da barış yazdı!',
+    heroMaster:'sağ kolu', topSupporter:'🎁 Turun destekçisi · {n} 💎', tapPeace:'barış', tapFinale:'final',
   },
   de: {
     gr:'GRIECHENLAND', tr:'TÜRKEI', grShort:'Griechenland', trShort:'Türkei',
@@ -241,7 +279,14 @@ const I18N = {
     heroSink:'⚔ {hero} versenkt eine Flotte!', heroActive:'IM EINSATZ {flag}', heroRest:'ruht {s} s', heroCall:'rufen: „{key}“',
     heroFinale:'🤝 {a} & {b} unterzeichnen den Frieden', heroFinaleSub:'Die zwei Helden reichen sich die Hand',
     st_waiting:'Warte auf TikTok…', st_connected:'● LIVE: @{user}', st_failed:'Verbindung fehlgeschlagen (bist du live?), neuer Versuch in 15 s',
-    st_ended:'Stream beendet', st_disconnected:'Getrennt, neuer Versuch in 15 s', st_noServer:'Keine Verbindung zu server.js', st_open:'● verbunden',
+    st_ended:'Stream beendet', st_disconnected:'Getrennt, neuer Versuch in 15 s', st_noServer:'Keine Verbindung zu server.js', st_open:'● verbunden', st_reconnect:'⟳ verbinde neu…',
+    giftMenu1:'🌹 Rose = 5 Soldaten', giftMenu2:'🍩 30 💎 = 150 Soldaten', giftMenu3:'👑 {n} 💎 = dein Legendenschiff', giftMenu4:'⚔ Geschenk = Heldenpunkte', giftMenu5:'🎯 Ziel voll = Feuerwerk',
+    goal:'Geschenkziel', goalDone:'🎆 GESCHENKZIEL ERREICHT! 🎆<small>Danke {names}!</small>', goalFeed:'🎆 Geschenkziel erreicht! Danke!',
+    patron:'👑 LEGENDENSCHIFF 👑<small>{nick} · {flag}</small>', patronFeed:'👑 {nick} segelt mit dem Legendenschiff! {flag}', patronShow:'Legendenschiff · {n} Krieger {flag}',
+    storm:'🌪 STURM VON {hero}! 🌪<small>Gegnerische Schiffe werden langsam</small>', shield:'🛡 SCHILD VON {hero}! 🛡<small>{isl} ist geschützt</small>',
+    stormFeed:'🌪 {hero} ruft einen Sturm!', shieldFeed:'🛡 {hero} schützt {isl}', shieldHit:'🛡 Der Schild hält den Angriff auf!',
+    ceasefire:'🕊 WAFFENRUHE! 🕊<small>Beide Seiten wollen Frieden</small>', ceaseBar:'🕊 WAFFENRUHE: die Schiffe warten 🕊', ceaseFeed:'🕊 Waffenruhe: beide Seiten schreiben Frieden!',
+    heroMaster:'rechte Hand', topSupporter:'🎁 Top-Unterstützer·in der Runde · {n} 💎', tapPeace:'Frieden', tapFinale:'Finale',
   },
 };
 let lang = (() => {
@@ -256,6 +301,49 @@ const upper = s => String(s).toLocaleUpperCase(lang === 'tr' ? 'tr-TR' : 'de-DE'
 const norm = s => String(s).toLowerCase().replace(/ı/g, 'i').normalize('NFD').replace(/[̀-ͯ]/g, '');
 const tokenize = s => norm(s).split(/[^\p{L}\p{N}]+/u).filter(Boolean);
 const rawTokens = s => String(s).toLocaleLowerCase('tr-TR').split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+
+// =====================================================================
+//  SOUND (alles synthetisch per WebAudio, keine Dateien nötig)
+// =====================================================================
+const SFX = (() => {
+  let ctx = null, master = null, muted = !CONFIG.sound, noiseBuf = null;
+  const last = {};
+  function init() { if (ctx) return; try { ctx = new (window.AudioContext || window.webkitAudioContext)(); master = ctx.createGain(); master.gain.value = 0.5; master.connect(ctx.destination); } catch {} }
+  function resume() { init(); if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {}); }
+  const ok = () => ctx && !muted && ctx.state === 'running';
+  const thr = (k, ms) => { const n = performance.now(); if (last[k] && n - last[k] < ms) return false; last[k] = n; return true; };
+  function tone(freq, dur, type = 'sine', vol = 0.2, when = 0, slide = 0) {
+    if (!ok()) return;
+    const t0 = ctx.currentTime + when, o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t0);
+    if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(20, freq * slide), t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g).connect(master); o.start(t0); o.stop(t0 + dur + 0.05);
+  }
+  function noise(dur, vol, freq = 800, when = 0) {
+    if (!ok()) return;
+    if (!noiseBuf) { noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+    const t0 = ctx.currentTime + when, src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    src.buffer = noiseBuf; f.type = 'lowpass'; f.frequency.setValueAtTime(freq, t0); f.frequency.exponentialRampToValueAtTime(60, t0 + dur);
+    g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(f).connect(g).connect(master); src.start(t0); src.stop(t0 + dur);
+  }
+  return {
+    resume, get muted() { return muted; }, toggle() { muted = !muted; resume(); return muted; },
+    boom() { if (thr('boom', 140)) { noise(0.6, 0.45, 900); tone(70, 0.4, 'sine', 0.25, 0, 0.5); } },
+    capture() { if (thr('cap', 300)) [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.25, 'triangle', 0.13, i * 0.09)); },
+    gift() { if (thr('gift', 150)) [1319, 1760, 2093].forEach((f, i) => tone(f, 0.3, 'sine', 0.07, i * 0.06)); },
+    horn() { tone(110, 1.3, 'sawtooth', 0.11); tone(165, 1.3, 'sawtooth', 0.09, 0.05); tone(220, 1.0, 'sawtooth', 0.07, 0.45); noise(1.2, 0.12, 400); },
+    thunder() { noise(2.4, 0.55, 280); noise(1.2, 0.3, 1200, 0.1); },
+    shield() { tone(400, 0.8, 'sine', 0.1, 0, 2); tone(600, 0.8, 'sine', 0.07, 0.1, 2); },
+    fanfare() { [392, 523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.35, 'triangle', 0.12, i * 0.12)); },
+    calm() { [659, 784, 880, 784].forEach((f, i) => tone(f, 0.8, 'sine', 0.07, i * 0.4)); },
+    peaceMusic() { [523, 587, 659, 784, 659, 587, 523, 392, 440, 523].forEach((f, i) => tone(f, 0.9, 'triangle', 0.08, i * 0.45)); [261, 329, 392].forEach(f => tone(f, 5, 'sine', 0.045)); },
+    gull() { if (thr('gull', 5000)) { tone(1800, 0.25, 'sine', 0.025, 0, 0.6); tone(1700, 0.25, 'sine', 0.025, 0.3, 0.6); } },
+  };
+})();
+['pointerdown', 'keydown', 'touchstart'].forEach(ev => addEventListener(ev, () => SFX.resume(), { passive:true }));
+SFX.resume(); // in OBS darf Ton sofort starten
 
 const SIDES = [
   { id:0, flag:'🇬🇷', css:'#2f7bff', keys:['1','gr','griechenland','greece','hellas','ellada','yunanistan','yunan','yunanlar','griechen','grieche','ελλαδα','ελλας'] },
@@ -318,7 +406,7 @@ const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 500);
 const camHome = new THREE.Vector3(1.2, 0, -0.9), camTarget = camHome.clone(), camDir = new THREE.Vector3(0, 0.93, 0.37).normalize();
 let camDist = 80, zoom = 1, shake = 0, focus = null;
 
-scene.add(new THREE.HemisphereLight(0xd6ecff, 0x1d4a5e, 0.75));
+const hemi = new THREE.HemisphereLight(0xd6ecff, 0x1d4a5e, 0.75); scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xfff0d6, 1.3);
 sun.position.set(-25, 55, 20); sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
@@ -584,6 +672,9 @@ function updateParticles(dt) {
   }
   pGeo.attributes.position.needsUpdate = pGeo.attributes.color.needsUpdate = true;
 }
+const dome = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshBasicMaterial({ color:0x7ef0ff, transparent:true, opacity:0.22, depthWrite:false, side:THREE.DoubleSide, blending:THREE.AdditiveBlending }));
+dome.visible = false; scene.add(dome);
+const C_RAIN = new THREE.Color(0.35, 0.45, 0.6);
 const C_FIRE = new THREE.Color(1, 0.55, 0.15), C_WHITE = new THREE.Color(1, 1, 1), C_WAKE = new THREE.Color(0.5, 0.6, 0.65), C_GOLD = new THREE.Color(1, 0.8, 0.25);
 
 // --- Schiffe ------------------------------------------------------------
@@ -667,6 +758,7 @@ function getUser(e) {
   if (!u) { u = { id, nick:e.nick || id, avatar:null, side:-1, pts:0, total:0, peace:0, last:0, likeWin:[], rank:0, heroT:0, heroPick:null }; users.set(id, u); }
   if (e.nick) u.nick = e.nick;
   if (e.avatar) u.avatar = e.avatar;
+  if (e.fake) u.fake = true;
   u.last = now;
   return u;
 }
@@ -694,6 +786,8 @@ function pickCaptain(side) {
 //  SPIEL-LOGIK
 // =====================================================================
 let now = 0, timeLeft = CONFIG.roundSeconds, roundOver = false, roundNo = 0, peace = 0, crisisT = CONFIG.crisisEvery, crisisOn = 0;
+let stormT = 0, stormSide = -1, shieldT = 0, shieldIsl = null, ceaseT = 0, ceaseCool = 0, roundDia = 0, goalDone = false;
+const peaceWin = [[], []];
 let treaties = 0; try { treaties = +localStorage.getItem('aegean_treaties') || 0; } catch {}
 const fleets = [];
 const owned = s => islands.filter(i => i.owner === s.id);
@@ -706,8 +800,9 @@ function resetRound() {
   islands.forEach(i => { i.owner = -1; i.troops = i.startTroops; i.governor = null; });
   ports.forEach(p => { p.troops = 15; p.flag.material = flagMats[p.owner]; });
   SIDES.forEach(s => { s.reserve = 0; s.target = null; s.launchT = 1 + s.id * 1.5; s.voteT = 0; });
-  HEROES.forEach(h => { h.charge = [0, 0]; h.active = null; h.rest = 0; h.duelShown = false; });
-  users.forEach(u => { u.pts = 0; u.peace = 0; });
+  HEROES.forEach(h => { h.charge = [0, 0]; h.active = null; h.rest = 0; h.duelShown = false; h.callers = new Map(); h.pendingShield = null; });
+  stormT = 0; stormSide = -1; shieldT = 0; shieldIsl = null; dome.visible = false; ceaseT = 0; ceaseCool = 0; roundDia = 0; goalDone = false; peaceWin[0] = []; peaceWin[1] = [];
+  users.forEach(u => { u.pts = 0; u.peace = 0; u.roundDia = 0; u.patronDone = false; });
   islands.forEach(paintIsland);
   doves.forEach(d => scene.remove(d.g)); doves.length = 0;
   document.getElementById('finale').classList.remove('on'); document.body.classList.remove('fin');
@@ -737,7 +832,8 @@ function edgePoint(o, toward, pad) {
   return o.pos.clone().add(new THREE.Vector3(Math.cos(ang), 0, Math.sin(ang)).multiplyScalar(ellipseR(o, ang) + pad));
 }
 
-function launchFleet(s, src, target, troops, captain, gold, hero) {
+function patronHero(u, s) { return { id:'p_' + u.id, name:upper(short(u.nick, 11)), css:'#ffd54a', cape:s.css, color:new THREE.Color('#ffd54a') }; }
+function launchFleet(s, src, target, troops, captain, gold, hero, patron) {
   troops = Math.floor(troops);
   if (troops < 1 || !target || !src) return;
   const from = edgePoint(src, target.pos, hero ? 0.9 : 0.45), end = edgePoint(target, src.pos, hero ? 1.0 : 0.55);
@@ -747,6 +843,7 @@ function launchFleet(s, src, target, troops, captain, gold, hero) {
   const dur = THREE.MathUtils.clamp(len / 6, 2.5, 7.5) / (gold ? 1.4 : 1) / (hero ? 1.2 : 1);
   const group = new THREE.Group();
   if (hero) group.add(makeHeroShip(hero, s.id));
+  else if (patron) group.add(makeHeroShip(patronHero(patron, s), s.id));
   else {
     const count = Math.min(1 + Math.floor(Math.sqrt(troops) / 2.3), 7);
     const offs = [[0, 0], [-0.5, -0.6], [0.5, -0.6], [-1, -1.2], [1, -1.2], [0, -1.2], [0, -1.8]];
@@ -754,11 +851,11 @@ function launchFleet(s, src, target, troops, captain, gold, hero) {
   }
   scene.add(group);
   const el = document.createElement('div');
-  el.className = 'flt' + (hero ? ' hero' : gold ? ' gold' : '') + (captain || hero ? '' : ' anon');
+  el.className = 'flt' + (hero || patron ? ' hero' : gold ? ' gold' : '') + (captain || hero ? '' : ' anon');
   el.style.setProperty('--c', s.css);
-  if (hero) el.style.setProperty('--h', hero.css);
+  el.style.setProperty('--h', hero ? hero.css : '#ffd54a');
   labelsEl.appendChild(el);
-  const f = { side:s, troops, captain, from, ctrl, end, target, src, t:0, dur, group, el, gold, hero, wake:0, shown:-1 };
+  const f = { side:s, troops, captain, from, ctrl, end, target, src, t:0, dur, group, el, gold, hero, patron, big:!!(hero || patron), wake:0, shown:-1 };
   fleets.push(f); updateFleetLabel(f);
   return f;
 }
@@ -766,6 +863,7 @@ function updateFleetLabel(f) {
   const n = Math.max(0, Math.floor(f.troops));
   if (n === f.shown) return; f.shown = n;
   if (f.hero) f.el.innerHTML = `${avatar({ hero:f.hero }, 26)}<span class="hn">${f.hero.name}</span><span>${f.side.flag} ⚔${n}</span>`;
+  else if (f.patron) f.el.innerHTML = `${avatar(f.patron, 26)}<span class="hn">👑 ${esc(short(f.patron.nick, 12))}</span><span>${f.side.flag} ⚔${n}</span>`;
   else f.el.innerHTML = f.captain ? `${avatar(f.captain, f.gold ? 22 : 18)}<span>${esc(short(f.captain.nick, 12))}</span><span style="color:${f.gold ? '#ffd54a' : f.side.css}">${f.gold ? '🎁' : '⚔'}${n}</span>` : `⚔ ${n}`;
 }
 const bez = (a, b, c, k, out) => out.set((1 - k) ** 2 * a.x + 2 * (1 - k) * k * b.x + k * k * c.x, 0, (1 - k) ** 2 * a.z + 2 * (1 - k) * k * b.z + k * k * c.z);
@@ -773,7 +871,7 @@ const tA = new THREE.Vector3(), tB = new THREE.Vector3();
 
 function updateFleets(dt, time) {
   // Seeschlachten
-  if (!roundOver) for (let i = 0; i < fleets.length; i++) for (let j = i + 1; j < fleets.length; j++) {
+  if (!roundOver && ceaseT <= 0) for (let i = 0; i < fleets.length; i++) for (let j = i + 1; j < fleets.length; j++) {
     const a = fleets[i], b = fleets[j];
     if (a.side === b.side || a.troops <= 0 || b.troops <= 0) continue;
     const range = a.hero || b.hero ? 6 : 1.6;
@@ -798,17 +896,17 @@ function updateFleets(dt, time) {
   for (let i = fleets.length - 1; i >= 0; i--) {
     const f = fleets[i];
     if (f.troops <= 0.5 && !roundOver) {
-      const p = f.group.position.clone(); p.y = 0.3; emit(p, C_WHITE, 25, 1.5, 0.9, 2.5); emit(p, C_FIRE, 20, 2, 0.6, 3);
+      const p = f.group.position.clone(); p.y = 0.3; emit(p, C_WHITE, 25, 1.5, 0.9, 2.5); emit(p, C_FIRE, 20, 2, 0.6, 3); SFX.boom();
       if (f.hero) endHero(f.hero);
       scene.remove(f.group); f.el.remove(); fleets.splice(i, 1); continue;
     }
-    if (!roundOver) f.t += dt / f.dur;
+    if (!roundOver && ceaseT <= 0) f.t += dt / f.dur * (stormT > 0 && f.side.id !== stormSide ? CONFIG.stormSlow : 1);
     const k = Math.min(f.t, 1);
     bez(f.from, f.ctrl, f.end, k, tA); bez(f.from, f.ctrl, f.end, Math.min(k + 0.01, 1), tB);
     f.group.position.set(tA.x, waveH(tA.x, tA.z, time) + 0.02, tA.z);
     if (tB.distanceToSquared(tA) > 1e-6) f.group.rotation.y = Math.atan2(tB.x - tA.x, tB.z - tA.z);
     f.group.rotation.z = Math.sin(time * 3 + i) * 0.06;
-    if (f.hero) {
+    if (f.big) {
       const hs = f.group.children[0];
       hs.userData.aura.rotation.z += dt * 2; hs.userData.aura.scale.setScalar(1 + Math.sin(time * 5) * 0.15);
       hs.userData.sword.rotation.z = -0.35 + Math.sin(time * 6) * 0.4;
@@ -831,8 +929,14 @@ function arrive(f) {
     else { o.troops += f.troops; emit(hit, s.color, 10, 1.5, 0.8, 2); }
     return;
   }
-  const mult = (o === CYPRUS && crisisOn > 0 ? 2 : 1) * (f.hero ? CONFIG.heroPower : 1);
-  o.troops -= f.troops * mult;
+  if (o === shieldIsl && shieldT > 0) {
+    emit(hit, new THREE.Color('#7ef0ff'), 40, 3, 0.9, 3); SFX.shield();
+    if (!o.shieldMsg || now - o.shieldMsg > 4) { o.shieldMsg = now; feed(t('shieldHit'), '#7ef0ff', null, 'hero'); }
+    if (f.hero) endHero(f.hero);
+    return;
+  }
+  const mult = (o === CYPRUS && crisisOn > 0 ? 2 : 1) * (f.hero ? CONFIG.heroPower : 1) * (f.patron ? 2 : 1);
+  o.troops -= f.troops * mult; SFX.boom();
   emit(hit, C_FIRE, 25 + Math.min(f.troops, 70), 4, 1.1, 4); emit(hit, s.color, 18, 3, 1, 3);
   if (f.hero) { emit(hit, f.hero.color, 90, 7, 1.4, 8, 0.8); shake = Math.min(shake + 0.6, 1); }
   shake = Math.min(shake + 0.12 + f.troops * 0.003, 0.9);
@@ -840,8 +944,9 @@ function arrive(f) {
     const prev = o.owner;
     o.owner = s.id; o.troops = -o.troops / mult; o.pulse = 1;
     o.governor = f.hero ? { hero:f.hero, nick:f.hero.name, side:s.id } : (f.captain || pickCaptain(s));
+    if (f.patron) o.governor = f.patron;
     addPts(f.hero ? f.summoner : o.governor, 20 + o.value * 15);
-    paintIsland(o);
+    paintIsland(o); SFX.capture();
     const top = o.pos.clone(); top.y = 1.6;
     emit(top, s.color, 120 + o.value * 30, 6, 1.6, 7, 1);
     shake = Math.min(shake + 0.4, 1);
@@ -856,6 +961,7 @@ function arrive(f) {
     }
     if (o.value >= 2 || f.hero) focusOn(o.pos, 2.5);
     if (s.target === o) s.target = null;
+    if (f.hero && f.hero.pendingShield === s) applyShield(f.hero, o, 2600);
     if (f.hero) nextHeroHop(f, o);
   } else if (f.hero) { o.troops = Math.max(0, o.troops); endHero(f.hero); }
 }
@@ -867,6 +973,7 @@ function chargeHero(hero, s, u, n) {
   if (hero.active || hero.rest > 0) return;
   hero.charge[s.id] = Math.min(CONFIG.heroCharge, hero.charge[s.id] + n);
   u.heroPick = hero; addPts(u, n);
+  const c = hero.callers.get(u.id) || { u, n:0 }; c.n += n; hero.callers.set(u.id, c);
   if (hero.charge[s.id] >= CONFIG.heroCharge) summonHero(hero, s, u);
 }
 function summonHero(hero, s, u) {
@@ -881,6 +988,41 @@ function summonHero(hero, s, u) {
   feed(t('heroSummon', { nick:u ? u.nick : '?', hero:hero.name, flag:s.flag }), hero.css, u || { hero }, 'hero');
   showcase({ hero }, `${hero.name} ${s.flag}`, t('heroSummon', { nick:u ? u.nick : '?', hero:hero.name, flag:s.flag }));
   focusOn(fr.pos, 2.5);
+  SFX.horn();
+  useAbility(hero, s);
+}
+function useAbility(hero, s) {
+  const hn = `<span style="color:${hero.css}">${hero.name}</span>`;
+  if (hero.ability === 'storm') {
+    stormT = CONFIG.stormLength; stormSide = s.id;
+    setTimeout(() => { if (!roundOver) { banner(t('storm', { hero:hn })); SFX.thunder(); } }, 2800);
+    feed(t('stormFeed', { hero:hero.name }), hero.css, { hero }, 'hero');
+  } else if (hero.ability === 'shield') {
+    const isl = owned(s).sort((a, b) => b.value - a.value || b.troops - a.troops)[0];
+    if (isl) applyShield(hero, isl, 2800);
+    else hero.pendingShield = s; // noch keine Insel: Schild auf die erste Insel, die der Held erobert
+  }
+}
+function applyShield(hero, isl, delay = 0) {
+  hero.pendingShield = null;
+  shieldIsl = isl; shieldT = CONFIG.shieldLength;
+  dome.material.color.copy(hero.color); dome.position.copy(isl.pos); dome.scale.set(isl.rx * 1.35, 2.6, isl.rz * 1.35); dome.visible = true;
+  const hn = `<span style="color:${hero.css}">${hero.name}</span>`;
+  setTimeout(() => { if (!roundOver) { banner(t('shield', { hero:hn, isl:upper(islandName(isl)) })); SFX.shield(); } }, delay);
+  feed(t('shieldFeed', { hero:hero.name, isl:islandName(isl) }), hero.css, { hero }, 'hero');
+}
+function startCeasefire() {
+  ceaseT = CONFIG.ceasefireLength; ceaseCool = CONFIG.ceasefireCooldown;
+  peace += 40;
+  banner(t('ceasefire')); feed(t('ceaseFeed'), '#fff', null, 'peace'); SFX.calm();
+  for (let k = 0; k < 10; k++) spawnDove(k, CONFIG.ceasefireLength + 2, CYPRUS.pos);
+  focusOn(CYPRUS.pos, 3);
+}
+function goalReached() {
+  goalDone = true;
+  const names = [...users.values()].filter(u => u.roundDia > 0).sort((a, b) => b.roundDia - a.roundDia).slice(0, 3).map(u => esc(u.nick)).join(', ');
+  banner(t('goalDone', { names })); feed(t('goalFeed'), '#ffd54a', null, 'big'); SFX.fanfare();
+  for (let k = 0; k < 10; k++) setTimeout(() => emit(new THREE.Vector3((rnd() - .5) * 26, 6 + rnd() * 3, (rnd() - .5) * 30), k % 2 ? C_GOLD : C_WHITE, 120, 6, 1.6, 3, 0.5, 2.5), k * 300);
 }
 function nextHeroHop(f, from) {
   f.hops--;
@@ -905,6 +1047,11 @@ function tick(dt) {
   for (const p of ports) p.troops = Math.min(p.troops + p.prod * dt, 400);
   for (const i of islands) if (i.governor && !i.governor.hero && i.owner === i.governor.side) addPts(i.governor, 0.1 * i.value * dt);
   HEROES.forEach(h => { if (h.rest > 0) h.rest = Math.max(0, h.rest - dt); });
+  if (stormT > 0) stormT = Math.max(0, stormT - dt);
+  if (shieldT > 0) { shieldT = Math.max(0, shieldT - dt); if (shieldT <= 0) { dome.visible = false; shieldIsl = null; } }
+  if (ceaseT > 0) ceaseT = Math.max(0, ceaseT - dt);
+  if (ceaseCool > 0) ceaseCool = Math.max(0, ceaseCool - dt);
+  document.getElementById('cease').classList.toggle('on', ceaseT > 0);
   crisisT -= dt;
   if (crisisOn > 0) { crisisOn -= dt; if (crisisOn <= 0) { SIDES.forEach(s => { if (s.target === CYPRUS) s.target = null; }); CYPRUS.el.classList.remove('crisis'); } }
   if (crisisT <= 0) {
@@ -916,7 +1063,7 @@ function tick(dt) {
   for (const s of SIDES) {
     const fr = front(s);
     if (fr && s.reserve > 0) { fr.troops += s.reserve; s.reserve = 0; }
-    s.launchT -= dt;
+    if (ceaseT <= 0) s.launchT -= dt;
     if (s.launchT <= 0 && fr) {
       s.launchT = CONFIG.launchEvery * (crisisOn > 0 ? 0.6 : 1);
       if (fr.troops >= CONFIG.minLaunch) { const n = fr.troops * CONFIG.launchShare; fr.troops -= n; launchFleet(s, fr, s.target, n, pickCaptain(s), false); }
@@ -934,22 +1081,25 @@ function tick(dt) {
 const doves = [];
 const doveBody = new THREE.SphereGeometry(1, 10, 8), wingGeo = new THREE.PlaneGeometry(1, 0.5); wingGeo.translate(0.5, 0, 0);
 const doveMat = new THREE.MeshStandardMaterial({ color:0xffffff, roughness:0.6, side:THREE.DoubleSide, emissive:0x333333 });
-function spawnDove(i) {
+function spawnDove(i, ttl, around) {
   const g = new THREE.Group();
   const b = new THREE.Mesh(doveBody, doveMat); b.scale.set(0.18, 0.15, 0.36); g.add(b);
   const h = new THREE.Mesh(doveBody, doveMat); h.scale.setScalar(0.11); h.position.set(0, 0.08, 0.32); g.add(h);
   const wl = new THREE.Mesh(wingGeo, doveMat), wr = new THREE.Mesh(wingGeo, doveMat); wr.rotation.y = Math.PI; g.add(wl, wr);
   const a = rnd() * Math.PI * 2, r = 28;
   g.position.set(Math.cos(a) * r, 3 + rnd() * 4, Math.sin(a) * r);
-  const target = new THREE.Vector3((rnd() - .5) * 20, 3 + rnd() * 3, (rnd() - .5) * 26);
+  const target = around ? around.clone().add(new THREE.Vector3((rnd() - .5) * 6, 3 + rnd() * 2, (rnd() - .5) * 4)) : new THREE.Vector3((rnd() - .5) * 20, 3 + rnd() * 3, (rnd() - .5) * 26);
+  if (around) g.position.set(around.x + (rnd() - .5) * 10, 6, around.z - 8);
   g.scale.setScalar(1.2 + rnd() * 0.8); scene.add(g);
-  doves.push({ g, wl, wr, target, ph:rnd() * 6, sp:4 + rnd() * 3, delay:i * 0.12 });
+  doves.push({ g, wl, wr, target, ph:rnd() * 6, sp:4 + rnd() * 3, delay:i * 0.12, ttl, around });
 }
 function updateDoves(dt, tt) {
-  for (const d of doves) {
+  for (let i = doves.length - 1; i >= 0; i--) {
+    const d = doves[i];
+    if (d.ttl != null && (d.ttl -= dt) <= 0) { scene.remove(d.g); doves.splice(i, 1); continue; }
     if ((d.delay -= dt) > 0) continue;
     const dir = tA.subVectors(d.target, d.g.position);
-    if (dir.length() < 1) d.target.set((rnd() - .5) * 26, 3 + rnd() * 4, (rnd() - .5) * 30);
+    if (dir.length() < 1) { if (d.around) d.target.copy(d.around).add(new THREE.Vector3((rnd() - .5) * 6, 3 + rnd() * 2, (rnd() - .5) * 4)); else d.target.set((rnd() - .5) * 26, 3 + rnd() * 4, (rnd() - .5) * 30); }
     dir.normalize();
     d.g.position.addScaledVector(dir, d.sp * dt);
     d.g.rotation.y = Math.atan2(dir.x, dir.z);
@@ -966,6 +1116,7 @@ function peaceFinale(reason, side) {
   islands.forEach(i => { i.flag.material = flagMats[2]; i.ring.material.color.set(0xffffff); i.ring.material.opacity = 0.9; i.pulse = 1; });
   ports.forEach(p => p.flag.material = flagMats[2]);
   for (let k = 0; k < 30; k++) spawnDove(k);
+  SFX.peaceMusic(); dome.visible = false; stormT = 0; ceaseT = 0; document.getElementById('cease').classList.remove('on');
   const colors = [SIDES[0].color, C_WHITE, SIDES[1].color, HEROES[0].color, HEROES[1].color];
   for (let k = 0; k < 14; k++) setTimeout(() => emit(new THREE.Vector3((rnd() - .5) * 26, 6 + rnd() * 3, (rnd() - .5) * 30), colors[k % colors.length], 130, 6, 1.8, 3, 0.5, 2.5), 300 + k * 450);
   focusOn(new THREE.Vector3(0, 0, 2), CONFIG.finaleSeconds);
@@ -974,6 +1125,7 @@ function peaceFinale(reason, side) {
     reason, side,
     peacemaker: all.filter(u => u.peace > 0).sort((a, b) => b.peace - a.peace)[0],
     best: SIDES.map(s => all.filter(u => u.side === s.id).sort((a, b) => b.pts - a.pts)[0]),
+    supporter: all.filter(u => u.roundDia > 0).sort((a, b) => b.roundDia - a.roundDia)[0],
     counts: SIDES.map(s => owned(s).length), cyprusFree: CYPRUS.owner < 0,
   };
   renderFinale();
@@ -992,6 +1144,7 @@ function renderFinale() {
     <div class="meta">${esc(t(L.reason, L.side ? { flag:L.side.flag, side:sideShort(L.side) } : {}))}</div>
     <div class="card heroes">${avatar({ hero:h1 }, 40)}${avatar({ hero:h2 }, 40)}<div>${esc(t('heroFinale', { a:h1.name, b:h2.name }))}<small>${esc(t('heroFinaleSub'))}</small></div></div>
     ${card(L.peacemaker, t('peacemaker', { n:Math.floor(L.peacemaker?.peace || 0) }), '#fff')}
+    ${card(L.supporter, t('topSupporter', { n:L.supporter?.roundDia || 0 }), '#ffd54a')}
     <div class="row">${SIDES.map(s => card(L.best[s.id], t('bravest', { flag:s.flag, n:Math.floor(L.best[s.id]?.pts || 0) }), s.css)).join('')}</div>
     <div class="meta">${t('islandsEnd', { a:L.counts[0], b:L.counts[1] })}${L.cyprusFree ? t('cyprusFree') : ''}<br>${t('treaties', { n:treaties })}</div>`;
 }
@@ -1013,6 +1166,11 @@ function handleEvent(e) {
       const join = joinGr && !joinTr ? SIDES[0] : joinTr && !joinGr ? SIDES[1] : null;
       if (join && join.id !== u.side) { u.side = join.id; feed(t('joined', { nick:u.nick, flag:join.flag, side:sideShort(join) }), join.css, u); }
       const s = ensureSide(u);
+      if (isPeace) {
+        peaceWin[s.id].push(now);
+        for (const w of peaceWin) while (w.length && now - w[0] > 10) w.shift();
+        if (ceaseT <= 0 && ceaseCool <= 0 && peaceWin[0].length >= CONFIG.ceasefireNeed && peaceWin[1].length >= CONFIG.ceasefireNeed) startCeasefire();
+      }
       const hero = HEROES.find(h => toks.some(k => h.keys.includes(k)));
       if (hero && now > u.heroT) { u.heroT = now + 2; chargeHero(hero, s, u, 1); }
       const isl = islands.find(i => toks.some(k => i.aliases.includes(k)) || rtoks.some(k => i.strict.includes(k)));
@@ -1035,9 +1193,21 @@ function handleEvent(e) {
     }
     case 'gift': {
       const s = ensureSide(u), dia = Math.max(1, e.diamonds || 1), cnt = Math.max(1, e.count || 1), troops = dia * cnt * CONFIG.troopsPerDiamond;
-      addPts(u, troops);
+      addPts(u, troops); SFX.gift();
+      u.roundDia = (u.roundDia || 0) + dia * cnt; roundDia += dia * cnt;
       const tg = pickTarget(s), fr = front(s);
+      if (tg && fr && u.roundDia >= CONFIG.patronDiamonds && !u.patronDone) {
+        u.patronDone = true;
+        launchFleet(s, fr, tg, troops, u, true, null, u); // trifft doppelt so hart (siehe arrive)
+        banner(t('patron', { nick:esc(u.nick), flag:s.flag })); feed(t('patronFeed', { nick:u.nick, flag:s.flag }), '#ffd54a', u, 'hero');
+        showcase(u, `👑 ${u.nick}`, t('patronShow', { n:troops, flag:s.flag })); SFX.fanfare(); focusOn(fr.pos, 2.5);
+        if (!goalDone && roundDia >= CONFIG.giftGoal) goalReached();
+        const hero0 = u.heroPick && heroFor(u.heroPick, s.id) ? u.heroPick : null;
+        if (hero0) chargeHero(hero0, s, u, dia * cnt);
+        break;
+      }
       if (tg && fr) launchFleet(s, fr, tg, troops, u, true);
+      if (!goalDone && roundDia >= CONFIG.giftGoal) goalReached();
       const gift = (e.giftName || t('giftDefault')) + (cnt > 1 ? ' x' + cnt : '');
       showcase(u, `${rankLabel(rankOf(u))} · ${u.nick}`, t('giftShow', { gift, n:troops, flag:s.flag }));
       feed(t('giftFeed', { nick:u.nick, gift, n:troops }), s.css, u, 'big');
@@ -1092,10 +1262,14 @@ function updateHud() {
   const pp = Math.min(100, peace / CONFIG.peaceGoal * 100);
   document.getElementById('peaceFill').style.width = pp + '%';
   document.getElementById('peacePct').textContent = Math.floor(pp) + '%';
+  document.getElementById('goalFill').style.width = Math.min(100, roundDia / CONFIG.giftGoal * 100) + '%';
+  document.getElementById('goalTxt').textContent = goalDone ? `✅ ${roundDia} 💎` : `${roundDia} / ${CONFIG.giftGoal} 💎`;
   heroesEl.innerHTML = HEROES.map(h => {
     const state = h.active ? t('heroActive', { flag:h.active.flag }) : h.rest > 0 ? t('heroRest', { s:Math.ceil(h.rest) }) : t('heroCall', { key:h.keys[0] });
     const bars = SIDES.filter(s => heroFor(h, s.id)).map(s => `<div class="hb"><i style="width:${h.charge[s.id] / CONFIG.heroCharge * 100}%;background:${s.css}"></i></div>`).join('');
-    return `<div class="hc${h.active ? ' on' : ''}" style="--h:${h.css}">${avatar({ hero:h }, 26)}<div class="bars"><span class="hn">${h.name}</span><span class="hs">${esc(state)}</span>${h.active ? '' : bars}</div></div>`;
+    const top = [...(h.callers?.values() || [])].sort((a, b) => b.n - a.n)[0];
+    const master = top ? `<span class="master">${avatar(top.u, 12)} ${esc(t('heroMaster'))}: ${esc(short(top.u.nick, 12))}</span>` : '';
+    return `<div class="hc${h.active ? ' on' : ''}" style="--h:${h.css}">${avatar({ hero:h }, 26)}<div class="bars"><span class="hn">${h.name}</span><span class="hs">${esc(state)}</span>${h.active ? '' : bars}${master}</div></div>`;
   }).join('');
   const medals = ['🥇', '🥈', '🥉'];
   for (const s of SIDES) {
@@ -1118,6 +1292,7 @@ function applyLang() {
   fleets.forEach(f => { f.shown = -1; updateFleetLabel(f); });
   if (lastFinale && roundOver) renderFinale();
   if (statusInfo) showStatus(statusInfo);
+  document.getElementById('giftMenu3').textContent = t('giftMenu3', { n:CONFIG.patronDiamonds });
   document.getElementById('btnTr').classList.toggle('on', lang === 'tr');
   document.getElementById('btnDe').classList.toggle('on', lang === 'de');
   updateHud();
@@ -1125,21 +1300,54 @@ function applyLang() {
 function setLang(l) { if (!I18N[l]) return; lang = l; try { localStorage.setItem('aegean_lang', l); } catch {} applyLang(); }
 document.getElementById('btnTr').addEventListener('click', () => setLang('tr'));
 document.getElementById('btnDe').addEventListener('click', () => setLang('de'));
+const btnSnd = document.getElementById('btnSnd');
+const syncSnd = () => { btnSnd.textContent = SFX.muted ? '🔇' : '🔊'; };
+btnSnd.addEventListener('click', () => { SFX.toggle(); syncSnd(); }); syncSnd();
+document.documentElement.style.setProperty('--bi', CONFIG.bottomInset + 'px');
+// Hilfezeile wechselt alle 8 s zwischen Steuerung und Geschenk-Menü
+setInterval(() => { const a = document.getElementById('helpA'), b = document.getElementById('helpB'); const showB = b.hidden; a.hidden = showB; b.hidden = !showB; }, 8000);
 
 // =====================================================================
 //  VERBINDUNG + DEMO
 // =====================================================================
-let demo = CONFIG.forceDemo, statusInfo = null;
+let demo = CONFIG.forceDemo, statusInfo = null, wsLive = null, isLive = false, everLive = false;
 const statusEl = document.getElementById('status'), langBtn = document.getElementById('langBtn');
 function showStatus(e) { statusInfo = e; statusEl.textContent = e.code ? t('st_' + e.code, e) : (e.text || ''); }
-function setDemo(on) { demo = on; document.getElementById('demo').style.display = on ? 'block' : 'none'; }
-function setLive(on) { langBtn.style.display = CONFIG.showLangButton && !on ? 'flex' : 'none'; }
+const tapEl = document.getElementById('tap');
+function syncPanels() { langBtn.style.display = CONFIG.showLangButton && !isLive ? 'flex' : 'none'; tapEl.style.display = demo && !isLive && CONFIG.showLangButton ? 'flex' : 'none'; }
+function setDemo(on) { demo = on; document.getElementById('demo').style.display = on ? 'block' : 'none'; syncPanels(); }
+function setLive(on) { isLive = on; syncPanels(); }
+function loadRanks(list) {
+  for (const r of list || []) {
+    if (!r || !r.id) continue;
+    const u = users.get(r.id) || getUser({ user:r.id, nick:r.nick });
+    u.total = Math.max(u.total, +r.total || 0); u.rank = rankOf(u); u.last = -999;
+  }
+}
+// Ränge alle 20 s an server.js schicken (nur echte Zuschauer, keine Demo-/Testnamen)
+setInterval(() => {
+  if (!wsLive || wsLive.readyState !== 1) return;
+  const list = [...users.values()].filter(u => u.total > 0 && !u.fake && !u.id.startsWith('tester_')).map(u => ({ id:u.id, nick:u.nick, total:Math.floor(u.total) }));
+  if (list.length) wsLive.send(JSON.stringify({ type:'save', users:list }));
+}, 20000);
 function connect() {
   if (CONFIG.forceDemo) { setDemo(true); return; }
-  let ws; try { ws = new WebSocket(CONFIG.wsUrl); } catch { setDemo(true); return; }
-  ws.onopen = () => { setDemo(false); setLive(true); showStatus({ code:'open' }); };
-  ws.onmessage = m => { try { const e = JSON.parse(m.data); if (e.type === 'status') showStatus(e); else handleEvent(e); } catch {} };
-  ws.onclose = () => { setLive(false); showStatus({ code:'noServer' }); setDemo(true); setTimeout(connect, 4000); };
+  let ws; try { ws = new WebSocket(CONFIG.wsUrl); } catch { if (CONFIG.allowDemo) setDemo(true); return; }
+  ws.onopen = () => {
+    wsLive = ws; setLive(true); setDemo(false); showStatus({ code:'open' });
+    // Simulierte Zuschauer entfernen und neu starten, damit im echten Stream nichts Gefälschtes zu sehen ist
+    const hadFake = [...users.values()].some(u => u.fake);
+    for (const [id, u] of users) if (u.fake) users.delete(id);
+    if (!everLive && hadFake && !roundOver) { roundNo = 0; resetRound(); }
+    everLive = true;
+  };
+  ws.onmessage = m => { try { const e = JSON.parse(m.data); if (e.type === 'status') showStatus(e); else if (e.type === 'ranks') loadRanks(e.users); else handleEvent(e); } catch {} };
+  ws.onclose = () => {
+    wsLive = null;
+    if (everLive) { showStatus({ code:'reconnect' }); }   // im echten Stream: kein Demo-Modus, nur neu verbinden
+    else { setLive(false); showStatus({ code:'noServer' }); if (CONFIG.allowDemo) setDemo(true); }
+    setTimeout(connect, 4000);
+  };
 }
 const FAKE_NAMES = ['ayse.tr','mehmet_35','elif_izmir','emre.kaptan','zeynep06','deniz_ege','can_bodrum','burak_tr','selin_ege','hakan35','ali_antalya','meltem_wind','kaptan_mavi','yusuf.34','merve_ank','ozan_ege','nikos_88','eleni.gr','kostas_kapitan','maria_ath','yannis92','sofia_kreta','dimitris.gr','lena_hh','jonas.b','mia_koeln','tom_ber','sara_muc','anna_ege','leo_sea'];
 const FAKE = Array.from({ length:60 }, (_, i) => FAKE_NAMES[i % FAKE_NAMES.length] + (i >= FAKE_NAMES.length ? '_' + i : ''));
@@ -1151,26 +1359,30 @@ function demoTick(dt) {
   while (demoAcc > 0.13) {
     demoAcc -= 0.13;
     const user = FAKE[Math.floor(rnd() * FAKE.length)], r = rnd();
-    if (r < 0.55) handleEvent({ type:'like', user, nick:user, count:1 + Math.floor(rnd() * 12) });
-    else if (r < 0.86) handleEvent({ type:'chat', user, nick:user, comment:FAKE_CHAT[Math.floor(rnd() * FAKE_CHAT.length)] });
-    else if (r < 0.89) { const g = FAKE_GIFTS[Math.floor(rnd() * (rnd() < 0.97 ? 5 : 6))]; handleEvent({ type:'gift', user, nick:user, giftName:g[0], diamonds:g[1], count:1 + Math.floor(rnd() * 3) }); }
-    else if (r < 0.894) handleEvent({ type:'follow', user, nick:user });
-    else if (r < 0.897) handleEvent({ type:'share', user, nick:user });
+    if (r < 0.55) handleEvent({ fake:true, type:'like', user, nick:user, count:1 + Math.floor(rnd() * 12) });
+    else if (r < 0.86) handleEvent({ fake:true, type:'chat', user, nick:user, comment:FAKE_CHAT[Math.floor(rnd() * FAKE_CHAT.length)] });
+    else if (r < 0.89) { const g = FAKE_GIFTS[Math.floor(rnd() * (rnd() < 0.97 ? 5 : 6))]; handleEvent({ fake:true, type:'gift', user, nick:user, giftName:g[0], diamonds:g[1], count:1 + Math.floor(rnd() * 3) }); }
+    else if (r < 0.894) handleEvent({ fake:true, type:'follow', user, nick:user });
+    else if (r < 0.897) handleEvent({ fake:true, type:'share', user, nick:user });
   }
 }
 // Testtasten: Q/W = Geschenk 🇬🇷/🇹🇷 · U/C = UĞURCAN/CEM sofort (U für 🇹🇷, C für 🇬🇷) · F = Frieden · P = Finale · L = Sprache · D = Demo
-addEventListener('keydown', ev => {
-  const k = ev.key.toLowerCase(), i = 'qw'.indexOf(k);
+addEventListener('keydown', ev => testKey(ev.key.toLowerCase()));
+tapEl.addEventListener('click', ev => { const b = ev.target.closest('[data-tap]'); if (b) testKey(b.dataset.tap); });
+function testKey(k) {
+  const i = 'qw'.indexOf(k);
   if (i >= 0) { const user = 'tester_' + i; const u = getUser({ user, nick:'Test ' + SIDES[i].flag }); u.side = i; handleEvent({ type:'gift', user, nick:u.nick, giftName:'Test-Galaxy', diamonds:30, count:1 }); }
   if (k === 'u' || k === 'c') {
     const hero = HEROES[k === 'u' ? 0 : 1], sid = hero.side ?? (k === 'u' ? 1 : 0), u = getUser({ user:'tester_h' + sid, nick:'Test ' + SIDES[sid].flag });
     u.side = sid; hero.rest = 0; hero.active = null; hero.charge[sid] = CONFIG.heroCharge - 1; chargeHero(hero, SIDES[sid], u, 1);
   }
-  if (k === 'f') handleEvent({ type:'chat', user:'tester_f', nick:'🕊', comment:'barış 🕊' });
+  if (k === 'k') { const sid = rnd() < 0.5 ? 0 : 1, u = getUser({ user:'tester_k' + sid, nick:'Test 👑 ' + SIDES[sid].flag }); u.side = sid; handleEvent({ type:'gift', user:u.id, nick:u.nick, giftName:'Test 99', diamonds:99, count:1 }); }
+  if (k === 'f') for (let j = 0; j < 6; j++) { const sid = j % 2, u = getUser({ user:'tester_f' + j, nick:'🕊 ' + SIDES[sid].flag }); u.side = sid; handleEvent({ type:'chat', user:u.id, nick:u.nick, comment:j % 2 ? 'barış 🕊' : 'ειρήνη 🕊' }); }
   if (k === 'p') peace = CONFIG.peaceGoal;
   if (k === 'l') setLang(lang === 'tr' ? 'de' : 'tr');
   if (k === 'd') setDemo(!demo);
-});
+  if (k === 'm') { SFX.toggle(); syncSnd(); }
+}
 
 // =====================================================================
 //  LOOP
@@ -1210,7 +1422,15 @@ function frame() {
   if (demo) demoTick(dt);
   tick(dt);
   updateWater(tt); updateFlags(tt, dt); updateFleets(dt, tt); updateParticles(dt); updateDoves(dt, tt);
-  clouds.forEach(c => { c.g.position.x += c.v * dt; if (c.g.position.x > 35) c.g.position.x = -35; });
+  clouds.forEach(c => { c.g.position.x += c.v * dt * (stormT > 0 ? 4 : 1); if (c.g.position.x > 35) c.g.position.x = -35; });
+  hemi.intensity += ((stormT > 0 ? 0.4 : 0.75) - hemi.intensity) * Math.min(1, dt * 2);
+  sun.intensity += ((stormT > 0 ? 0.55 : 1.3) - sun.intensity) * Math.min(1, dt * 2);
+  if (stormT > 0) {
+    for (let k = 0; k < 12; k++) { const p = new THREE.Vector3((rnd() - .5) * 40, 9, (rnd() - .5) * 44); emit(p, C_RAIN, 1, 0, 0.8, -12, 0, 6); }
+    if (rnd() < 0.012) { sun.intensity = 4; SFX.thunder(); }
+  }
+  if (shieldT > 0) dome.material.opacity = 0.16 + Math.sin(tt * 4) * 0.06;
+  if (!roundOver && rnd() < 0.002) SFX.gull();
   let goal = camHome, z = 1;
   if (focus) { focus.t -= dt; goal = focus.pos; z = roundOver ? 0.92 : 0.72; if (focus.t <= 0) focus = null; }
   camTarget.lerp(goal, Math.min(1, dt * 2)); zoom += (z - zoom) * Math.min(1, dt * 2);

@@ -6,10 +6,29 @@ Zypern ist der Hauptpreis (5 Punkte). **Am Ende jeder Runde gewinnt immer der Fr
 ## Online-Demo (ohne TikTok)
 **▶ https://cembot90.github.io/aegean-island-live/**
 
-Der Link läuft im Demo-Modus mit simulierten Zuschauern, auch auf dem Handy. Testtasten am PC: `Q` / `W` = Geschenk, `U` / `C` = Helden, `F` = Frieden, `P` = Friedensgipfel, `L` = Sprache.
+Der Link läuft im Demo-Modus mit simulierten Zuschauern, auch auf dem Handy. Am Handy tippst du auf die Knöpfe rechts. Am PC gehen auch Tasten: `Q` / `W` = Geschenk, `U` / `C` = Helden, `K` = Legendenschiff, `F` = Waffenruhe, `P` = Finale, `L` = Sprache, `M` = Ton.
 Die alte Götter-Version: https://cembot90.github.io/aegean-island-live/goetter.html?demo=1
 
 ![Spiel](screenshot.png) ![Held](screenshot-held.png) ![Friedensgipfel](screenshot-frieden.png)
+
+## Neu: Extras für mehr Beteiligung
+| Extra | So funktioniert es |
+|---|---|
+| 🔊 **Sound** | Kanonen, Fanfaren, Heldenhorn, Donner, Möwen und Friedensmusik, alles im Browser erzeugt (keine Musikrechte). Ein- und ausschalten mit 🔊 oder der Taste `M`, aus mit `?sound=0`. |
+| 🌪 **UĞURCANs Sturm** | Wenn er gerufen wird, fahren 10 Sekunden lang alle gegnerischen Schiffe nur halb so schnell, mit Regen und Blitzen. |
+| 🛡 **CEMs Schild** | 20 Sekunden lang ist die wertvollste Insel seiner Seite unangreifbar. Hat die Seite noch keine Insel, schützt er die erste Insel, die er erobert. |
+| 🤝 **Rechte Hand** | Wer einen Helden am meisten gerufen hat, steht mit Bild und Namen neben dem Helden („sağ kolu“). |
+| 🕊 **Waffenruhe** | Schreiben beide Seiten innerhalb von 10 Sekunden je dreimal „barış“, halten alle Schiffe 8 Sekunden an, und Tauben fliegen über Zypern. |
+| 👑 **Legendenschiff** | Wer in einer Runde 99 💎 schenkt, bekommt ein eigenes großes Schiff mit Profilbild und Namen im Segel, das doppelt so hart trifft (ein Schiff pro Person und Runde, fester Wert, kein Zufall). |
+| 🎯 **Geschenkziel** | Ein Balken pro Runde (Standard 500 💎, ändern mit `?goal=800`). Ist er voll, gibt es ein Feuerwerk und einen Dank an die drei größten Unterstützer·innen. |
+| 🎁 **Geschenk-Menü** | Die Hilfezeile wechselt alle 8 Sekunden zwischen Steuerung und den Geschenkwerten („🌹 Gül = 5 asker“ …). |
+| 🏆 **Ränge über alle Streams** | `server.js` speichert Punkte in `data/ranks.json` auf deinem Rechner. Stammzuschauer steigen so über mehrere Streams zu Kapitän, Amiral und Efsane auf. |
+| 📊 **Deine Statistik** | `http://localhost:8787/stats` zeigt Geschenkwert, geschätzte Diamanten und Dollar sowie die Top-Unterstützer. Die Seite ist nur für dich und nur auf deinem Rechner erreichbar. |
+| 📱 **Demo-Knöpfe** | Im Demo-Modus gibt es rechts Knöpfe zum Antippen (Geschenk, Helden, Legendenschiff, Frieden, Finale), damit man die Demo auch am Handy spielen kann. |
+
+## Rechtliches & Lizenz
+Lies **[RECHTLICHES.md](RECHTLICHES.md)**, bevor du damit Geld verdienst. Die Lizenzen stehen in [LIZENZ.md](LIZENZ.md) und [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Kurz: Das Spiel gehört dir, `server.js` steht unter der AGPL-3.0, und die TikTok-Anbindung ist inoffiziell.
 
 ## Sprache: Türkisch oder Deutsch
 Standard ist **Türkisch**. Umschalten kannst du so:
@@ -62,7 +81,10 @@ Du brauchst Node.js 20 oder neuer.
 npm install
 node server.js DEIN_TIKTOK_NAME
 ```
-Dann `http://localhost:8787` als Browser-Quelle in OBS oder TikTok LIVE Studio einfügen (1080×1920).
+Dann **`http://localhost:8787/?demo=0`** als Browser-Quelle in OBS oder TikTok LIVE Studio einfügen (1080×1920).
+`demo=0` sorgt dafür, dass im echten Stream niemals simulierte Zuschauer erscheinen. Verdeckt TikToks Chat den unteren Rand, häng `&bottom=120` an.
+
+Beim ersten echten Live einmal so starten, um die Geschenkwerte zu prüfen: `DEBUG_GIFTS=1 node server.js DEIN_TIKTOK_NAME`
 
 - Testen ohne TikTok: `http://localhost:8787/?demo=1`
 - Testtasten: `Q` / `W` = Geschenk 🇬🇷 / 🇹🇷, `U` / `C` = UĞURCAN / CEM, `F` = Friedenskommentar, `P` = Friedensgipfel sofort, `L` = Sprache, `D` = Demo an/aus

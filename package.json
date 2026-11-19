@@ -4,9 +4,15 @@
   "private": true,
   "type": "module",
   "description": "TikTok-LIVE-Spiel: Kampf um die Ägäis",
-  "scripts": { "start": "node server.js" },
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
-    "tiktok-live-connector": "^2.5.0",
-    "ws": "^8.18.0"
+    "tiktok-live-connector": "2.5.0",
+    "ws": "8.23.0"
+  },
+  "license": "SEE LICENSE IN LIZENZ.md",
+  "engines": {
+    "node": ">=20"
   }
 }
