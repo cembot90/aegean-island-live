@@ -6,10 +6,29 @@ Zypern ist der Hauptpreis (5 Punkte). **Am Ende jeder Runde gewinnt immer der Fr
 ## Online-Demo (ohne TikTok)
 **▶ https://cembot90.github.io/aegean-island-live/**
 
-Der Link läuft im Demo-Modus mit simulierten Zuschauern, auch auf dem Handy. Testtasten am PC: `Q` / `W` = Geschenk, `F` = Frieden, `P` = Friedensgipfel.
+Der Link läuft im Demo-Modus mit simulierten Zuschauern, auch auf dem Handy. Testtasten am PC: `Q` / `W` = Geschenk, `U` / `C` = Helden, `F` = Frieden, `P` = Friedensgipfel, `L` = Sprache.
 Die alte Götter-Version: https://cembot90.github.io/aegean-island-live/goetter.html?demo=1
 
-![Spiel](screenshot.png) ![Friedensgipfel](screenshot-frieden.png)
+![Spiel](screenshot.png) ![Held](screenshot-held.png) ![Friedensgipfel](screenshot-frieden.png)
+
+## Sprache: Türkisch oder Deutsch
+Standard ist **Türkisch**. Umschalten kannst du so:
+- mit dem Knopf **🇹🇷 TR / 🇩🇪 DE** oben rechts (die Wahl wird gespeichert),
+- mit der Taste `L`,
+- über die Adresse: `?lang=de` oder `?lang=tr`.
+
+Sobald `server.js` mit TikTok verbunden ist, wird der Knopf ausgeblendet, damit er nicht im Stream zu sehen ist.
+Mit `?ui=0` verschwindet er immer. Den Standard änderst du in `CONFIG.defaultLang`.
+
+## Die Helden UĞURCAN und CEM
+- Zuschauer rufen einen Helden, indem sie `ugurcan` oder `cem` kommentieren. Jeder Kommentar bringt 1 Ruf-Punkt.
+- Geschenke laden den Helden mit auf, den man zuletzt gerufen hat (1 Punkt pro Diamant).
+- Bei 25 Punkten erscheint der Held für **die Seite, die ihn gerufen hat**. Er kommt auf einem großen goldenen Schiff mit seinem Namen im Segel und einem Krieger an Deck.
+- Ein Held versenkt normale Flotten bei Berührung, kämpft doppelt so stark und erobert bis zu 3 Inseln hintereinander. Danach ruht er 40 Sekunden.
+- Treffen UĞURCAN und CEM auf verschiedenen Seiten aufeinander, gibt es ein **Helden-Duell**.
+- Im Finale unterschreiben beide gemeinsam den Frieden.
+- Feste Seite? In `HEROES` bei `side` eine `1` (Türkei) oder `0` (Griechenland) statt `null` eintragen.
+- Testtasten: `U` ruft UĞURCAN für 🇹🇷, `C` ruft CEM für 🇬🇷.
 
 ## So spielen die Zuschauer
 | Aktion | Wirkung |
@@ -46,7 +65,7 @@ node server.js DEIN_TIKTOK_NAME
 Dann `http://localhost:8787` als Browser-Quelle in OBS oder TikTok LIVE Studio einfügen (1080×1920).
 
 - Testen ohne TikTok: `http://localhost:8787/?demo=1`
-- Testtasten: `Q` = Geschenk 🇬🇷, `W` = Geschenk 🇹🇷, `F` = Friedenskommentar, `P` = Friedensgipfel sofort, `D` = Demo an/aus
+- Testtasten: `Q` / `W` = Geschenk 🇬🇷 / 🇹🇷, `U` / `C` = UĞURCAN / CEM, `F` = Friedenskommentar, `P` = Friedensgipfel sofort, `L` = Sprache, `D` = Demo an/aus
 - URL-Optionen: `?round=300` (Rundendauer in Sekunden), `?peace=800` (Größe des Friedensbalkens)
 - Alle Werte findest du im Block `CONFIG` oben in `index.html`.
 - Die alte Version mit vier Götter-Teams liegt in `goetter.html`.

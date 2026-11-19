@@ -18,9 +18,10 @@ const server = http.createServer((req, res) => {
 });
 const wss = new WebSocketServer({ server });
 const broadcast = obj => { const s = JSON.stringify(obj); wss.clients.forEach(c => c.readyState === 1 && c.send(s)); };
-let statusText = 'Warte auf TikTok…';
-wss.on('connection', ws => ws.send(JSON.stringify({ type: 'status', text: statusText })));
-const status = text => { statusText = text; console.log(text); broadcast({ type: 'status', text }); };
+// Status geht als Code ans Spiel, das ihn in der eingestellten Sprache (TR/DE) anzeigt
+let statusMsg = { type: 'status', code: 'waiting' };
+wss.on('connection', ws => ws.send(JSON.stringify(statusMsg)));
+const status = (code, text, extra = {}) => { statusMsg = { type: 'status', code, ...extra }; console.log(text); broadcast(statusMsg); };
 
 server.listen(PORT, () => {
   console.log(`\n🎮 Spiel läuft auf  http://localhost:${PORT}  (als Browser-Quelle in OBS / TikTok LIVE Studio einfügen)`);
@@ -44,8 +45,8 @@ if (!username) {
   const conn = new TikTokLiveConnection(username);
 
   const connect = () => conn.connect()
-    .then(s => status(`● LIVE verbunden mit @${username} (Raum ${s.roomId})`))
-    .catch(err => { status(`Verbindung fehlgeschlagen (bist du live?) – neuer Versuch in 15 s`); console.error(err?.message || err); setTimeout(connect, 15000); });
+    .then(s => status('connected', `● LIVE verbunden mit @${username} (Raum ${s.roomId})`, { user: username }))
+    .catch(err => { status('failed', 'Verbindung fehlgeschlagen (bist du live?), neuer Versuch in 15 s'); console.error(err?.message || err); setTimeout(connect, 15000); });
 
   conn.on(WebcastEvent.CHAT,   d => broadcast({ type: 'chat', ...user(d), comment: d.comment }));
   conn.on(WebcastEvent.LIKE,   d => broadcast({ type: 'like', ...user(d), count: d.likeCount || 1 }));
@@ -61,7 +62,7 @@ if (!username) {
       count: d.repeatCount || 1,
     });
   });
-  conn.on(WebcastEvent.STREAM_END, () => { status('Stream beendet'); setTimeout(connect, 15000); });
-  conn.on('disconnected', () => { status('Getrennt – neuer Versuch in 15 s'); setTimeout(connect, 15000); });
+  conn.on(WebcastEvent.STREAM_END, () => { status('ended', 'Stream beendet'); setTimeout(connect, 15000); });
+  conn.on('disconnected', () => { status('disconnected', 'Getrennt, neuer Versuch in 15 s'); setTimeout(connect, 15000); });
   connect();
 }

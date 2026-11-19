@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="tr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@500;700;800;900&display=swap" rel="stylesheet">
 <style>
-  :root { --gr:#2f7bff; --tr:#ff3b3b; --peace:#f4f1e6; --panel:rgba(4,22,38,.66); --sh:0 2px 6px rgba(0,0,0,.6); }
+  :root { --gr:#2f7bff; --tr:#ff3b3b; --panel:rgba(4,22,38,.66); --sh:0 2px 6px rgba(0,0,0,.6); --gold:#ffd54a; }
   * { box-sizing:border-box; margin:0; padding:0; }
   html,body { width:100%; height:100%; overflow:hidden; background:#06263d; font-family:Inter,system-ui,sans-serif; color:#fff; }
   canvas#c { position:fixed; inset:0; width:100%; height:100%; display:block; }
@@ -15,6 +15,7 @@
 
   .av { display:inline-flex; align-items:center; justify-content:center; flex:none; border-radius:50%; overflow:hidden; font-weight:900; color:#fff; border:2px solid var(--c,#fff); background:var(--c,#555); vertical-align:middle; }
   .av img { width:100%; height:100%; object-fit:cover; display:block; }
+  .av.hero { background:radial-gradient(circle at 35% 30%, #fff6c8, var(--h) 55%, #6b4a00); border-color:var(--gold); color:#2a1a00; box-shadow:0 0 10px var(--h); }
 
   .lbl { position:absolute; transform:translate(-50%,-100%); text-align:center; text-shadow:var(--sh); white-space:nowrap; display:flex; flex-direction:column; align-items:center; gap:1px; }
   .lbl .n { font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
@@ -23,12 +24,14 @@
   .lbl.big .n { font-size:13px; color:#ffe27a; }
   .lbl.big .t { font-size:16px; }
   .lbl.crisis .t { animation:pulse .6s infinite alternate; }
-  @keyframes pulse { to { transform:scale(1.2); box-shadow:0 0 14px #ffd54a; } }
+  @keyframes pulse { to { transform:scale(1.2); box-shadow:0 0 14px var(--gold); } }
   .port { position:absolute; transform:translate(-50%,-50%); font-size:9.5px; font-weight:800; padding:1px 6px; border-radius:6px; background:rgba(0,0,0,.45); border-bottom:2px solid var(--c); white-space:nowrap; text-shadow:var(--sh); }
   .land { position:absolute; transform:translate(-50%,-50%); font-family:Cinzel,serif; font-weight:900; font-size:14px; letter-spacing:.22em; opacity:.85; text-shadow:0 0 6px rgba(0,0,0,.8), 0 2px 8px rgba(0,0,0,.6); white-space:nowrap; }
   .flt { position:absolute; transform:translate(-50%,-150%); display:flex; align-items:center; gap:3px; font-size:10.5px; font-weight:900; padding:1px 6px 1px 1px; border-radius:999px; background:rgba(0,0,0,.6); border:1.5px solid var(--c); white-space:nowrap; text-shadow:var(--sh); }
-  .flt.gold { border-color:#ffd54a; background:rgba(70,45,0,.8); font-size:12px; }
+  .flt.gold { border-color:var(--gold); background:rgba(70,45,0,.8); font-size:12px; }
   .flt.anon { padding:1px 6px; }
+  .flt.hero { transform:translate(-50%,-190%); font-size:14px; padding:2px 10px 2px 2px; border:2px solid var(--h); background:linear-gradient(90deg,rgba(60,40,0,.92),rgba(20,10,0,.85)); box-shadow:0 0 16px var(--h); }
+  .flt.hero .hn { font-family:Cinzel,serif; letter-spacing:.06em; color:var(--h); }
 
   #hud { position:fixed; top:0; left:0; right:0; padding:10px 10px 0; pointer-events:none; }
   #vs { display:grid; grid-template-columns:1fr auto 1fr; gap:6px; align-items:stretch; }
@@ -50,6 +53,14 @@
   #peaceBar { flex:1; height:9px; border-radius:999px; background:rgba(255,255,255,.15); overflow:hidden; }
   #peaceFill { height:100%; width:0; background:linear-gradient(90deg,#9fd8ff,#fff,#ffe9a8); transition:width .5s; box-shadow:0 0 10px #fff; }
   #peacePct { font-weight:900; font-size:13px; min-width:38px; text-align:right; }
+  #heroes { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:6px; }
+  .hc { display:flex; align-items:center; gap:6px; padding:3px 8px 3px 3px; border-radius:10px; background:linear-gradient(90deg,rgba(60,40,0,.75),rgba(4,22,38,.66)); border:1px solid rgba(255,213,74,.45); }
+  .hc.on { border-color:var(--h); box-shadow:0 0 12px var(--h); animation:pulse2 .6s infinite alternate; }
+  .hc .hn { font-family:Cinzel,serif; font-weight:900; font-size:12px; letter-spacing:.05em; color:var(--h); line-height:1; }
+  .hc .hs { font-size:9px; font-weight:800; opacity:.85; }
+  .hc .bars { flex:1; display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .hb { position:relative; height:5px; border-radius:99px; background:rgba(255,255,255,.14); overflow:hidden; }
+  .hb i { position:absolute; left:0; top:0; bottom:0; border-radius:99px; transition:width .4s; }
   #crisis { display:none; margin-top:6px; text-align:center; font-size:12px; font-weight:900; padding:5px; border-radius:10px; background:linear-gradient(90deg,rgba(255,170,0,.85),rgba(255,90,0,.85)); animation:pulse2 .7s infinite alternate; }
   #crisis.on { display:block; }
   @keyframes pulse2 { to { filter:brightness(1.25); } }
@@ -57,8 +68,9 @@
   #feed { position:fixed; left:8px; bottom:166px; width:min(66vw,350px); display:flex; flex-direction:column-reverse; gap:4px; pointer-events:none; }
   .ev { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; padding:3px 9px 3px 3px; border-radius:999px; background:var(--panel); border-left:3px solid var(--c,#fff); text-shadow:0 1px 2px rgba(0,0,0,.6); animation:in .25s ease-out; }
   .ev.noav { padding-left:9px; }
-  .ev.big { background:rgba(70,45,0,.78); border-left-color:#ffd54a; }
+  .ev.big { background:rgba(70,45,0,.78); border-left-color:var(--gold); }
   .ev.peace { background:rgba(60,60,50,.75); border-left-color:#fff; }
+  .ev.hero { background:linear-gradient(90deg,rgba(90,60,0,.9),rgba(40,25,0,.8)); border-left-color:var(--gold); font-weight:900; }
   @keyframes in { from { transform:translateX(-24px); opacity:0; } }
 
   #board { position:fixed; left:8px; right:8px; bottom:66px; display:grid; grid-template-columns:1fr 1fr; gap:6px; pointer-events:none; }
@@ -71,29 +83,35 @@
   .pl .medal { width:14px; text-align:center; }
 
   #help { position:fixed; left:6px; right:6px; bottom:8px; display:flex; flex-wrap:wrap; justify-content:center; gap:4px; pointer-events:none; }
-  #help span { font-size:11px; font-weight:800; padding:4px 8px; border-radius:999px; background:rgba(3,20,35,.75); }
+  #help span { font-size:10px; font-weight:800; padding:4px 8px; border-radius:999px; background:rgba(3,20,35,.75); }
 
-  #showcase { position:fixed; left:50%; top:31%; transform:translate(-50%,-50%) scale(.6); opacity:0; display:flex; align-items:center; gap:12px; padding:10px 18px 10px 10px; border-radius:999px; background:linear-gradient(90deg,rgba(80,50,0,.92),rgba(40,25,0,.92)); border:2px solid #ffd54a; box-shadow:0 0 30px rgba(255,200,60,.5); transition:transform .3s cubic-bezier(.2,1.6,.4,1), opacity .25s; pointer-events:none; max-width:94vw; }
+  #showcase { position:fixed; left:50%; top:33%; transform:translate(-50%,-50%) scale(.6); opacity:0; display:flex; align-items:center; gap:12px; padding:10px 18px 10px 10px; border-radius:999px; background:linear-gradient(90deg,rgba(80,50,0,.92),rgba(40,25,0,.92)); border:2px solid var(--gold); box-shadow:0 0 30px rgba(255,200,60,.5); transition:transform .3s cubic-bezier(.2,1.6,.4,1), opacity .25s; pointer-events:none; max-width:94vw; }
   #showcase.on { opacity:1; transform:translate(-50%,-50%) scale(1); }
   #showcase .who { font-size:17px; font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:56vw; }
   #showcase .what { font-size:12.5px; font-weight:800; color:#ffe27a; }
-  #banner { position:fixed; left:50%; top:42%; transform:translate(-50%,-50%) scale(.8); width:94vw; text-align:center; font-family:Cinzel,serif; font-weight:900; font-size:clamp(18px,5.6vw,36px); text-shadow:0 4px 16px rgba(0,0,0,.85); opacity:0; transition:opacity .25s, transform .25s; pointer-events:none; }
+  #banner { position:fixed; left:50%; top:44%; transform:translate(-50%,-50%) scale(.8); width:94vw; text-align:center; font-family:Cinzel,serif; font-weight:900; font-size:clamp(18px,5.6vw,36px); text-shadow:0 4px 16px rgba(0,0,0,.85); opacity:0; transition:opacity .25s, transform .25s; pointer-events:none; }
   #banner.on { opacity:1; transform:translate(-50%,-50%) scale(1); }
+  #banner small { display:block; font-family:Inter,sans-serif; font-size:.5em; letter-spacing:.02em; }
 
-  #finale { position:fixed; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:20px; text-align:center; background:radial-gradient(circle at 50% 42%, rgba(255,255,255,.2), rgba(0,10,25,.82)); }
+  #finale { position:fixed; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; gap:9px; padding:20px; text-align:center; background:radial-gradient(circle at 50% 42%, rgba(255,255,255,.2), rgba(0,10,25,.82)); }
   body.fin #labels, body.fin #feed { opacity:.15; transition:opacity 1s; }
   #finale.on { display:flex; animation:fade 1s ease-out; }
   @keyframes fade { from { opacity:0; } }
-  #finale .big { font-family:Cinzel,serif; font-size:clamp(34px,11vw,70px); font-weight:900; text-shadow:0 0 30px rgba(255,255,255,.6), 0 6px 20px rgba(0,0,0,.6); }
+  #finale .big { font-family:Cinzel,serif; font-size:clamp(34px,11vw,70px); font-weight:900; line-height:1.05; text-shadow:0 0 30px rgba(255,255,255,.6), 0 6px 20px rgba(0,0,0,.6); }
   #finale .langs { font-size:19px; font-weight:800; letter-spacing:.05em; }
   #finale .flags { font-size:42px; }
   #finale .card { display:flex; align-items:center; gap:10px; padding:8px 16px 8px 8px; border-radius:999px; background:rgba(0,0,0,.45); border:2px solid var(--c,#fff); font-weight:800; font-size:14px; text-align:left; }
   #finale .card small { display:block; font-size:11px; opacity:.8; }
+  #finale .heroes { border-color:var(--gold); background:rgba(70,45,0,.6); }
   #finale .row { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
   #finale .meta { font-size:13px; font-weight:700; opacity:.9; }
 
-  #demo { position:fixed; right:8px; top:178px; font-size:10px; font-weight:900; letter-spacing:.1em; padding:3px 7px; border-radius:6px; background:#b3261e; display:none; }
-  #status { position:fixed; left:8px; top:178px; font-size:10px; opacity:.6; }
+  #langBtn { position:fixed; right:8px; top:206px; display:flex; gap:2px; padding:2px; border-radius:8px; background:rgba(3,20,35,.8); z-index:5; }
+  #langBtn button { font:800 11px Inter,sans-serif; color:#fff; background:transparent; border:0; padding:4px 7px; border-radius:6px; cursor:pointer; }
+  #langBtn button.on { background:#fff; color:#06263d; }
+  #langBtn button:focus-visible { outline:2px solid var(--gold); }
+  #demo { position:fixed; right:8px; top:232px; font-size:10px; font-weight:900; letter-spacing:.1em; padding:3px 7px; border-radius:6px; background:#b3261e; display:none; }
+  #status { position:fixed; left:8px; top:210px; font-size:10px; opacity:.6; }
 </style>
 </head>
 <body>
@@ -102,96 +120,182 @@
 
 <div id="hud">
   <div id="vs">
-    <div class="side" style="--c:var(--gr)"><b>🇬🇷 GRIECHENLAND</b><div class="pts" id="ptsGr">0</div><div class="s" id="infGr"></div></div>
-    <div id="mid"><div id="timer">6:00</div><div id="round">RUNDE 1</div></div>
-    <div class="side r" style="--c:var(--tr)"><b>TÜRKEI 🇹🇷</b><div class="pts" id="ptsTr">0</div><div class="s" id="infTr"></div></div>
+    <div class="side" style="--c:var(--gr)"><b id="nmGr"></b><div class="pts" id="ptsGr">0</div><div class="s" id="infGr"></div></div>
+    <div id="mid"><div id="timer">6:00</div><div id="round"></div></div>
+    <div class="side r" style="--c:var(--tr)"><b id="nmTr"></b><div class="pts" id="ptsTr">0</div><div class="s" id="infTr"></div></div>
   </div>
   <div id="tug"><div id="tugGr"></div></div>
-  <div id="peace"><span class="dove">🕊</span><div class="txt">FRIEDEN<small>schreib: frieden · barış · ειρήνη</small></div><div id="peaceBar"><div id="peaceFill"></div></div><span id="peacePct">0%</span></div>
-  <div id="crisis">⚡ ZYPERN-KRISE! Alle Flotten nach Zypern, doppelte Truppen! ⚡</div>
+  <div id="peace"><span class="dove">🕊</span><div class="txt"><span data-i="peace"></span><small data-i="peaceHint"></small></div><div id="peaceBar"><div id="peaceFill"></div></div><span id="peacePct">0%</span></div>
+  <div id="heroes"></div>
+  <div id="crisis" data-i="crisisBar"></div>
 </div>
 
 <div id="feed"></div>
 <div id="board">
-  <div class="col" style="--c:var(--gr)"><h4>🇬🇷 TOP KAPITÄNE</h4><div id="lbGr"></div></div>
-  <div class="col" style="--c:var(--tr)"><h4>🇹🇷 TOP KAPITÄNE</h4><div id="lbTr"></div></div>
+  <div class="col" style="--c:var(--gr)"><h4>🇬🇷 <span data-i="topCaps"></span></h4><div id="lbGr"></div></div>
+  <div class="col" style="--c:var(--tr)"><h4>🇹🇷 <span data-i="topCaps"></span></h4><div id="lbTr"></div></div>
 </div>
 <div id="help">
-  <span>💬 1 = 🇬🇷 · 2 = 🇹🇷</span>
-  <span>💬 Inselname = Ziel</span>
-  <span>❤️ Like = Soldaten</span>
-  <span>🎁 Geschenk = Flotte mit deinem Namen</span>
-  <span>🕊 „frieden“ = Friedensbalken</span>
+  <span data-i="helpJoin"></span>
+  <span data-i="helpTarget"></span>
+  <span data-i="helpLike"></span>
+  <span data-i="helpGift"></span>
+  <span data-i="helpHero"></span>
+  <span data-i="helpPeace"></span>
 </div>
 
 <div id="showcase"><span id="scAv"></span><div><div class="who" id="scWho"></div><div class="what" id="scWhat"></div></div></div>
 <div id="banner"></div>
 <div id="finale"></div>
-<div id="demo">DEMO-MODUS</div>
+<div id="langBtn" role="group" aria-label="Dil / Sprache"><button type="button" id="btnTr">🇹🇷 TR</button><button type="button" id="btnDe">🇩🇪 DE</button></div>
+<div id="demo" data-i="demo"></div>
 <div id="status"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 // =====================================================================
-//  KONFIGURATION
+//  KONFIGURATION / AYARLAR
 // =====================================================================
 const params = new URLSearchParams(location.search);
 const CONFIG = {
   roundSeconds: +(params.get('round') || 360), // Rundendauer, danach immer Friedensgipfel
   peaceGoal: +(params.get('peace') || 650),    // so viele Friedenspunkte beenden die Runde früher
-  peacePerComment: 5,     // Kommentar mit „frieden / barış / ειρήνη / peace / 🕊“
-  peacePerLike: 0.08,     // jedes Like, egal welche Seite, nährt auch den Frieden
-  peacePerSecond: 0.4,    // der Frieden wächst von allein
+  peacePerComment: 5, peacePerLike: 0.08, peacePerSecond: 0.4,
   likeTroops: 1, commentTroops: 3, followTroops: 25, shareTroops: 15,
   troopsPerDiamond: 5,    // Rose = 1 Diamant = 5 Soldaten
   launchEvery: 3.0, launchShare: 0.65, minLaunch: 8,
-  crisisEvery: 75, crisisLength: 20, // Zypern-Krise
+  crisisEvery: 75, crisisLength: 20,
   finaleSeconds: 16,
+  heroCharge: 25,         // Ruf-Punkte, bis ein Held erscheint (Kommentar = 1, Geschenk = 1 pro Diamant)
+  heroTroops: 140, heroPower: 2, heroHops: 3, heroCooldown: 40,
+  defaultLang: 'tr',      // 'tr' oder 'de'
   wsUrl: params.get('ws') || `ws://${location.hostname || 'localhost'}:${params.get('port') || 8787}`,
   // Auf einer Webseite (z. B. GitHub Pages) gibt es keinen lokalen server.js: dann direkt Demo-Modus
   forceDemo: params.get('demo') === '1' || (!params.get('ws') && location.protocol === 'https:'),
+  showLangButton: params.get('ui') !== '0',
 };
+
+// Die zwei Helden. side: null = beide Seiten können sie rufen; 0 = nur Griechenland, 1 = nur Türkei
+const HEROES = [
+  { id:'ugurcan', name:'UĞURCAN', keys:['ugurcan'], side:null, css:'#ffd54a', cape:'#ff3b3b' },
+  { id:'cem',     name:'CEM',     keys:['cem'],     side:null, css:'#7ef0ff', cape:'#2f7bff' },
+];
+
+// =====================================================================
+//  SPRACHE / DİL
+// =====================================================================
+const I18N = {
+  tr: {
+    gr:'YUNANİSTAN', tr:'TÜRKİYE', grShort:'Yunanistan', trShort:'Türkiye',
+    round:'TUR {n}', peace:'BARIŞ', peaceHint:'yaz: barış · frieden · ειρήνη',
+    crisisBar:'⚡ KIBRIS KRİZİ! Tüm filolar Kıbrıs’a, çift asker! ⚡',
+    helpJoin:'💬 1 = 🇬🇷 · 2 = 🇹🇷', helpTarget:'💬 Ada adı = hedef', helpLike:'❤️ Beğeni = asker',
+    helpGift:'🎁 Hediye = senin adınla filo', helpHero:'⚔ „ugurcan“ / „cem“ = kahraman çağır', helpPeace:'🕊 „barış“ = barış çubuğu',
+    topCaps:'EN İYİ KAPTANLAR', joinHint:'Katılmak için {n} yaz!', demo:'DEMO MODU',
+    ranks:['Acemi Er','Tayfa','Lostromo','Kaptan','Amiral','Efsane'],
+    rankUp:'{icon} {nick} artık {rank}!',
+    roundStart:'⚓ {n}. tur: 🇬🇷 için 1, 🇹🇷 için 2 yaz!',
+    seaBattle:'💥 Deniz savaşı! {a}, {b} filosunu batırdı',
+    capture:'{side}<br>{isl} adasını fethetti!', governor:'👑 {nick} artık vali',
+    captureFeedWho:'🏴 {nick}, {flag} için {isl} adasını aldı', captureFeed:'🏴 {flag} {isl} adasını aldı',
+    crisisBanner:'⚡ KIBRIS KRİZİ! ⚡<small>Tüm filolar Kıbrıs’a!</small>',
+    whyPeace:'İzleyiciler barışı seçti!', whyAll:'{flag} {side} tüm adaları tutuyor ve barışa el uzatıyor.', whyTime:'Süre doldu: müzakere masasına!',
+    finaleBig:'BARIŞ<br>KAZANDI', finaleLangs:'Barış · Ειρήνη · Frieden',
+    peacemaker:'🕊 Turun barış elçisi ({n} barış puanı)', bravest:'{flag} en cesur kaptan · {n} P.',
+    islandsEnd:'Son durumda adalar: 🇬🇷 {a} · 🇹🇷 {b}', cyprusFree:' · Kıbrıs özgür kaldı',
+    treaties:'🤝 Bu yayında imzalanan barış anlaşmaları: <b>{n}</b>', summit:'🕊 Barış zirvesi! Barış · Ειρήνη · Frieden',
+    wishPeace:'🕊 {nick} barış diliyor', joined:'👋 {nick}, {flag} {side} için yelken açtı', target:'🎯 {nick}: {flag} rota {isl}!',
+    combo:'🔥 {nick} beğeni kombosu x{n}!', giftShow:'{gift} → {n} askerlik filo {flag}', giftFeed:'🎁 {nick}: {gift} → {n} asker',
+    follow:'⭐ {nick} takip etti → {flag} için +{n}', share:'🔁 {nick} paylaştı → {flag} için +{n}', giftDefault:'Hediye',
+    heroComes:'⚔ {hero} GELİYOR! ⚔<small>{flag} {side} için · çağıran: {nick}</small>', heroSummon:'⚔ {nick}, {hero} kahramanını çağırdı! {flag}',
+    heroCapture:'⚔ {hero}<br>{isl} adasını fethetti!', heroDuel:'⚔ {a} vs {b} ⚔<small>Kahramanların düellosu!</small>',
+    heroSink:'⚔ {hero} bir filoyu batırdı!', heroActive:'SAHADA {flag}', heroRest:'dinleniyor {s} sn', heroCall:'çağır: „{key}“',
+    heroFinale:'🤝 {a} & {b} barış anlaşmasını imzaladı', heroFinaleSub:'İki kahraman el sıkıştı',
+    st_waiting:'TikTok bekleniyor…', st_connected:'● CANLI: @{user}', st_failed:'Bağlantı başarısız (canlı mısın?), 15 sn sonra tekrar',
+    st_ended:'Yayın bitti', st_disconnected:'Bağlantı koptu, 15 sn sonra tekrar', st_noServer:'server.js bağlantısı yok', st_open:'● bağlı',
+  },
+  de: {
+    gr:'GRIECHENLAND', tr:'TÜRKEI', grShort:'Griechenland', trShort:'Türkei',
+    round:'RUNDE {n}', peace:'FRIEDEN', peaceHint:'schreib: frieden · barış · ειρήνη',
+    crisisBar:'⚡ ZYPERN-KRISE! Alle Flotten nach Zypern, doppelte Truppen! ⚡',
+    helpJoin:'💬 1 = 🇬🇷 · 2 = 🇹🇷', helpTarget:'💬 Inselname = Ziel', helpLike:'❤️ Like = Soldaten',
+    helpGift:'🎁 Geschenk = Flotte mit Namen', helpHero:'⚔ „ugurcan“ / „cem“ = Held', helpPeace:'🕊 „frieden“ = Friedensbalken',
+    topCaps:'TOP KAPITÄNE', joinHint:'Schreib {n} zum Mitmachen!', demo:'DEMO-MODUS',
+    ranks:['Rekrut','Matrose','Bootsmann','Kapitän','Admiral','Legende'],
+    rankUp:'{icon} {nick} ist jetzt {rank}!',
+    roundStart:'⚓ Runde {n}: Schreib 1 für 🇬🇷 oder 2 für 🇹🇷!',
+    seaBattle:'💥 Seeschlacht! {a} versenkt die Flotte von {b}',
+    capture:'{side}<br>erobert {isl}!', governor:'👑 {nick} ist Gouverneur',
+    captureFeedWho:'🏴 {nick} erobert {isl} für {flag}', captureFeed:'🏴 {flag} erobert {isl}',
+    crisisBanner:'⚡ ZYPERN-KRISE! ⚡<small>Alle Flotten nach Zypern!</small>',
+    whyPeace:'Die Zuschauer haben den Frieden gewählt!', whyAll:'{flag} {side} hält alle Inseln und reicht die Hand zum Frieden.', whyTime:'Die Zeit ist um: an den Verhandlungstisch!',
+    finaleBig:'FRIEDEN<br>GEWINNT', finaleLangs:'Frieden · Ειρήνη · Barış',
+    peacemaker:'🕊 Friedensstifter·in der Runde ({n} Friedenspunkte)', bravest:'{flag} tapferste·r Kapitän·in · {n} P.',
+    islandsEnd:'Inseln am Ende: 🇬🇷 {a} · 🇹🇷 {b}', cyprusFree:' · Zypern blieb frei',
+    treaties:'🤝 Friedensverträge in diesem Stream: <b>{n}</b>', summit:'🕊 Friedensgipfel! Frieden · Ειρήνη · Barış',
+    wishPeace:'🕊 {nick} wünscht Frieden', joined:'👋 {nick} segelt für {flag} {side}', target:'🎯 {nick}: {flag} Kurs auf {isl}!',
+    combo:'🔥 {nick} Like-Combo x{n}!', giftShow:'{gift} → Flotte mit {n} Kriegern {flag}', giftFeed:'🎁 {nick}: {gift} → {n} Krieger',
+    follow:'⭐ {nick} folgt → +{n} für {flag}', share:'🔁 {nick} teilt → +{n} für {flag}', giftDefault:'Geschenk',
+    heroComes:'⚔ {hero} KOMMT! ⚔<small>für {flag} {side} · gerufen von {nick}</small>', heroSummon:'⚔ {nick} ruft {hero}! {flag}',
+    heroCapture:'⚔ {hero}<br>erobert {isl}!', heroDuel:'⚔ {a} gegen {b} ⚔<small>Das Duell der Helden!</small>',
+    heroSink:'⚔ {hero} versenkt eine Flotte!', heroActive:'IM EINSATZ {flag}', heroRest:'ruht {s} s', heroCall:'rufen: „{key}“',
+    heroFinale:'🤝 {a} & {b} unterzeichnen den Frieden', heroFinaleSub:'Die zwei Helden reichen sich die Hand',
+    st_waiting:'Warte auf TikTok…', st_connected:'● LIVE: @{user}', st_failed:'Verbindung fehlgeschlagen (bist du live?), neuer Versuch in 15 s',
+    st_ended:'Stream beendet', st_disconnected:'Getrennt, neuer Versuch in 15 s', st_noServer:'Keine Verbindung zu server.js', st_open:'● verbunden',
+  },
+};
+let lang = (() => {
+  const p = params.get('lang');
+  if (p && I18N[p]) return p;
+  try { const s = localStorage.getItem('aegean_lang'); if (s && I18N[s]) return s; } catch {}
+  return CONFIG.defaultLang;
+})();
+const t = (key, vars = {}) => String(I18N[lang][key] ?? I18N.de[key] ?? key).replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '');
+const upper = s => String(s).toLocaleUpperCase(lang === 'tr' ? 'tr-TR' : 'de-DE');
 
 const norm = s => String(s).toLowerCase().replace(/ı/g, 'i').normalize('NFD').replace(/[̀-ͯ]/g, '');
 const tokenize = s => norm(s).split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+const rawTokens = s => String(s).toLocaleLowerCase('tr-TR').split(/[^\p{L}\p{N}]+/u).filter(Boolean);
 
 const SIDES = [
-  { id:0, name:'GRIECHENLAND', short:'Griechenland', flag:'🇬🇷', css:'#2f7bff', keys:['1','gr','griechenland','greece','hellas','ellada','yunanistan','griechen','grieche','ελλαδα','ελλας'] },
-  { id:1, name:'TÜRKEI',       short:'Türkei',       flag:'🇹🇷', css:'#ff3b3b', keys:['2','tr','turkei','tuerkei','turkey','turkiye','turk','turken','τουρκια'] },
+  { id:0, flag:'🇬🇷', css:'#2f7bff', keys:['1','gr','griechenland','greece','hellas','ellada','yunanistan','yunan','yunanlar','griechen','grieche','ελλαδα','ελλας'] },
+  { id:1, flag:'🇹🇷', css:'#ff3b3b', keys:['2','tr','turkei','tuerkei','turkey','turkiye','turk','turkler','turken','τουρκια'] },
 ].map(s => ({ ...s, color:new THREE.Color(s.css), keys:s.keys.map(norm) }));
-const PEACE_WORDS = ['frieden','peace','baris','ειρηνη','eirini','irini','pace','paz','paix','salam','shalom','friede','kardeslik','φιλια','dostluk'].map(norm);
+const sideName = s => t(s.id ? 'tr' : 'gr');
+const sideShort = s => t(s.id ? 'trShort' : 'grShort');
+const PEACE_WORDS = ['frieden','friede','peace','baris','sulh','ειρηνη','eirini','irini','pace','paz','paix','salam','shalom','kardeslik','dostluk','φιλια'].map(norm);
+HEROES.forEach(h => { h.color = new THREE.Color(h.css); h.keys = h.keys.map(norm); });
 
 // Projektion: Ostteil (Türkei-Südküste, Zypern) wird gestaucht, damit alles ins Hochformat passt
 const LONMID = 26.8, LAT0 = 37.75, SX = 4.4, SZ = 5.6;
 const lonC = lon => lon <= 28 ? lon - LONMID : (28 - LONMID) + (lon - 28) * 0.42;
 const P = (lon, lat) => new THREE.Vector3(lonC(lon) * SX, 0, -(lat - LAT0) * SZ);
 
-// [Name, Länge, Breite, rx, rz, Start-Truppen, Produktion/s, Punktwert, Aliase]
+// [id, deutsch, türkçe, Länge, Breite, rx, rz, Start-Truppen, Produktion/s, Punktwert, weitere Aliase, strenge Aliase]
 const ISLAND_DATA = [
-  ['Thasos',     24.70, 40.68, 0.85,0.7, 14, 1, 1, ['tasos','tasoz','θασος']],
-  ['Samothraki', 25.55, 40.47, 0.6, 0.5, 10, 1, 1, ['semadirek','σαμοθρακη']],
-  ['Gökçeada',   25.85, 40.18, 0.75,0.45,12, 1, 1, ['gokceada','imbros','imvros','ιμβρος']],
-  ['Limnos',     25.20, 39.90, 1.0, 0.8, 16, 1, 1, ['lemnos','limni','λημνος']],
-  ['Lesbos',     26.25, 39.20, 1.35,1.15,24, 2, 2, ['lesvos','midilli','λεσβος']],
-  ['Skyros',     24.55, 38.88, 0.9, 0.55,12, 1, 1, ['skiros','iskiri','σκυρος']],
-  ['Chios',      26.00, 38.40, 0.7, 1.0, 18, 1, 1, ['hios','sakiz','χιος']],
-  ['Samos',      26.75, 37.73, 0.9, 0.5, 16, 1, 1, ['sisam','σαμος']],
-  ['Ikaria',     26.12, 37.60, 0.9, 0.4, 12, 1, 1, ['nikarya','ικαρια']],
-  ['Andros',     24.85, 37.85, 0.5, 0.8, 12, 1, 1, ['ανδρος']],
-  ['Mykonos',    25.35, 37.45, 0.5, 0.4, 12, 1, 1, ['mikonos','μυκονος']],
-  ['Naxos',      25.50, 37.05, 0.8, 0.9, 18, 1, 1, ['naksos','nakşa','ναξος']],
-  ['Milos',      24.43, 36.70, 0.8, 0.55,12, 1, 1, ['melos','μηλος']],
-  ['Santorini',  25.43, 36.40, 0.55,0.6, 14, 1, 1, ['thira','santorin','σαντορινη','θηρα']],
-  ['Kos',        27.12, 36.82, 0.75,0.35,14, 1, 1, ['istankoy','κως']],
-  ['Rhodos',     28.00, 36.20, 0.8, 1.3, 24, 2, 2, ['rhodes','rodos','rodi','ροδος']],
-  ['Karpathos',  27.15, 35.60, 0.4, 0.9, 12, 1, 1, ['kerpe','καρπαθος']],
-  ['Kreta',      24.90, 35.25, 5.8, 0.95,50, 3, 3, ['crete','girit','kriti','κρητη']],
-  ['Zypern',     32.90, 35.55, 3.0, 1.5, 70, 4, 5, ['cyprus','kibris','kypros','κυπρος','cypern','zypern']],
+  ['thasos',     'Thasos',     'Taşoz',     24.70, 40.68, 0.85,0.7, 14, 1, 1, ['tasos','θασος']],
+  ['samothraki', 'Samothraki', 'Semadirek', 25.55, 40.47, 0.6, 0.5, 10, 1, 1, ['samothrake','σαμοθρακη']],
+  ['gokceada',   'Gökçeada',   'Gökçeada',  25.85, 40.18, 0.75,0.45,12, 1, 1, ['imbros','imvros','ιμβρος']],
+  ['limnos',     'Limnos',     'Limni',     25.20, 39.90, 1.0, 0.8, 16, 1, 1, ['lemnos','λημνος']],
+  ['lesbos',     'Lesbos',     'Midilli',   26.25, 39.20, 1.35,1.15,24, 2, 2, ['lesvos','λεσβος']],
+  ['skyros',     'Skyros',     'İskiri',    24.55, 38.88, 0.9, 0.55,12, 1, 1, ['skiros','σκυρος']],
+  ['chios',      'Chios',      'Sakız',     26.00, 38.40, 0.7, 1.0, 18, 1, 1, ['hios','χιος']],
+  ['samos',      'Samos',      'Sisam',     26.75, 37.73, 0.9, 0.5, 16, 1, 1, ['σαμος']],
+  ['ikaria',     'Ikaria',     'İkarya',    26.12, 37.60, 0.9, 0.4, 12, 1, 1, ['nikarya','ikarya','ικαρια']],
+  ['andros',     'Andros',     'Andros',    24.85, 37.85, 0.5, 0.8, 12, 1, 1, ['ανδρος']],
+  ['mykonos',    'Mykonos',    'Mikonos',   25.35, 37.45, 0.5, 0.4, 12, 1, 1, ['μυκονος']],
+  ['naxos',      'Naxos',      'Nakşa',     25.50, 37.05, 0.8, 0.9, 18, 1, 1, ['naksos','ναξος']],
+  ['milos',      'Milos',      'Milo',      24.43, 36.70, 0.8, 0.55,12, 1, 1, ['melos','μηλος']],
+  ['santorini',  'Santorini',  'Santorini', 25.43, 36.40, 0.55,0.6, 14, 1, 1, ['thira','santorin','σαντορινη','θηρα']],
+  ['kos',        'Kos',        'İstanköy',  27.12, 36.82, 0.75,0.35,14, 1, 1, ['κως'], ['kos']],   // „koş“ (lauf!) soll nicht Kos treffen
+  ['rhodos',     'Rhodos',     'Rodos',     28.00, 36.20, 0.8, 1.3, 24, 2, 2, ['rhodes','rodi','ροδος']],
+  ['karpathos',  'Karpathos',  'Kerpe',     27.15, 35.60, 0.4, 0.9, 12, 1, 1, ['καρπαθος']],
+  ['kreta',      'Kreta',      'Girit',     24.90, 35.25, 5.8, 0.95,50, 3, 3, ['crete','kriti','κρητη']],
+  ['cyprus',     'Zypern',     'Kıbrıs',    32.90, 35.55, 3.0, 1.5, 70, 4, 5, ['cyprus','kypros','κυπρος','cypern']],
 ];
-// Häfen auf dem Festland: hier starten die Flotten
 const PORTS = [
-  ['Kavala', 24.40, 40.93, 0], ['Volos', 22.95, 39.36, 0], ['Piräus', 23.62, 37.94, 0], ['Sounion', 24.02, 37.66, 0],
-  ['Çanakkale', 26.40, 40.15, 1], ['İzmir', 27.10, 38.42, 1], ['Bodrum', 27.43, 37.03, 1], ['Mersin', 34.62, 36.80, 1],
+  ['Kavala','Kavala', 24.40, 40.93, 0], ['Volos','Volos', 22.95, 39.36, 0], ['Piräus','Pire', 23.62, 37.94, 0], ['Sounion','Sunion', 24.02, 37.66, 0],
+  ['Çanakkale','Çanakkale', 26.40, 40.15, 1], ['İzmir','İzmir', 27.10, 38.42, 1], ['Bodrum','Bodrum', 27.43, 37.03, 1], ['Mersin','Mersin', 34.62, 36.80, 1],
 ];
 const GREECE = [[19,42],[26.4,42],[26.05,40.73],[25.87,40.85],[25.2,40.95],[24.8,40.85],[24.4,40.93],[23.9,40.75],[23.75,40.4],[24.4,40.15],[23.9,40.35],[23.95,39.95],[23.65,40.2],[23.35,39.95],[23.0,40.25],[22.95,40.6],[22.6,40.45],[22.6,40.0],[22.9,39.55],[23.3,39.15],[23.05,39.05],[23.35,39.0],[23.6,38.95],[24.15,38.65],[24.58,38.16],[24.3,38.05],[23.75,38.3],[24.03,37.66],[23.62,37.94],[23.15,37.85],[23.2,37.45],[23.15,37.3],[22.75,37.0],[23.05,36.45],[22.5,36.45],[22.4,36.7],[22.15,36.4],[21.95,36.95],[21.6,37.5],[19,37.5]];
 const TURKEY = [[26.4,42],[37,42],[37,36.5],[36,36.0],[35.5,36.6],[34.62,36.8],[34.15,36.4],[33.6,36.15],[32.85,36.08],[32.0,36.55],[31.4,36.78],[30.7,36.88],[30.55,36.5],[30.3,36.25],[29.6,36.2],[29.1,36.62],[28.6,36.65],[28.25,36.82],[28.0,36.72],[27.4,36.68],[27.6,36.82],[28.2,37.02],[27.6,37.0],[27.25,37.0],[27.43,37.15],[27.25,37.35],[27.2,37.6],[27.25,37.88],[27.0,38.05],[26.55,38.15],[26.3,38.3],[26.4,38.45],[26.5,38.65],[26.75,38.4],[27.1,38.42],[26.75,38.6],[26.95,38.75],[26.75,39.05],[26.7,39.3],[26.95,39.55],[26.6,39.55],[26.07,39.48],[26.15,39.75],[26.2,40.0],[26.4,40.15],[26.18,40.05],[26.0,40.3],[26.6,40.6],[26.05,40.73]];
@@ -211,10 +315,10 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0a3756);
 scene.fog = new THREE.Fog(0x0a3756, 90, 200);
 const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 500);
-const camHome = new THREE.Vector3(1.2, 0, 0), camTarget = camHome.clone(), camDir = new THREE.Vector3(0, 0.93, 0.37).normalize();
+const camHome = new THREE.Vector3(1.2, 0, -0.9), camTarget = camHome.clone(), camDir = new THREE.Vector3(0, 0.93, 0.37).normalize();
 let camDist = 80, zoom = 1, shake = 0, focus = null;
 
-const hemi = new THREE.HemisphereLight(0xd6ecff, 0x1d4a5e, 0.75); scene.add(hemi);
+scene.add(new THREE.HemisphereLight(0xd6ecff, 0x1d4a5e, 0.75));
 const sun = new THREE.DirectionalLight(0xfff0d6, 1.3);
 sun.position.set(-25, 55, 20); sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
@@ -250,11 +354,10 @@ function flagTex(kind) {
     x.fillStyle = '#fbfaf4'; x.fillRect(0, 0, W, H);
     x.font = '84px serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('🕊', W / 2, H / 2 + 4);
   } else { x.fillStyle = '#d9d9d9'; x.fillRect(0, 0, W, H); }
-  const t = new THREE.CanvasTexture(cv); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; return t;
+  const tx = new THREE.CanvasTexture(cv); tx.encoding = THREE.sRGBEncoding; tx.anisotropy = 4; return tx;
 }
-const FLAG_TEX = [flagTex(0), flagTex(1), flagTex(2), flagTex(3)];
-const flagMats = FLAG_TEX.map(t => new THREE.MeshStandardMaterial({ map:t, side:THREE.DoubleSide, roughness:0.8 }));
-const flagMatFor = owner => owner === 'peace' ? flagMats[2] : owner >= 0 ? flagMats[owner] : flagMats[3];
+const flagMats = [0, 1, 2, 3].map(k => new THREE.MeshStandardMaterial({ map:flagTex(k), side:THREE.DoubleSide, roughness:0.8 }));
+const flagMatFor = owner => owner >= 0 ? flagMats[owner] : flagMats[3];
 
 // --- Geometrie-Helfer -----------------------------------------------
 const toPts = poly => poly.map(([lo, la]) => P(lo, la));
@@ -271,19 +374,21 @@ function edgeDist(x, z, pts) {
   let best = Infinity;
   for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
     const a = pts[i], b = pts[j], dx = b.x - a.x, dz = b.z - a.z, l = dx * dx + dz * dz || 1;
-    const t = THREE.MathUtils.clamp(((x - a.x) * dx + (z - a.z) * dz) / l, 0, 1);
-    best = Math.min(best, Math.hypot(x - a.x - t * dx, z - a.z - t * dz));
+    const k = THREE.MathUtils.clamp(((x - a.x) * dx + (z - a.z) * dz) / l, 0, 1);
+    best = Math.min(best, Math.hypot(x - a.x - k * dx, z - a.z - k * dz));
   }
   return best;
 }
 
-// --- Inseln & Häfen als Objekte --------------------------------------
-const islands = ISLAND_DATA.map(([name, lon, lat, rx, rz, troops, prod, value, alias]) => ({
-  kind:'island', name, pos:P(lon, lat), rx, rz, startTroops:troops, prod, value,
-  aliases:[name, ...alias].map(norm), owner:-1, troops, governor:null,
+// --- Inseln & Häfen -----------------------------------------------------
+const islands = ISLAND_DATA.map(([id, de, trn, lon, lat, rx, rz, troops, prod, value, alias = [], strict = []]) => ({
+  kind:'island', id, names:{ de, tr:trn }, pos:P(lon, lat), rx, rz, startTroops:troops, prod, value,
+  aliases:[...new Set([de, trn, id, ...alias].map(norm))].filter(a => !strict.includes(a)),
+  strict:strict.map(s => s.toLocaleLowerCase('tr-TR')), owner:-1, troops, governor:null,
 }));
-const CYPRUS = islands.find(i => i.name === 'Zypern');
-const ports = PORTS.map(([name, lon, lat, side]) => ({ kind:'port', name, pos:P(lon, lat), rx:0.45, rz:0.45, owner:side, troops:15, prod:0.8 }));
+const islandName = o => o.names[lang];
+const CYPRUS = islands.find(i => i.id === 'cyprus');
+const ports = PORTS.map(([de, trn, lon, lat, side]) => ({ kind:'port', names:{ de, tr:trn }, pos:P(lon, lat), rx:0.45, rz:0.45, owner:side, troops:15, prod:0.8 }));
 
 // --- Wasser -----------------------------------------------------------
 const WS = 150, WSEG = 110;
@@ -306,18 +411,17 @@ waterGeo.rotateX(-Math.PI / 2);
 const water = new THREE.Mesh(waterGeo, new THREE.MeshStandardMaterial({ vertexColors:true, flatShading:true, roughness:0.22, metalness:0.1 }));
 water.receiveShadow = true; scene.add(water);
 const waterBase = Float32Array.from(waterGeo.attributes.position.array);
-const waveH = (x, z, t) => Math.sin(x * 0.35 + t * 1.1) * 0.09 + Math.cos(z * 0.3 + t * 1.4) * 0.08 + Math.sin((x + z) * 0.8 + t * 2) * 0.03;
+const waveH = (x, z, tt) => Math.sin(x * 0.35 + tt * 1.1) * 0.09 + Math.cos(z * 0.3 + tt * 1.4) * 0.08 + Math.sin((x + z) * 0.8 + tt * 2) * 0.03;
 
 // --- Festland ----------------------------------------------------------
-const sandMat = new THREE.MeshStandardMaterial({ color:0xe6cf96, roughness:0.95, flatShading:true });
-const landTopMat = new THREE.MeshStandardMaterial({ color:0x7fa04e, roughness:0.95, flatShading:true });
+const sandMat = new THREE.MeshStandardMaterial({ color:lin(0xe6cf96), roughness:0.95, flatShading:true });
+const landTopMat = new THREE.MeshStandardMaterial({ color:lin(0x7fa04e), roughness:0.95, flatShading:true });
 function buildMainland(pts) {
   const shape = new THREE.Shape(pts.map(p => new THREE.Vector2(p.x, -p.z)));
   const geo = new THREE.ExtrudeGeometry(shape, { depth:0.6, bevelEnabled:true, bevelThickness:0.12, bevelSize:0.22, bevelSegments:2, curveSegments:1 });
   geo.rotateX(-Math.PI / 2); geo.translate(0, -0.18, 0);
   const m = new THREE.Mesh(geo, [landTopMat, sandMat]);
   m.receiveShadow = true; m.castShadow = true; scene.add(m);
-  // Berge und Wälder
   let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
   pts.forEach(p => { minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x); minZ = Math.min(minZ, p.z); maxZ = Math.max(maxZ, p.z); });
   minX = Math.max(minX, -30); maxX = Math.min(maxX, 30); minZ = Math.max(minZ, -30); maxZ = Math.min(maxZ, 30);
@@ -335,8 +439,7 @@ function buildMainland(pts) {
       for (let i = 0; i < gp.count; i++) {
         const y = gp.getY(i), n = noise3(gp.getX(i) * 3 + x, y, gp.getZ(i) * 3 + z) * 0.18;
         gp.setXYZ(i, gp.getX(i) * (1 + n), y, gp.getZ(i) * (1 + n));
-        const hy = (y + h / 2) / h;
-        c.copy(base); if (hy > 0.7 && h > 1.4) c.lerp(snow, 0.85);
+        c.copy(base); if ((y + h / 2) / h > 0.7 && h > 1.4) c.lerp(snow, 0.85);
         cc.set([c.r, c.g, c.b], i * 3);
       }
       g.setAttribute('color', new THREE.BufferAttribute(cc, 3)); g.computeVertexNormals();
@@ -348,17 +451,15 @@ function buildMainland(pts) {
     }
   }
 }
-[sandMat, landTopMat].forEach(m => m.color.convertSRGBToLinear());
 buildMainland(GR_PTS); buildMainland(TR_PTS);
 
 // --- Insel-Meshes -----------------------------------------------------
 const landMat = new THREE.MeshStandardMaterial({ vertexColors:true, roughness:0.9, flatShading:true });
-const houseMat = new THREE.MeshStandardMaterial({ color:0xfbfbf6, roughness:0.7 });
-const roofMat = new THREE.MeshStandardMaterial({ color:0x1e5fc0, roughness:0.6 });
-const poleMat = new THREE.MeshStandardMaterial({ color:0x6b4a2b });
+const houseMat = new THREE.MeshStandardMaterial({ color:lin(0xfbfbf6), roughness:0.7 });
+const roofMat = new THREE.MeshStandardMaterial({ color:lin(0x1e5fc0), roughness:0.6 });
+const poleMat = new THREE.MeshStandardMaterial({ color:lin(0x6b4a2b) });
 const houseGeo = new THREE.BoxGeometry(0.18, 0.16, 0.18);
 const domeGeo = new THREE.SphereGeometry(0.075, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2);
-[houseMat, roofMat, poleMat].forEach(m => m.color.convertSRGBToLinear());
 const labelsEl = document.getElementById('labels');
 
 function addFlag(parent, y, scale = 1) {
@@ -408,9 +509,9 @@ function buildIsland(o) {
   Object.assign(o, { group:g, ring, flag:f.flag, flagBase:f.base, top:hgt + (big ? 2.2 : 1.5), ph, pulse:0 });
   const el = document.createElement('div');
   el.className = 'lbl' + (big ? ' big' : '');
-  el.innerHTML = `<div class="n">${o.value > 1 ? '★'.repeat(Math.min(o.value, 3)) + ' ' : ''}${o.name}</div><div class="t">0</div><div class="g" style="display:none"></div>`;
+  el.innerHTML = `<div class="n"></div><div class="t">0</div><div class="g" style="display:none"></div>`;
   labelsEl.appendChild(el);
-  o.el = el; o.elT = el.querySelector('.t'); o.elG = el.querySelector('.g');
+  o.el = el; o.elN = el.querySelector('.n'); o.elT = el.querySelector('.t'); o.elG = el.querySelector('.g');
 }
 islands.forEach(buildIsland);
 
@@ -425,9 +526,9 @@ function buildPort(o) {
   labelsEl.appendChild(el); o.el = el;
 }
 ports.forEach(buildPort);
-const landLabels = [['GRIECHENLAND', 23.5, 39.65, '#dbe8ff'], ['TÜRKEI', 28.9, 38.9, '#ffe0e0']].map(([t, lo, la, c]) => {
-  const el = document.createElement('div'); el.className = 'land'; el.textContent = t; el.style.color = c; labelsEl.appendChild(el);
-  return { el, pos:P(lo, la) };
+const landLabels = [[0, 23.5, 39.65, '#dbe8ff'], [1, 28.9, 38.9, '#ffe0e0']].map(([side, lo, la, c]) => {
+  const el = document.createElement('div'); el.className = 'land'; el.style.color = c; labelsEl.appendChild(el);
+  return { el, side, pos:P(lo, la) };
 });
 
 function paintIsland(o) {
@@ -437,6 +538,7 @@ function paintIsland(o) {
   o.flag.material = flagMatFor(o.owner);
   o.elT.style.borderColor = s ? s.css : '#ddd';
   o.elT.style.color = s ? s.css : '#fff';
+  o.elN.textContent = (o.value > 1 ? '★'.repeat(Math.min(o.value, 3)) + ' ' : '') + islandName(o);
   if (o.governor && s) { o.elG.style.display = 'flex'; o.elG.innerHTML = avatar(o.governor, 15) + '👑 ' + esc(short(o.governor.nick, 12)); }
   else o.elG.style.display = 'none';
 }
@@ -455,7 +557,7 @@ const clouds = [];
 }
 
 // --- Partikel -----------------------------------------------------------
-const P_MAX = 2600, pGeo = new THREE.BufferGeometry(), pPos = new Float32Array(P_MAX * 3), pCol = new Float32Array(P_MAX * 3);
+const P_MAX = 3000, pGeo = new THREE.BufferGeometry(), pPos = new Float32Array(P_MAX * 3), pCol = new Float32Array(P_MAX * 3);
 pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3)); pGeo.setAttribute('color', new THREE.BufferAttribute(pCol, 3));
 const spriteTex = (() => { const cv = document.createElement('canvas'); cv.width = cv.height = 64; const x = cv.getContext('2d'), gr = x.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, '#fff'); gr.addColorStop(0.4, 'rgba(255,255,255,.6)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = gr; x.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(cv); })();
 const points = new THREE.Points(pGeo, new THREE.PointsMaterial({ size:0.5, map:spriteTex, vertexColors:true, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending }));
@@ -495,7 +597,6 @@ const hullMat = new THREE.MeshStandardMaterial({ color:lin(0x6e4423), roughness:
 const goldHullMat = new THREE.MeshStandardMaterial({ color:0xc9962a, roughness:0.4, metalness:0.6, emissive:0x553300, emissiveIntensity:0.5 });
 const mastGeo = new THREE.CylinderGeometry(0.022, 0.022, 0.95, 5);
 const sailGeo = new THREE.PlaneGeometry(0.62, 0.42, 4, 1);
-const whiteSail = new THREE.MeshStandardMaterial({ color:0xffffff, side:THREE.DoubleSide, roughness:0.8 });
 function makeShip(side, gold) {
   const g = new THREE.Group();
   const hull = new THREE.Mesh(hullGeo, gold ? goldHullMat : hullMat); hull.castShadow = true; g.add(hull);
@@ -504,24 +605,66 @@ function makeShip(side, gold) {
   g.userData.sail = sail;
   return g;
 }
+// Heldenschiff: großes goldenes Schiff mit Namenssegel und Krieger an Deck
+const heroSailMats = {};
+function heroSailMat(hero, side) {
+  const k = hero.id + side;
+  if (heroSailMats[k]) return heroSailMats[k];
+  const cv = document.createElement('canvas'); cv.width = 256; cv.height = 176;
+  const x = cv.getContext('2d');
+  const gr = x.createLinearGradient(0, 0, 0, 176); gr.addColorStop(0, hero.css); gr.addColorStop(1, '#6b4a00');
+  x.fillStyle = gr; x.fillRect(0, 0, 256, 176);
+  x.fillStyle = SIDES[side].css; x.fillRect(0, 140, 256, 36);
+  x.fillStyle = '#1a1000'; x.font = '900 46px Cinzel, Georgia, serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillText(hero.name, 128, 64, 236);
+  x.font = '40px serif'; x.fillText('⚔', 128, 112);
+  x.fillStyle = '#fff'; x.font = '900 22px Inter, sans-serif'; x.fillText(SIDES[side].flag, 128, 158);
+  const tx = new THREE.CanvasTexture(cv); tx.encoding = THREE.sRGBEncoding;
+  return (heroSailMats[k] = new THREE.MeshStandardMaterial({ map:tx, side:THREE.DoubleSide, roughness:0.6, emissive:hero.color, emissiveIntensity:0.12 }));
+}
+function makeHeroShip(hero, side) {
+  const g = new THREE.Group();
+  const hull = new THREE.Mesh(hullGeo, goldHullMat); hull.castShadow = true; g.add(hull);
+  const mast = new THREE.Mesh(mastGeo, poleMat); mast.position.y = 0.6; g.add(mast);
+  const sail = new THREE.Mesh(new THREE.PlaneGeometry(0.72, 0.5), heroSailMat(hero, side)); sail.position.set(0, 0.72, 0.05); sail.castShadow = true; g.add(sail);
+  g.userData.sail = sail;
+  // Krieger
+  const skin = new THREE.MeshStandardMaterial({ color:lin(0xe0b48a) }), armor = new THREE.MeshStandardMaterial({ color:hero.color, metalness:0.6, roughness:0.35 });
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 0.24, 8), armor); body.position.set(0, 0.36, -0.28); g.add(body);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 8), skin); head.position.set(0, 0.54, -0.28); g.add(head);
+  const helm = new THREE.Mesh(new THREE.ConeGeometry(0.065, 0.08, 8), armor); helm.position.set(0, 0.61, -0.28); g.add(helm);
+  const cape = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.26), new THREE.MeshStandardMaterial({ color:hero.cape, side:THREE.DoubleSide })); cape.position.set(0, 0.36, -0.36); cape.rotation.x = 0.25; g.add(cape);
+  const sword = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.32, 0.02), new THREE.MeshStandardMaterial({ color:0xeeeeee, metalness:0.9, roughness:0.2, emissive:0x444444 }));
+  sword.position.set(0.1, 0.6, -0.26); sword.rotation.z = -0.35; g.add(sword);
+  g.userData.sword = sword;
+  // Aura
+  const aura = new THREE.Mesh(new THREE.RingGeometry(0.5, 0.9, 40), new THREE.MeshBasicMaterial({ color:hero.color, transparent:true, opacity:0.55, depthWrite:false, blending:THREE.AdditiveBlending }));
+  aura.rotation.x = -Math.PI / 2; aura.position.y = 0.06; g.add(aura);
+  g.userData.aura = aura;
+  g.scale.setScalar(2.8);
+  return g;
+}
 
 // =====================================================================
-//  SPIELER (Zuschauer)
+//  SPIELER
 // =====================================================================
 const users = new Map();
-const RANKS = [[0, 'Rekrut', '🪖'], [25, 'Matrose', '⚓'], [80, 'Bootsmann', '🧭'], [200, 'Kapitän', '🎖'], [500, 'Admiral', '⭐'], [1200, 'Legende', '👑']];
-const rankOf = u => { let r = RANKS[0]; for (const x of RANKS) if (u.total >= x[0]) r = x; return r; };
+const RANK_DEF = [[0, '🪖'], [25, '⚓'], [80, '🧭'], [200, '🎖'], [500, '⭐'], [1200, '👑']];
+const rankOf = u => { let k = 0; RANK_DEF.forEach((r, i) => { if (u.total >= r[0]) k = i; }); return k; };
+const rankLabel = k => `${RANK_DEF[k][1]} ${I18N[lang].ranks[k]}`;
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const short = (s, n) => (s = String(s)).length > n ? s.slice(0, n - 1) + '…' : s;
 function avatar(u, size) {
+  if (u && u.hero) return `<span class="av hero" style="width:${size}px;height:${size}px;font-size:${Math.round(size * 0.5)}px;--h:${u.hero.css}">⚔</span>`;
   const c = u && SIDES[u.side] ? SIDES[u.side].css : '#888';
-  const inner = u && u.avatar ? `<img src="${esc(u.avatar)}" referrerpolicy="no-referrer" onerror="this.remove()">` : esc((u?.nick || '?').replace(/^[^\p{L}\p{N}]+/u, '').slice(0, 1).toUpperCase() || '?');
+  const initial = upper((u?.nick || '?').replace(/^[^\p{L}\p{N}]+/u, '').slice(0, 1)) || '?';
+  const inner = u && u.avatar ? `<img src="${esc(u.avatar)}" referrerpolicy="no-referrer" alt="" onerror="this.remove()">` : esc(initial);
   return `<span class="av" style="width:${size}px;height:${size}px;font-size:${Math.round(size * 0.48)}px;--c:${c}">${inner}</span>`;
 }
 function getUser(e) {
   const id = e.user || e.nick || 'anon';
   let u = users.get(id);
-  if (!u) { u = { id, nick:e.nick || id, avatar:null, side:-1, pts:0, total:0, peace:0, last:0, likeWin:[], rank:RANKS[0] }; users.set(id, u); }
+  if (!u) { u = { id, nick:e.nick || id, avatar:null, side:-1, pts:0, total:0, peace:0, last:0, likeWin:[], rank:0, heroT:0, heroPick:null }; users.set(id, u); }
   if (e.nick) u.nick = e.nick;
   if (e.avatar) u.avatar = e.avatar;
   u.last = now;
@@ -534,11 +677,11 @@ function ensureSide(u) {
   u.side = s.id; return s;
 }
 function addPts(u, n) {
+  if (!u || u.hero) return;
   u.pts += n; u.total += n;
   const r = rankOf(u);
-  if (r !== u.rank) { u.rank = r; if (r[0] > 0) feed(`${r[2]} ${u.nick} ist jetzt ${r[1]}!`, SIDES[u.side]?.css, u, 'big'); }
+  if (r !== u.rank) { u.rank = r; if (r > 0) feed(t('rankUp', { icon:RANK_DEF[r][1], nick:u.nick, rank:I18N[lang].ranks[r] }), SIDES[u.side]?.css, u, 'big'); }
 }
-// Kapitän für automatische Flotten: aktive Spieler der Seite, gewichtet nach Punkten
 function pickCaptain(side) {
   const pool = [...users.values()].filter(u => u.side === side.id && now - u.last < 60);
   if (!pool.length) return null;
@@ -563,21 +706,22 @@ function resetRound() {
   islands.forEach(i => { i.owner = -1; i.troops = i.startTroops; i.governor = null; });
   ports.forEach(p => { p.troops = 15; p.flag.material = flagMats[p.owner]; });
   SIDES.forEach(s => { s.reserve = 0; s.target = null; s.launchT = 1 + s.id * 1.5; s.voteT = 0; });
+  HEROES.forEach(h => { h.charge = [0, 0]; h.active = null; h.rest = 0; h.duelShown = false; });
   users.forEach(u => { u.pts = 0; u.peace = 0; });
   islands.forEach(paintIsland);
   doves.forEach(d => scene.remove(d.g)); doves.length = 0;
   document.getElementById('finale').classList.remove('on'); document.body.classList.remove('fin');
-  document.getElementById('round').textContent = `RUNDE ${roundNo}`;
-  feed(`⚓ Runde ${roundNo}: Schreib 1 für 🇬🇷 oder 2 für 🇹🇷!`, '#fff', null, 'big');
+  document.getElementById('round').textContent = t('round', { n:roundNo });
+  feed(t('roundStart', { n:roundNo }), '#fff', null, 'big');
 }
 
-function pickTarget(s) {
-  if (crisisOn > 0 && CYPRUS.owner !== s.id) return (s.target = CYPRUS);
-  if (s.target && s.target.owner !== s.id) return s.target;
+function pickTarget(s, exclude) {
+  if (crisisOn > 0 && CYPRUS.owner !== s.id && CYPRUS !== exclude) return (s.target = CYPRUS);
+  if (s.target && s.target.owner !== s.id && s.target !== exclude) return s.target;
   const from = bases(s);
   let best = null, bs = Infinity;
   for (const i of islands) {
-    if (i.owner === s.id) continue;
+    if (i.owner === s.id || i === exclude) continue;
     const d = Math.min(...from.map(b => b.pos.distanceTo(i.pos) - ellipseR(i, Math.atan2(b.pos.z - i.pos.z, b.pos.x - i.pos.x))));
     const sc = d + i.troops * 0.06 - i.value * 1.2 + (i.owner === -1 ? 0 : 1.5);
     if (sc < bs) { bs = sc; best = i; }
@@ -585,66 +729,96 @@ function pickTarget(s) {
   return (s.target = best);
 }
 function front(s) {
-  const t = pickTarget(s); if (!t) return null;
-  return bases(s).reduce((a, b) => (a.pos.distanceTo(t.pos) - a.troops * 0.03 <= b.pos.distanceTo(t.pos) - b.troops * 0.03 ? a : b));
+  const tg = pickTarget(s); if (!tg) return null;
+  return bases(s).reduce((a, b) => (a.pos.distanceTo(tg.pos) - a.troops * 0.03 <= b.pos.distanceTo(tg.pos) - b.troops * 0.03 ? a : b));
 }
 function edgePoint(o, toward, pad) {
   const ang = Math.atan2(toward.z - o.pos.z, toward.x - o.pos.x);
   return o.pos.clone().add(new THREE.Vector3(Math.cos(ang), 0, Math.sin(ang)).multiplyScalar(ellipseR(o, ang) + pad));
 }
 
-function launchFleet(s, src, target, troops, captain, gold) {
+function launchFleet(s, src, target, troops, captain, gold, hero) {
   troops = Math.floor(troops);
   if (troops < 1 || !target || !src) return;
-  const from = edgePoint(src, target.pos, 0.45), end = edgePoint(target, src.pos, 0.55);
+  const from = edgePoint(src, target.pos, hero ? 0.9 : 0.45), end = edgePoint(target, src.pos, hero ? 1.0 : 0.55);
   const dir = new THREE.Vector3().subVectors(end, from);
   const ctrl = from.clone().lerp(end, 0.5).add(new THREE.Vector3(-dir.z, 0, dir.x).normalize().multiplyScalar((rnd() - 0.5) * dir.length() * 0.3));
   const len = from.distanceTo(ctrl) + ctrl.distanceTo(end);
-  const dur = THREE.MathUtils.clamp(len / 6, 2.5, 7.5) / (gold ? 1.4 : 1);
+  const dur = THREE.MathUtils.clamp(len / 6, 2.5, 7.5) / (gold ? 1.4 : 1) / (hero ? 1.2 : 1);
   const group = new THREE.Group();
-  const count = Math.min(1 + Math.floor(Math.sqrt(troops) / 2.3), 7);
-  const offs = [[0, 0], [-0.5, -0.6], [0.5, -0.6], [-1, -1.2], [1, -1.2], [0, -1.2], [0, -1.8]];
-  for (let i = 0; i < count; i++) { const sh = makeShip(s.id, gold); sh.position.set(offs[i][0], 0, offs[i][1]); if (i === 0 && (gold || captain)) sh.scale.setScalar(gold ? 1.6 : 1.25); group.add(sh); }
+  if (hero) group.add(makeHeroShip(hero, s.id));
+  else {
+    const count = Math.min(1 + Math.floor(Math.sqrt(troops) / 2.3), 7);
+    const offs = [[0, 0], [-0.5, -0.6], [0.5, -0.6], [-1, -1.2], [1, -1.2], [0, -1.2], [0, -1.8]];
+    for (let i = 0; i < count; i++) { const sh = makeShip(s.id, gold); sh.position.set(offs[i][0], 0, offs[i][1]); if (i === 0 && (gold || captain)) sh.scale.setScalar(gold ? 1.6 : 1.25); group.add(sh); }
+  }
   scene.add(group);
   const el = document.createElement('div');
-  el.className = 'flt' + (gold ? ' gold' : '') + (captain ? '' : ' anon');
+  el.className = 'flt' + (hero ? ' hero' : gold ? ' gold' : '') + (captain || hero ? '' : ' anon');
   el.style.setProperty('--c', s.css);
+  if (hero) el.style.setProperty('--h', hero.css);
   labelsEl.appendChild(el);
-  const f = { side:s, troops, captain, from, ctrl, end, target, t:0, dur, group, el, gold, wake:0, shown:-1 };
+  const f = { side:s, troops, captain, from, ctrl, end, target, src, t:0, dur, group, el, gold, hero, wake:0, shown:-1 };
   fleets.push(f); updateFleetLabel(f);
   return f;
 }
 function updateFleetLabel(f) {
   const n = Math.max(0, Math.floor(f.troops));
   if (n === f.shown) return; f.shown = n;
-  f.el.innerHTML = f.captain ? `${avatar(f.captain, f.gold ? 22 : 18)}<span>${esc(short(f.captain.nick, 12))}</span><span style="color:${f.gold ? '#ffd54a' : f.side.css}">${f.gold ? '🎁' : '⚔'}${n}</span>` : `⚔ ${n}`;
+  if (f.hero) f.el.innerHTML = `${avatar({ hero:f.hero }, 26)}<span class="hn">${f.hero.name}</span><span>${f.side.flag} ⚔${n}</span>`;
+  else f.el.innerHTML = f.captain ? `${avatar(f.captain, f.gold ? 22 : 18)}<span>${esc(short(f.captain.nick, 12))}</span><span style="color:${f.gold ? '#ffd54a' : f.side.css}">${f.gold ? '🎁' : '⚔'}${n}</span>` : `⚔ ${n}`;
 }
-const bez = (a, b, c, t, out) => out.set((1 - t) ** 2 * a.x + 2 * (1 - t) * t * b.x + t * t * c.x, 0, (1 - t) ** 2 * a.z + 2 * (1 - t) * t * b.z + t * t * c.z);
+const bez = (a, b, c, k, out) => out.set((1 - k) ** 2 * a.x + 2 * (1 - k) * k * b.x + k * k * c.x, 0, (1 - k) ** 2 * a.z + 2 * (1 - k) * k * b.z + k * k * c.z);
 const tA = new THREE.Vector3(), tB = new THREE.Vector3();
 
 function updateFleets(dt, time) {
-  // Seeschlachten: gegnerische Flotten, die sich begegnen, kämpfen
+  // Seeschlachten
   if (!roundOver) for (let i = 0; i < fleets.length; i++) for (let j = i + 1; j < fleets.length; j++) {
     const a = fleets[i], b = fleets[j];
     if (a.side === b.side || a.troops <= 0 || b.troops <= 0) continue;
-    if (a.group.position.distanceToSquared(b.group.position) > 1.6) continue;
-    const dmg = Math.min(30 * dt, a.troops, b.troops);
-    a.troops -= dmg; b.troops -= dmg;
-    if (rnd() < 0.5) { const m = a.group.position.clone().lerp(b.group.position, 0.5); m.y = 0.5; emit(m, C_FIRE, 4, 2.5, 0.5, 2); }
-    shake = Math.min(shake + 0.02, 0.5);
-    [a, b].forEach((f, k) => { if (f.troops <= 0.5) { f.sunk = true; const o = k ? a : b; if (f.captain && o.captain) feed(`💥 Seeschlacht! ${o.captain.nick} versenkt die Flotte von ${f.captain.nick}`, o.side.css, o.captain); addPts(o.captain || { pts:0, total:0 }, 5); } });
+    const range = a.hero || b.hero ? 6 : 1.6;
+    if (a.group.position.distanceToSquared(b.group.position) > range) continue;
+    const m = a.group.position.clone().lerp(b.group.position, 0.5); m.y = 0.5;
+    if (a.hero && b.hero) {
+      const dmg = Math.min(40 * dt, a.troops, b.troops); a.troops -= dmg; b.troops -= dmg;
+      emit(m, a.hero.color, 6, 4, 0.7, 4); emit(m, b.hero.color, 6, 4, 0.7, 4); shake = Math.min(shake + 0.05, 0.9);
+      if (!a.hero.duelShown) { a.hero.duelShown = b.hero.duelShown = true; banner(t('heroDuel', { a:a.hero.name, b:b.hero.name })); focusOn(m, 3); }
+    } else if (a.hero || b.hero) {
+      const h = a.hero ? a : b, o = h === a ? b : a;
+      h.troops -= o.troops * 0.15; o.troops = 0; o.sunkBy = h;
+      emit(m, h.hero.color, 50, 5, 1, 5); shake = Math.min(shake + 0.3, 0.9);
+      feed(t('heroSink', { hero:h.hero.name }), h.hero.css, { hero:h.hero }, 'hero');
+    } else {
+      const dmg = Math.min(30 * dt, a.troops, b.troops); a.troops -= dmg; b.troops -= dmg;
+      if (rnd() < 0.5) emit(m, C_FIRE, 4, 2.5, 0.5, 2);
+      shake = Math.min(shake + 0.02, 0.5);
+      [a, b].forEach((f, k) => { if (f.troops <= 0.5) { const o = k ? a : b; if (f.captain && o.captain) feed(t('seaBattle', { a:o.captain.nick, b:f.captain.nick }), o.side.css, o.captain); addPts(o.captain, 5); } });
+    }
   }
   for (let i = fleets.length - 1; i >= 0; i--) {
     const f = fleets[i];
-    if (f.sunk) { const p = f.group.position.clone(); p.y = 0.3; emit(p, C_WHITE, 25, 1.5, 0.9, 2.5); emit(p, C_FIRE, 20, 2, 0.6, 3); scene.remove(f.group); f.el.remove(); fleets.splice(i, 1); continue; }
-    if (roundOver) { f.group.position.y -= 0; } else f.t += dt / f.dur;
-    const t = Math.min(f.t, 1);
-    bez(f.from, f.ctrl, f.end, t, tA); bez(f.from, f.ctrl, f.end, Math.min(t + 0.01, 1), tB);
+    if (f.troops <= 0.5 && !roundOver) {
+      const p = f.group.position.clone(); p.y = 0.3; emit(p, C_WHITE, 25, 1.5, 0.9, 2.5); emit(p, C_FIRE, 20, 2, 0.6, 3);
+      if (f.hero) endHero(f.hero);
+      scene.remove(f.group); f.el.remove(); fleets.splice(i, 1); continue;
+    }
+    if (!roundOver) f.t += dt / f.dur;
+    const k = Math.min(f.t, 1);
+    bez(f.from, f.ctrl, f.end, k, tA); bez(f.from, f.ctrl, f.end, Math.min(k + 0.01, 1), tB);
     f.group.position.set(tA.x, waveH(tA.x, tA.z, time) + 0.02, tA.z);
     if (tB.distanceToSquared(tA) > 1e-6) f.group.rotation.y = Math.atan2(tB.x - tA.x, tB.z - tA.z);
     f.group.rotation.z = Math.sin(time * 3 + i) * 0.06;
+    if (f.hero) {
+      const hs = f.group.children[0];
+      hs.userData.aura.rotation.z += dt * 2; hs.userData.aura.scale.setScalar(1 + Math.sin(time * 5) * 0.15);
+      hs.userData.sword.rotation.z = -0.35 + Math.sin(time * 6) * 0.4;
+    }
     f.wake -= dt;
-    if (f.wake <= 0 && !roundOver) { f.wake = 0.07; emit(f.group.position, C_WAKE, 2, 0.4, 0.9, 0.2, 0.2); if (f.gold) emit(f.group.position, C_GOLD, 2, 0.6, 0.7, 1.2, 0.3, 1); }
+    if (f.wake <= 0 && !roundOver) {
+      f.wake = 0.07; emit(f.group.position, C_WAKE, f.hero ? 5 : 2, 0.5, 0.9, 0.2, f.hero ? 0.8 : 0.2);
+      if (f.gold) emit(f.group.position, C_GOLD, 2, 0.6, 0.7, 1.2, 0.3, 1);
+      if (f.hero) emit(f.group.position, f.hero.color, 4, 0.8, 0.9, 1.6, 0.8, 0.8);
+    }
     updateFleetLabel(f);
     if (f.t >= 1) { arrive(f); scene.remove(f.group); f.el.remove(); fleets.splice(i, 1); }
   }
@@ -652,26 +826,74 @@ function updateFleets(dt, time) {
 
 function arrive(f) {
   const o = f.target, s = f.side, hit = f.end.clone(); hit.y = 0.4;
-  if (o.owner === s.id) { o.troops += f.troops; emit(hit, s.color, 10, 1.5, 0.8, 2); return; }
-  const mult = o === CYPRUS && crisisOn > 0 ? 2 : 1;
+  if (o.owner === s.id) {
+    if (f.hero) { o.troops += f.troops; nextHeroHop(f, o); }
+    else { o.troops += f.troops; emit(hit, s.color, 10, 1.5, 0.8, 2); }
+    return;
+  }
+  const mult = (o === CYPRUS && crisisOn > 0 ? 2 : 1) * (f.hero ? CONFIG.heroPower : 1);
   o.troops -= f.troops * mult;
   emit(hit, C_FIRE, 25 + Math.min(f.troops, 70), 4, 1.1, 4); emit(hit, s.color, 18, 3, 1, 3);
-  shake = Math.min(shake + 0.12 + f.troops * 0.003, 0.7);
+  if (f.hero) { emit(hit, f.hero.color, 90, 7, 1.4, 8, 0.8); shake = Math.min(shake + 0.6, 1); }
+  shake = Math.min(shake + 0.12 + f.troops * 0.003, 0.9);
   if (o.troops < 0) {
-    const prev = SIDES[o.owner];
-    o.owner = s.id; o.troops = -o.troops; o.pulse = 1; o.governor = f.captain || pickCaptain(s);
-    if (o.governor) addPts(o.governor, 20 + o.value * 15);
+    const prev = o.owner;
+    o.owner = s.id; o.troops = -o.troops / mult; o.pulse = 1;
+    o.governor = f.hero ? { hero:f.hero, nick:f.hero.name, side:s.id } : (f.captain || pickCaptain(s));
+    addPts(f.hero ? f.summoner : o.governor, 20 + o.value * 15);
     paintIsland(o);
     const top = o.pos.clone(); top.y = 1.6;
     emit(top, s.color, 120 + o.value * 30, 6, 1.6, 7, 1);
     shake = Math.min(shake + 0.4, 1);
-    const gov = o.governor ? `<br><span style="font-size:.55em;font-family:Inter">👑 ${esc(o.governor.nick)} ist Gouverneur</span>` : '';
-    banner(`<span style="color:${s.css}">${s.flag} ${s.name}</span><br>erobert ${o.name.toUpperCase()}!${gov}`);
-    feed(`🏴 ${s.flag} ${o.governor ? o.governor.nick + ' erobert' : 'erobert'} ${o.name}${prev ? ' von ' + prev.flag : ''}`, s.css, o.governor);
-    if (o.value >= 2) focusOn(o.pos, 2.5);
+    const isl = upper(islandName(o));
+    if (f.hero) {
+      banner(t('heroCapture', { hero:`<span style="color:${f.hero.css}">${f.hero.name}</span>`, isl }));
+      feed(t('captureFeedWho', { nick:f.hero.name, flag:s.flag, isl:islandName(o) }), f.hero.css, { hero:f.hero }, 'hero');
+    } else {
+      const gov = o.governor ? `<small>${esc(t('governor', { nick:o.governor.nick }))}</small>` : '';
+      banner(t('capture', { side:`<span style="color:${s.css}">${s.flag} ${sideName(s)}</span>`, isl }) + gov);
+      feed(o.governor ? t('captureFeedWho', { nick:o.governor.nick, flag:s.flag, isl:islandName(o) }) : t('captureFeed', { flag:s.flag, isl:islandName(o) }), s.css, o.governor);
+    }
+    if (o.value >= 2 || f.hero) focusOn(o.pos, 2.5);
     if (s.target === o) s.target = null;
-  }
+    if (f.hero) nextHeroHop(f, o);
+  } else if (f.hero) { o.troops = Math.max(0, o.troops); endHero(f.hero); }
 }
+
+// --- Helden ------------------------------------------------------------
+function heroFor(hero, sideId) { return hero.side === null || hero.side === sideId; }
+function chargeHero(hero, s, u, n) {
+  if (!heroFor(hero, s.id) || roundOver) return;
+  if (hero.active || hero.rest > 0) return;
+  hero.charge[s.id] = Math.min(CONFIG.heroCharge, hero.charge[s.id] + n);
+  u.heroPick = hero; addPts(u, n);
+  if (hero.charge[s.id] >= CONFIG.heroCharge) summonHero(hero, s, u);
+}
+function summonHero(hero, s, u) {
+  const tg = pickTarget(s), fr = front(s);
+  if (!tg || !fr) return;
+  hero.charge = [0, 0];
+  const f = launchFleet(s, fr, tg, CONFIG.heroTroops, null, false, hero);
+  if (!f) return;
+  f.summoner = u; f.hops = CONFIG.heroHops;
+  hero.active = s;
+  banner(t('heroComes', { hero:`<span style="color:${hero.css}">${hero.name}</span>`, flag:s.flag, side:sideShort(s), nick:esc(u ? u.nick : '?') }));
+  feed(t('heroSummon', { nick:u ? u.nick : '?', hero:hero.name, flag:s.flag }), hero.css, u || { hero }, 'hero');
+  showcase({ hero }, `${hero.name} ${s.flag}`, t('heroSummon', { nick:u ? u.nick : '?', hero:hero.name, flag:s.flag }));
+  focusOn(fr.pos, 2.5);
+}
+function nextHeroHop(f, from) {
+  f.hops--;
+  const n = from.troops * 0.7;
+  if (f.hops <= 0 || n < 25 || roundOver) { endHero(f.hero); return; }
+  const tg = pickTarget(f.side, from);
+  if (!tg) { endHero(f.hero); return; }
+  from.troops -= n;
+  const nf = launchFleet(f.side, from, tg, n, null, false, f.hero);
+  if (!nf) { endHero(f.hero); return; }
+  nf.summoner = f.summoner; nf.hops = f.hops;
+}
+function endHero(hero) { hero.active = null; hero.rest = CONFIG.heroCooldown; hero.duelShown = false; }
 
 function focusOn(pos, sec) { focus = { pos:pos.clone(), t:sec }; }
 
@@ -681,13 +903,13 @@ function tick(dt) {
   peace += CONFIG.peacePerSecond * dt;
   for (const i of islands) i.troops = i.owner >= 0 ? Math.min(i.troops + i.prod * dt, 999) : Math.min(i.troops + 0.12 * dt, i.startTroops * 2);
   for (const p of ports) p.troops = Math.min(p.troops + p.prod * dt, 400);
-  users.forEach(u => { if (u.side >= 0) islands.forEach(i => { if (i.governor === u && i.owner === u.side) u.pts += 0, addPts(u, 0.1 * i.value * dt); }); });
-  // Zypern-Krise
+  for (const i of islands) if (i.governor && !i.governor.hero && i.owner === i.governor.side) addPts(i.governor, 0.1 * i.value * dt);
+  HEROES.forEach(h => { if (h.rest > 0) h.rest = Math.max(0, h.rest - dt); });
   crisisT -= dt;
   if (crisisOn > 0) { crisisOn -= dt; if (crisisOn <= 0) { SIDES.forEach(s => { if (s.target === CYPRUS) s.target = null; }); CYPRUS.el.classList.remove('crisis'); } }
   if (crisisT <= 0) {
     crisisT = CONFIG.crisisEvery; crisisOn = CONFIG.crisisLength;
-    banner('⚡ ZYPERN-KRISE! ⚡<br><span style="font-size:.6em">Alle Flotten nach Zypern!</span>');
+    banner(t('crisisBanner'));
     CYPRUS.el.classList.add('crisis'); focusOn(CYPRUS.pos, 3);
   }
   document.getElementById('crisis').classList.toggle('on', crisisOn > 0);
@@ -701,13 +923,13 @@ function tick(dt) {
     }
   }
   const allOne = SIDES.find(s => owned(s).length === islands.length);
-  if (peace >= CONFIG.peaceGoal) peaceFinale('Die Zuschauer haben den Frieden gewählt!');
-  else if (allOne) peaceFinale(`${allOne.flag} ${allOne.short} hält alle Inseln und reicht die Hand zum Frieden.`);
-  else if (timeLeft <= 0) peaceFinale('Die Zeit ist um: an den Verhandlungstisch!');
+  if (peace >= CONFIG.peaceGoal) peaceFinale('whyPeace');
+  else if (allOne) peaceFinale('whyAll', allOne);
+  else if (timeLeft <= 0) peaceFinale('whyTime');
 }
 
 // =====================================================================
-//  FRIEDENSFINALE (am Ende gewinnt immer der Frieden)
+//  FRIEDENSFINALE / BARIŞ FİNALİ
 // =====================================================================
 const doves = [];
 const doveBody = new THREE.SphereGeometry(1, 10, 8), wingGeo = new THREE.PlaneGeometry(1, 0.5); wingGeo.translate(0.5, 0, 0);
@@ -723,7 +945,7 @@ function spawnDove(i) {
   g.scale.setScalar(1.2 + rnd() * 0.8); scene.add(g);
   doves.push({ g, wl, wr, target, ph:rnd() * 6, sp:4 + rnd() * 3, delay:i * 0.12 });
 }
-function updateDoves(dt, t) {
+function updateDoves(dt, tt) {
   for (const d of doves) {
     if ((d.delay -= dt) > 0) continue;
     const dir = tA.subVectors(d.target, d.g.position);
@@ -731,37 +953,47 @@ function updateDoves(dt, t) {
     dir.normalize();
     d.g.position.addScaledVector(dir, d.sp * dt);
     d.g.rotation.y = Math.atan2(dir.x, dir.z);
-    const flap = Math.sin(t * 12 + d.ph) * 0.8;
+    const flap = Math.sin(tt * 12 + d.ph) * 0.8;
     d.wl.rotation.z = flap; d.wr.rotation.z = -flap;
   }
 }
 
-function peaceFinale(reason) {
+let lastFinale = null;
+function peaceFinale(reason, side) {
   roundOver = true; crisisOn = 0; CYPRUS.el.classList.remove('crisis'); document.getElementById('crisis').classList.remove('on');
   treaties++; try { localStorage.setItem('aegean_treaties', treaties); } catch {}
-  fleets.forEach(f => f.group.children.forEach(sh => sh.userData.sail && (sh.userData.sail.material = flagMats[2])));
+  fleets.forEach(f => f.group.traverse(o => { if (o.userData.sail) o.userData.sail.material = flagMats[2]; }));
   islands.forEach(i => { i.flag.material = flagMats[2]; i.ring.material.color.set(0xffffff); i.ring.material.opacity = 0.9; i.pulse = 1; });
   ports.forEach(p => p.flag.material = flagMats[2]);
   for (let k = 0; k < 30; k++) spawnDove(k);
-  const colors = [SIDES[0].color, C_WHITE, SIDES[1].color];
-  for (let k = 0; k < 14; k++) setTimeout(() => emit(new THREE.Vector3((rnd() - .5) * 26, 6 + rnd() * 3, (rnd() - .5) * 30), colors[k % 3], 130, 6, 1.8, 3, 0.5, 2.5), 300 + k * 450);
+  const colors = [SIDES[0].color, C_WHITE, SIDES[1].color, HEROES[0].color, HEROES[1].color];
+  for (let k = 0; k < 14; k++) setTimeout(() => emit(new THREE.Vector3((rnd() - .5) * 26, 6 + rnd() * 3, (rnd() - .5) * 30), colors[k % colors.length], 130, 6, 1.8, 3, 0.5, 2.5), 300 + k * 450);
   focusOn(new THREE.Vector3(0, 0, 2), CONFIG.finaleSeconds);
   const all = [...users.values()];
-  const peacemaker = all.filter(u => u.peace > 0).sort((a, b) => b.peace - a.peace)[0];
-  const bestOf = s => all.filter(u => u.side === s.id).sort((a, b) => b.pts - a.pts)[0];
-  const card = (u, label, c) => u ? `<div class="card" style="--c:${c}">${avatar(u, 44)}<div>${esc(u.nick)}<small>${label}</small></div></div>` : '';
-  const gr = SIDES[0], tr = SIDES[1];
-  document.getElementById('finale').innerHTML = `
-    <div class="flags">🇬🇷 🕊 🇹🇷</div>
-    <div class="big">FRIEDEN<br>GEWINNT</div>
-    <div class="langs">Ειρήνη · Barış · Frieden</div>
-    <div class="meta">${esc(reason)}</div>
-    ${card(peacemaker, `🕊 Friedensstifter·in der Runde (${Math.floor(peacemaker?.peace || 0)} Friedenspunkte)`, '#fff')}
-    <div class="row">${card(bestOf(gr), `🇬🇷 tapferste·r Kapitän·in · ${Math.floor(bestOf(gr)?.pts || 0)} P.`, gr.css)}${card(bestOf(tr), `🇹🇷 tapferste·r Kapitän·in · ${Math.floor(bestOf(tr)?.pts || 0)} P.`, tr.css)}</div>
-    <div class="meta">Inseln am Ende: 🇬🇷 ${owned(gr).length} · 🇹🇷 ${owned(tr).length}${CYPRUS.owner >= 0 ? '' : ' · Zypern blieb frei'}<br>🤝 Friedensverträge in diesem Stream: <b>${treaties}</b></div>`;
+  lastFinale = {
+    reason, side,
+    peacemaker: all.filter(u => u.peace > 0).sort((a, b) => b.peace - a.peace)[0],
+    best: SIDES.map(s => all.filter(u => u.side === s.id).sort((a, b) => b.pts - a.pts)[0]),
+    counts: SIDES.map(s => owned(s).length), cyprusFree: CYPRUS.owner < 0,
+  };
+  renderFinale();
   setTimeout(() => { document.getElementById('finale').classList.add('on'); document.body.classList.add('fin'); }, 900);
-  feed('🕊 Friedensgipfel! Ειρήνη · Barış · Frieden', '#fff', null, 'peace');
+  feed(t('summit'), '#fff', null, 'peace');
   setTimeout(resetRound, CONFIG.finaleSeconds * 1000);
+}
+function renderFinale() {
+  const L = lastFinale; if (!L) return;
+  const card = (u, label, c, cls = '') => u ? `<div class="card ${cls}" style="--c:${c}">${avatar(u, 44)}<div>${esc(u.nick)}<small>${label}</small></div></div>` : '';
+  const [h1, h2] = HEROES;
+  document.getElementById('finale').innerHTML = `
+    <div class="flags">🇹🇷 🕊 🇬🇷</div>
+    <div class="big">${t('finaleBig')}</div>
+    <div class="langs">${t('finaleLangs')}</div>
+    <div class="meta">${esc(t(L.reason, L.side ? { flag:L.side.flag, side:sideShort(L.side) } : {}))}</div>
+    <div class="card heroes">${avatar({ hero:h1 }, 40)}${avatar({ hero:h2 }, 40)}<div>${esc(t('heroFinale', { a:h1.name, b:h2.name }))}<small>${esc(t('heroFinaleSub'))}</small></div></div>
+    ${card(L.peacemaker, t('peacemaker', { n:Math.floor(L.peacemaker?.peace || 0) }), '#fff')}
+    <div class="row">${SIDES.map(s => card(L.best[s.id], t('bravest', { flag:s.flag, n:Math.floor(L.best[s.id]?.pts || 0) }), s.css)).join('')}</div>
+    <div class="meta">${t('islandsEnd', { a:L.counts[0], b:L.counts[1] })}${L.cyprusFree ? t('cyprusFree') : ''}<br>${t('treaties', { n:treaties })}</div>`;
 }
 
 // =====================================================================
@@ -772,19 +1004,21 @@ function handleEvent(e) {
   const u = getUser(e);
   switch (e.type) {
     case 'chat': {
-      const raw = e.comment || '', toks = tokenize(raw);
-      const isPeace = raw.includes('🕊') || raw.includes('☮') || toks.some(t => PEACE_WORDS.includes(t));
-      if (isPeace) { peace += CONFIG.peacePerComment; u.peace += CONFIG.peacePerComment; addPts(u, 2); if (u.peace % 25 < CONFIG.peacePerComment) feed(`🕊 ${u.nick} wünscht Frieden`, '#fff', u, 'peace'); }
+      const raw = e.comment || '', toks = tokenize(raw), rtoks = rawTokens(raw);
+      const isPeace = raw.includes('🕊') || raw.includes('☮') || toks.some(k => PEACE_WORDS.includes(k));
+      if (isPeace) { peace += CONFIG.peacePerComment; u.peace += CONFIG.peacePerComment; addPts(u, 2); if (u.peace % 25 < CONFIG.peacePerComment) feed(t('wishPeace', { nick:u.nick }), '#fff', u, 'peace'); }
       if (roundOver) return;
-      const joinGr = raw.includes('🇬🇷') || toks.some(t => SIDES[0].keys.includes(t));
-      const joinTr = raw.includes('🇹🇷') || toks.some(t => SIDES[1].keys.includes(t));
+      const joinGr = raw.includes('🇬🇷') || toks.some(k => SIDES[0].keys.includes(k));
+      const joinTr = raw.includes('🇹🇷') || toks.some(k => SIDES[1].keys.includes(k));
       const join = joinGr && !joinTr ? SIDES[0] : joinTr && !joinGr ? SIDES[1] : null;
-      if (join && join.id !== u.side) { u.side = join.id; feed(`👋 ${u.nick} segelt für ${join.flag} ${join.short}`, join.css, u); }
+      if (join && join.id !== u.side) { u.side = join.id; feed(t('joined', { nick:u.nick, flag:join.flag, side:sideShort(join) }), join.css, u); }
       const s = ensureSide(u);
-      const isl = islands.find(i => toks.some(t => i.aliases.includes(t)));
+      const hero = HEROES.find(h => toks.some(k => h.keys.includes(k)));
+      if (hero && now > u.heroT) { u.heroT = now + 2; chargeHero(hero, s, u, 1); }
+      const isl = islands.find(i => toks.some(k => i.aliases.includes(k)) || rtoks.some(k => i.strict.includes(k)));
       if (isl && isl.owner !== s.id && isl !== s.target && crisisOn <= 0 && now > s.voteT) {
         s.target = isl; s.voteT = now + 4;
-        feed(`🎯 ${u.nick}: ${s.flag} Kurs auf ${isl.name}!`, s.css, u);
+        feed(t('target', { nick:u.nick, flag:s.flag, isl:islandName(isl) }), s.css, u);
       }
       s.reserve += CONFIG.commentTroops; addPts(u, 1);
       break;
@@ -795,22 +1029,26 @@ function handleEvent(e) {
       peace += n * CONFIG.peacePerLike;
       u.likeWin.push([now, n]); u.likeWin = u.likeWin.filter(x => now - x[0] < 6);
       const combo = u.likeWin.reduce((a, x) => a + x[1], 0);
-      if (combo >= 40 && !u.comboShown) { u.comboShown = true; feed(`🔥 ${u.nick} Like-Combo x${combo}!`, s.css, u, 'big'); setTimeout(() => u.comboShown = false, 8000); }
+      if (combo >= 40 && !u.comboShown) { u.comboShown = true; feed(t('combo', { nick:u.nick, n:combo }), s.css, u, 'big'); setTimeout(() => u.comboShown = false, 8000); }
       const fr = front(s); if (fr) { const p = fr.pos.clone(); p.y = 1.2; emit(p, s.color, Math.min(n, 6), 1, 0.7, 2.5); }
       break;
     }
     case 'gift': {
       const s = ensureSide(u), dia = Math.max(1, e.diamonds || 1), cnt = Math.max(1, e.count || 1), troops = dia * cnt * CONFIG.troopsPerDiamond;
       addPts(u, troops);
-      const t = pickTarget(s), fr = front(s);
-      if (t && fr) launchFleet(s, fr, t, troops, u, true);
-      showcase(u, `${e.giftName || 'Geschenk'}${cnt > 1 ? ' x' + cnt : ''} → Flotte mit ${troops} Kriegern ${s.flag}`);
-      feed(`🎁 ${u.nick}: ${e.giftName || 'Geschenk'}${cnt > 1 ? ' x' + cnt : ''} → ${troops} Krieger`, s.css, u, 'big');
-      if (troops >= 150 && t) focusOn(t.pos, 2);
+      const tg = pickTarget(s), fr = front(s);
+      if (tg && fr) launchFleet(s, fr, tg, troops, u, true);
+      const gift = (e.giftName || t('giftDefault')) + (cnt > 1 ? ' x' + cnt : '');
+      showcase(u, `${rankLabel(rankOf(u))} · ${u.nick}`, t('giftShow', { gift, n:troops, flag:s.flag }));
+      feed(t('giftFeed', { nick:u.nick, gift, n:troops }), s.css, u, 'big');
+      if (troops >= 150 && tg) focusOn(tg.pos, 2);
+      // Geschenke laden auch den zuletzt gerufenen (oder den stärksten) Helden auf
+      const hero = u.heroPick && heroFor(u.heroPick, s.id) ? u.heroPick : HEROES.filter(h => heroFor(h, s.id)).sort((a, b) => b.charge[s.id] - a.charge[s.id])[0];
+      if (hero) chargeHero(hero, s, u, dia * cnt);
       break;
     }
-    case 'follow': { const s = ensureSide(u); s.reserve += CONFIG.followTroops; addPts(u, 10); feed(`⭐ ${u.nick} folgt → +${CONFIG.followTroops} für ${s.flag}`, s.css, u); break; }
-    case 'share':  { const s = ensureSide(u); s.reserve += CONFIG.shareTroops;  addPts(u, 5);  feed(`🔁 ${u.nick} teilt → +${CONFIG.shareTroops} für ${s.flag}`, s.css, u); break; }
+    case 'follow': { const s = ensureSide(u); s.reserve += CONFIG.followTroops; addPts(u, 10); feed(t('follow', { nick:u.nick, flag:s.flag, n:CONFIG.followTroops }), s.css, u); break; }
+    case 'share':  { const s = ensureSide(u); s.reserve += CONFIG.shareTroops;  addPts(u, 5);  feed(t('share', { nick:u.nick, flag:s.flag, n:CONFIG.shareTroops }), s.css, u); break; }
   }
 }
 
@@ -828,57 +1066,84 @@ function feed(text, color, u, cls) {
   setTimeout(() => d.remove(), 9000);
 }
 let bannerT;
-function banner(html) { const b = document.getElementById('banner'); b.innerHTML = html; b.classList.add('on'); clearTimeout(bannerT); bannerT = setTimeout(() => b.classList.remove('on'), 2400); }
+function banner(html) { const b = document.getElementById('banner'); b.innerHTML = html; b.classList.add('on'); clearTimeout(bannerT); bannerT = setTimeout(() => b.classList.remove('on'), 2600); }
 const scQueue = []; let scBusy = false;
-function showcase(u, what) { scQueue.push([u, what]); if (!scBusy) nextShowcase(); }
+function showcase(u, who, what) { scQueue.push([u, who, what]); if (!scBusy) nextShowcase(); }
 function nextShowcase() {
   const el = document.getElementById('showcase'), it = scQueue.shift();
   if (!it) { scBusy = false; return; }
   scBusy = true;
-  const [u, what] = it, r = rankOf(u);
+  const [u, who, what] = it;
   document.getElementById('scAv').innerHTML = avatar(u, 56);
-  document.getElementById('scWho').textContent = `${r[2]} ${u.nick}`;
+  document.getElementById('scWho').textContent = who;
   document.getElementById('scWhat').textContent = what;
   el.classList.add('on');
   setTimeout(() => { el.classList.remove('on'); setTimeout(nextShowcase, 300); }, scQueue.length > 2 ? 1400 : 2600);
 }
+const heroesEl = document.getElementById('heroes');
 function updateHud() {
   const m = Math.max(0, Math.ceil(timeLeft));
   document.getElementById('timer').textContent = `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`;
   const [gr, tr] = SIDES, sg = score(gr), st = score(tr);
   document.getElementById('ptsGr').textContent = sg; document.getElementById('ptsTr').textContent = st;
-  document.getElementById('infGr').textContent = `👥 ${members(gr)} · 🏝 ${owned(gr).length}${gr.target ? ' · → ' + gr.target.name : ''}`;
-  document.getElementById('infTr').textContent = `${tr.target ? tr.target.name + ' ← · ' : ''}🏝 ${owned(tr).length} · 👥 ${members(tr)}`;
+  document.getElementById('infGr').textContent = `👥 ${members(gr)} · 🏝 ${owned(gr).length}${gr.target ? ' · → ' + islandName(gr.target) : ''}`;
+  document.getElementById('infTr').textContent = `${tr.target ? islandName(tr.target) + ' ← · ' : ''}🏝 ${owned(tr).length} · 👥 ${members(tr)}`;
   document.getElementById('tugGr').style.width = (sg + st ? sg / (sg + st) * 100 : 50) + '%';
   const pp = Math.min(100, peace / CONFIG.peaceGoal * 100);
   document.getElementById('peaceFill').style.width = pp + '%';
   document.getElementById('peacePct').textContent = Math.floor(pp) + '%';
+  heroesEl.innerHTML = HEROES.map(h => {
+    const state = h.active ? t('heroActive', { flag:h.active.flag }) : h.rest > 0 ? t('heroRest', { s:Math.ceil(h.rest) }) : t('heroCall', { key:h.keys[0] });
+    const bars = SIDES.filter(s => heroFor(h, s.id)).map(s => `<div class="hb"><i style="width:${h.charge[s.id] / CONFIG.heroCharge * 100}%;background:${s.css}"></i></div>`).join('');
+    return `<div class="hc${h.active ? ' on' : ''}" style="--h:${h.css}">${avatar({ hero:h }, 26)}<div class="bars"><span class="hn">${h.name}</span><span class="hs">${esc(state)}</span>${h.active ? '' : bars}</div></div>`;
+  }).join('');
   const medals = ['🥇', '🥈', '🥉'];
   for (const s of SIDES) {
     const top = [...users.values()].filter(u => u.side === s.id && u.pts >= 1).sort((a, b) => b.pts - a.pts).slice(0, 3);
-    document.getElementById(s.id ? 'lbTr' : 'lbGr').innerHTML = top.map((u, k) => {
-      const r = rankOf(u);
-      return `<div class="pl"><span class="medal">${medals[k]}</span>${avatar(u, 20)}<span class="nm">${esc(u.nick)}<span class="rk">${r[2]} ${r[1]}</span></span><span class="sc">${Math.floor(u.pts)}</span></div>`;
-    }).join('') || '<div class="pl" style="opacity:.6">Schreib ' + (s.id + 1) + ' zum Mitmachen!</div>';
+    document.getElementById(s.id ? 'lbTr' : 'lbGr').innerHTML = top.map((u, k) =>
+      `<div class="pl"><span class="medal">${medals[k]}</span>${avatar(u, 20)}<span class="nm">${esc(u.nick)}<span class="rk">${rankLabel(rankOf(u))}</span></span><span class="sc">${Math.floor(u.pts)}</span></div>`
+    ).join('') || `<div class="pl" style="opacity:.6">${esc(t('joinHint', { n:s.id + 1 }))}</div>`;
   }
 }
+
+// --- Sprache umschalten / dil değiştir ----------------------------------
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i]').forEach(el => { el.textContent = t(el.dataset.i); });
+  document.getElementById('nmGr').textContent = `🇬🇷 ${t('gr')}`;
+  document.getElementById('nmTr').textContent = `${t('tr')} 🇹🇷`;
+  document.getElementById('round').textContent = t('round', { n:Math.max(roundNo, 1) });
+  landLabels.forEach(l => l.el.textContent = t(l.side ? 'tr' : 'gr'));
+  islands.forEach(paintIsland);
+  fleets.forEach(f => { f.shown = -1; updateFleetLabel(f); });
+  if (lastFinale && roundOver) renderFinale();
+  if (statusInfo) showStatus(statusInfo);
+  document.getElementById('btnTr').classList.toggle('on', lang === 'tr');
+  document.getElementById('btnDe').classList.toggle('on', lang === 'de');
+  updateHud();
+}
+function setLang(l) { if (!I18N[l]) return; lang = l; try { localStorage.setItem('aegean_lang', l); } catch {} applyLang(); }
+document.getElementById('btnTr').addEventListener('click', () => setLang('tr'));
+document.getElementById('btnDe').addEventListener('click', () => setLang('de'));
 
 // =====================================================================
 //  VERBINDUNG + DEMO
 // =====================================================================
-let demo = CONFIG.forceDemo;
-const statusEl = document.getElementById('status');
+let demo = CONFIG.forceDemo, statusInfo = null;
+const statusEl = document.getElementById('status'), langBtn = document.getElementById('langBtn');
+function showStatus(e) { statusInfo = e; statusEl.textContent = e.code ? t('st_' + e.code, e) : (e.text || ''); }
 function setDemo(on) { demo = on; document.getElementById('demo').style.display = on ? 'block' : 'none'; }
+function setLive(on) { langBtn.style.display = CONFIG.showLangButton && !on ? 'flex' : 'none'; }
 function connect() {
   if (CONFIG.forceDemo) { setDemo(true); return; }
   let ws; try { ws = new WebSocket(CONFIG.wsUrl); } catch { setDemo(true); return; }
-  ws.onopen = () => { setDemo(false); statusEl.textContent = '● verbunden'; };
-  ws.onmessage = m => { try { const e = JSON.parse(m.data); if (e.type === 'status') statusEl.textContent = e.text; else handleEvent(e); } catch {} };
-  ws.onclose = () => { statusEl.textContent = 'Keine Verbindung zu server.js'; setDemo(true); setTimeout(connect, 4000); };
+  ws.onopen = () => { setDemo(false); setLive(true); showStatus({ code:'open' }); };
+  ws.onmessage = m => { try { const e = JSON.parse(m.data); if (e.type === 'status') showStatus(e); else handleEvent(e); } catch {} };
+  ws.onclose = () => { setLive(false); showStatus({ code:'noServer' }); setDemo(true); setTimeout(connect, 4000); };
 }
-const FAKE_NAMES = ['nikos_88','eleni.gr','kostas_kapitan','maria_ath','yannis92','sofia_kreta','dimitris.gr','katerina_r','giorgos7','ayse.tr','mehmet_35','elif_izmir','emre.kaptan','zeynep06','deniz_ege','can_bodrum','burak_tr','selin_ege','hakan35','ali_antalya','lena_hh','jonas.b','mia_koeln','tom_ber','sara_muc','anna_ege','leo_sea','kaptan_mavi','poseidon_fan','meltem_wind'];
+const FAKE_NAMES = ['ayse.tr','mehmet_35','elif_izmir','emre.kaptan','zeynep06','deniz_ege','can_bodrum','burak_tr','selin_ege','hakan35','ali_antalya','meltem_wind','kaptan_mavi','yusuf.34','merve_ank','ozan_ege','nikos_88','eleni.gr','kostas_kapitan','maria_ath','yannis92','sofia_kreta','dimitris.gr','lena_hh','jonas.b','mia_koeln','tom_ber','sara_muc','anna_ege','leo_sea'];
 const FAKE = Array.from({ length:60 }, (_, i) => FAKE_NAMES[i % FAKE_NAMES.length] + (i >= FAKE_NAMES.length ? '_' + i : ''));
-const FAKE_CHAT = ['1','2','🇬🇷','🇹🇷','zypern','kıbrıs','kreta','rhodos','lesbos','chios','naxos','frieden','barış','ειρήνη','peace 🕊','los!!','💪💪','samos','santorini','limnos'];
+const FAKE_CHAT = ['1','2','🇬🇷','🇹🇷','kıbrıs','zypern','girit','kreta','rodos','midilli','sakız','naxos','barış','frieden','ειρήνη','peace 🕊','hadi!!','💪💪','sisam','santorini','limni','ugurcan','cem','UĞURCAN!!','cem cem','koş koş'];
 const FAKE_GIFTS = [['Rose', 1], ['Rose', 1], ['GG', 1], ['Finger Heart', 5], ['Doughnut', 30], ['Galaxy', 1000]];
 let demoAcc = 0;
 function demoTick(dt) {
@@ -893,24 +1158,29 @@ function demoTick(dt) {
     else if (r < 0.897) handleEvent({ type:'share', user, nick:user });
   }
 }
-// Testtasten: Q = Geschenk 🇬🇷, W = Geschenk 🇹🇷, F = Frieden, D = Demo an/aus
+// Testtasten: Q/W = Geschenk 🇬🇷/🇹🇷 · U/C = UĞURCAN/CEM sofort (U für 🇹🇷, C für 🇬🇷) · F = Frieden · P = Finale · L = Sprache · D = Demo
 addEventListener('keydown', ev => {
   const k = ev.key.toLowerCase(), i = 'qw'.indexOf(k);
-  if (i >= 0) { const user = 'tester_' + i; const u = getUser({ user, nick:'Tester ' + SIDES[i].flag }); u.side = i; handleEvent({ type:'gift', user, nick:u.nick, giftName:'Test-Galaxy', diamonds:30, count:1 }); }
-  if (k === 'f') handleEvent({ type:'chat', user:'tester_f', nick:'Friedenstaube', comment:'frieden 🕊' });
+  if (i >= 0) { const user = 'tester_' + i; const u = getUser({ user, nick:'Test ' + SIDES[i].flag }); u.side = i; handleEvent({ type:'gift', user, nick:u.nick, giftName:'Test-Galaxy', diamonds:30, count:1 }); }
+  if (k === 'u' || k === 'c') {
+    const hero = HEROES[k === 'u' ? 0 : 1], sid = hero.side ?? (k === 'u' ? 1 : 0), u = getUser({ user:'tester_h' + sid, nick:'Test ' + SIDES[sid].flag });
+    u.side = sid; hero.rest = 0; hero.active = null; hero.charge[sid] = CONFIG.heroCharge - 1; chargeHero(hero, SIDES[sid], u, 1);
+  }
+  if (k === 'f') handleEvent({ type:'chat', user:'tester_f', nick:'🕊', comment:'barış 🕊' });
   if (k === 'p') peace = CONFIG.peaceGoal;
+  if (k === 'l') setLang(lang === 'tr' ? 'de' : 'tr');
   if (k === 'd') setDemo(!demo);
 });
 
 // =====================================================================
 //  LOOP
 // =====================================================================
-function updateWater(t) { const p = waterGeo.attributes.position.array; for (let i = 0; i < p.length; i += 3) p[i + 1] = waveH(waterBase[i], waterBase[i + 2], t); waterGeo.attributes.position.needsUpdate = true; }
-function waveFlag(o, t) { const a = o.flag.geometry.attributes.position, b = o.flagBase; for (let i = 0; i < a.count; i++) a.setZ(i, Math.sin(b[i * 3] * 6 - t * 6 + o.ph) * 0.12 * b[i * 3]); a.needsUpdate = true; }
-function updateFlags(t, dt) {
-  for (const o of islands) { waveFlag(o, t); if (o.pulse > 0) { o.pulse = Math.max(0, o.pulse - dt); const s = 1 + o.pulse * 0.3; o.ring.scale.set(o.rx * s, o.rz * s, 1); } }
-  ports.forEach(p => waveFlag(p, t));
-  if (crisisOn > 0) { CYPRUS.ring.material.opacity = 0.5 + Math.sin(t * 8) * 0.4; if (rnd() < 0.3) emit(new THREE.Vector3(CYPRUS.pos.x + (rnd() - .5) * 5, 0.5, CYPRUS.pos.z + (rnd() - .5) * 2.5), C_GOLD, 2, 0.5, 1, 2, 0.5, 0.5); }
+function updateWater(tt) { const p = waterGeo.attributes.position.array; for (let i = 0; i < p.length; i += 3) p[i + 1] = waveH(waterBase[i], waterBase[i + 2], tt); waterGeo.attributes.position.needsUpdate = true; }
+function waveFlag(o, tt) { const a = o.flag.geometry.attributes.position, b = o.flagBase; for (let i = 0; i < a.count; i++) a.setZ(i, Math.sin(b[i * 3] * 6 - tt * 6 + o.ph) * 0.12 * b[i * 3]); a.needsUpdate = true; }
+function updateFlags(tt, dt) {
+  for (const o of islands) { waveFlag(o, tt); if (o.pulse > 0) { o.pulse = Math.max(0, o.pulse - dt); const s = 1 + o.pulse * 0.3; o.ring.scale.set(o.rx * s, o.rz * s, 1); } }
+  ports.forEach(p => waveFlag(p, tt));
+  if (crisisOn > 0) { CYPRUS.ring.material.opacity = 0.5 + Math.sin(tt * 8) * 0.4; if (rnd() < 0.3) emit(new THREE.Vector3(CYPRUS.pos.x + (rnd() - .5) * 5, 0.5, CYPRUS.pos.z + (rnd() - .5) * 2.5), C_GOLD, 2, 0.5, 1, 2, 0.5, 0.5); }
 }
 function resize() {
   renderer.setSize(innerWidth, innerHeight, false);
@@ -929,24 +1199,23 @@ function place(el, x, y, z) {
 }
 function updateLabels() {
   for (const o of islands) { place(o.el, o.pos.x, o.top, o.pos.z); o.elT.textContent = Math.floor(o.troops); }
-  for (const p of ports) { place(p.el, p.pos.x, 0.6, p.pos.z + 0.75); p.el.textContent = `⚓ ${p.name} ${Math.floor(p.troops)}`; }
+  for (const p of ports) { place(p.el, p.pos.x, 0.6, p.pos.z + 0.75); p.el.textContent = `⚓ ${p.names[lang]} ${Math.floor(p.troops)}`; }
   for (const l of landLabels) { place(l.el, l.pos.x, 0.6, l.pos.z); const w = l.el.offsetWidth / 2 + 6; l.el.style.left = THREE.MathUtils.clamp(parseFloat(l.el.style.left), w, innerWidth - w) + 'px'; }
-  for (const f of fleets) place(f.el, f.group.position.x, 1.1, f.group.position.z);
+  for (const f of fleets) place(f.el, f.group.position.x, f.hero ? 2.6 : 1.1, f.group.position.z);
 }
 
 const clock = new THREE.Clock(); let hudAcc = 0;
 function frame() {
-  const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime; now = t;
+  const dt = Math.min(clock.getDelta(), 0.05), tt = clock.elapsedTime; now = tt;
   if (demo) demoTick(dt);
   tick(dt);
-  updateWater(t); updateFlags(t, dt); updateFleets(dt, t); updateParticles(dt); updateDoves(dt, t);
+  updateWater(tt); updateFlags(tt, dt); updateFleets(dt, tt); updateParticles(dt); updateDoves(dt, tt);
   clouds.forEach(c => { c.g.position.x += c.v * dt; if (c.g.position.x > 35) c.g.position.x = -35; });
-  // Kamera: fährt bei großen Ereignissen kurz heran
   let goal = camHome, z = 1;
   if (focus) { focus.t -= dt; goal = focus.pos; z = roundOver ? 0.92 : 0.72; if (focus.t <= 0) focus = null; }
   camTarget.lerp(goal, Math.min(1, dt * 2)); zoom += (z - zoom) * Math.min(1, dt * 2);
   shake *= 0.9;
-  const sway = new THREE.Vector3(Math.sin(t * 0.13) * 0.5, 0, Math.cos(t * 0.11) * 0.35);
+  const sway = new THREE.Vector3(Math.sin(tt * 0.13) * 0.5, 0, Math.cos(tt * 0.11) * 0.35);
   camera.position.copy(camTarget).add(sway).addScaledVector(camDir, camDist * zoom);
   camera.position.x += (rnd() - .5) * shake; camera.position.y += (rnd() - .5) * shake;
   camera.lookAt(tB.copy(camTarget).add(sway));
@@ -955,6 +1224,9 @@ function frame() {
   hudAcc += dt; if (hudAcc > 0.25) { hudAcc = 0; updateHud(); }
   requestAnimationFrame(frame);
 }
+HEROES.forEach(h => { h.charge = [0, 0]; h.active = null; h.rest = 0; });
+setLive(false);
+applyLang();
 resetRound(); connect(); frame();
 </script>
 </body>
