@@ -9,7 +9,7 @@ Zypern ist der Hauptpreis (5 Punkte). **Am Ende jeder Runde gewinnt immer der Fr
 Der Link läuft im Demo-Modus mit simulierten Zuschauern, auch auf dem Handy. Am Handy tippst du auf die Knöpfe rechts. Am PC gehen auch Tasten: `Q` / `W` = Geschenk, `U` / `C` = Helden, `K` = Legendenschiff, `F` = Waffenruhe, `P` = Finale, `L` = Sprache, `M` = Ton.
 Die alte Götter-Version: https://cembot90.github.io/aegean-island-live/goetter.html?demo=1
 
-![Spiel](screenshot.png) ![Held](screenshot-held.png) ![Friedensgipfel](screenshot-frieden.png)
+![Karte](screenshot.png) ![POV](screenshot-pov.png) ![POV Griechisch](screenshot-pov-el.png) ![Held](screenshot-held.png) ![Friedensgipfel](screenshot-frieden.png)
 
 ## Neu: Extras für mehr Beteiligung
 | Extra | So funktioniert es |
@@ -26,15 +26,26 @@ Die alte Götter-Version: https://cembot90.github.io/aegean-island-live/goetter.
 | 📊 **Deine Statistik** | `http://localhost:8787/stats` zeigt Geschenkwert, geschätzte Diamanten und Dollar sowie die Top-Unterstützer. Die Seite ist nur für dich und nur auf deinem Rechner erreichbar. |
 | 📱 **Demo-Knöpfe** | Im Demo-Modus gibt es rechts Knöpfe zum Antippen (Geschenk, Helden, Legendenschiff, Frieden, Finale), damit man die Demo auch am Handy spielen kann. |
 
+## Grafik, Kamera und Sprachen
+- **Kamera (Knopf 🗺/🎥/🔄 oben rechts, Taste `V`, oder `?cam=map|pov|auto`):**
+  - 🗺 **Karte**: Blick von oben auf die ganze Ägäis.
+  - 🎥 **POV**: Die Kamera fliegt hinter einem Schiff her, bevorzugt hinter Helden, Legendenschiffen und Geschenk-Flotten. Oben steht, wessen Schiff gerade gefilmt wird („🎥 ayse.tr 🇹🇷 → Girit“).
+  - 🔄 **Auto** (Standard): wechselt zwischen Karte (18 s) und POV (14 s) und springt in POV, sobald ein Held oder ein Legendenschiff losfährt.
+  - Die Taste `V` funktioniert auch im echten Stream.
+- **Gelände**: Festland und Inseln sind eine zusammenhängende 3D-Landschaft mit Bergen, Stränden, Wäldern, Dörfern, Windmühlen, Burgen und Leuchttürmen. Dazu kommen genauere Küsten (Dardanellen, Euböa, Kreta, Zypern mit Karpas-Halbinsel) und kleine Deko-Inseln.
+- **Wasser und Himmel**: Wellen und Schaum an den Stränden, Abendhimmel mit Sonne am Horizont und ein dezentes Glühen (`?fx=0` schaltet es aus).
+- **Langsamer Rechner?** Mit `?q=low` gibt es weniger Bäume, keine Effekte und eine geringere Auflösung.
+- **Sprachen**: 🇹🇷 Türkisch (Standard), 🇩🇪 Deutsch, 🇬🇷 Griechisch. Umschalten mit dem Knopf, der Taste `L` oder `?lang=tr|de|el`.
+
 ## Rechtliches & Lizenz
 Lies **[RECHTLICHES.md](RECHTLICHES.md)**, bevor du damit Geld verdienst. Die Lizenzen stehen in [LIZENZ.md](LIZENZ.md) und [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 Kurz: Das Spiel gehört dir, `server.js` steht unter der AGPL-3.0, und die TikTok-Anbindung ist inoffiziell.
 
-## Sprache: Türkisch oder Deutsch
+## Sprache: Türkisch, Deutsch oder Griechisch
 Standard ist **Türkisch**. Umschalten kannst du so:
 - mit dem Knopf **🇹🇷 TR / 🇩🇪 DE** oben rechts (die Wahl wird gespeichert),
 - mit der Taste `L`,
-- über die Adresse: `?lang=de` oder `?lang=tr`.
+- über die Adresse: `?lang=tr`, `?lang=de` oder `?lang=el`.
 
 Sobald `server.js` mit TikTok verbunden ist, wird der Knopf ausgeblendet, damit er nicht im Stream zu sehen ist.
 Mit `?ui=0` verschwindet er immer. Den Standard änderst du in `CONFIG.defaultLang`.
