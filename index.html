@@ -451,9 +451,10 @@ const ISLAND_POLY = {
 const CYP_C = P(32.9, 35.35), cypP = (lon, lat) => new THREE.Vector3(CYP_C.x + (lon - 33.35) * 2.8, 0, CYP_C.z - (lat - 35.15) * 4.0);
 // Kleine Deko-Inseln (nicht eroberbar): [Länge, Breite, rx, rz]
 const DECO_ISLES = [[25.15,37.6,0.38,0.32],[25.15,37.05,0.42,0.4],[25.3,36.72,0.3,0.22],[25.85,36.85,0.5,0.22],[26.98,37.0,0.4,0.28],[26.85,37.15,0.25,0.2],[26.55,37.32,0.22,0.18],[27.82,36.6,0.25,0.2],[27.4,36.42,0.3,0.15],[23.0,36.22,0.45,0.4],[23.45,37.72,0.3,0.25],[26.05,39.83,0.25,0.2],[24.65,37.6,0.25,0.3],[24.45,37.45,0.3,0.22],[25.6,36.62,0.3,0.15],[26.4,36.6,0.25,0.18]];
+// [deutsch, türkçe, ελληνικά, Länge, Breite, Seite, Ausfahrt Länge, Ausfahrt Breite] – Flotten starten an der Hafenausfahrt im offenen Meer
 const PORTS = [
-  ['Kavala','Kavala','Καβάλα', 24.40, 40.93, 0], ['Volos','Volos','Βόλος', 22.95, 39.36, 0], ['Piräus','Pire','Πειραιάς', 23.62, 37.94, 0], ['Sounion','Sunion','Σούνιο', 24.02, 37.66, 0],
-  ['Çanakkale','Çanakkale','Τσανάκαλε', 26.40, 40.15, 1], ['İzmir','İzmir','Ιζμίρ', 27.10, 38.42, 1], ['Bodrum','Bodrum','Μπόντρουμ', 27.43, 37.03, 1], ['Mersin','Mersin','Μερσίνα', 34.62, 36.80, 1],
+  ['Kavala','Kavala','Καβάλα', 24.40, 40.93, 0, 24.45, 40.78], ['Volos','Volos','Βόλος', 22.95, 39.36, 0, 23.55, 39.25], ['Piräus','Pire','Πειραιάς', 23.62, 37.94, 0, 23.85, 37.58], ['Sounion','Sunion','Σούνιο', 24.02, 37.66, 0, 24.15, 37.58],
+  ['Çanakkale','Çanakkale','Τσανάκαλε', 26.40, 40.15, 1, 25.95, 39.95], ['İzmir','İzmir','Ιζμίρ', 27.10, 38.42, 1, 26.6, 38.8], ['Bodrum','Bodrum','Μπόντρουμ', 27.43, 37.03, 1, 27.33, 36.95], ['Mersin','Mersin','Μερσίνα', 34.62, 36.80, 1, 34.45, 36.6],
 ];
 const GREECE = [[15,45],[26.4,45],[26.05,40.73],[25.87,40.85],[25.2,40.95],[24.8,40.85],[24.4,40.93],[23.9,40.75],[23.75,40.4],[24.4,40.15],[23.9,40.35],[23.95,39.95],[23.65,40.2],[23.35,39.95],[23.0,40.25],[22.95,40.6],[22.6,40.45],[22.6,40.0],[22.9,39.55],[23.3,39.15],[23.05,39.05],[23.1,38.75],[23.5,38.45],[23.95,38.15],[24.03,37.66],[23.62,37.94],[23.15,37.85],[23.2,37.45],[23.15,37.3],[22.75,37.0],[23.05,36.45],[22.5,36.45],[22.4,36.7],[22.15,36.4],[21.95,36.95],[21.6,37.5],[15,37.5]];
 const EUBOEA = [[23.25,38.98],[23.5,39.02],[24.15,38.65],[24.58,38.16],[24.3,38.05],[23.88,38.33],[23.58,38.5],[23.3,38.75]];
@@ -561,7 +562,7 @@ const islands = ISLAND_DATA.map(([id, de, trn, el, lon, lat, rx, rz, troops, pro
 }));
 const islandName = o => o.names[lang];
 const CYPRUS = islands.find(i => i.id === 'cyprus');
-const ports = PORTS.map(([de, trn, el, lon, lat, side]) => ({ kind:'port', names:{ de, tr:trn, el }, pos:P(lon, lat), rx:0.45, rz:0.45, owner:side, troops:15, prod:0.8 }));
+const ports = PORTS.map(([de, trn, el, lon, lat, side, elo, ela]) => ({ kind:'port', names:{ de, tr:trn, el }, pos:P(lon, lat), exitPos:P(elo, ela), rx:0.45, rz:0.45, owner:side, troops:15, prod:0.8 }));
 
 // =====================================================================
 //  GELÄNDE: Festland und Inseln als eine zusammenhängende Höhenkarte
@@ -899,22 +900,104 @@ const C_RAIN = new THREE.Color(0.35, 0.45, 0.6);
 const C_FIRE = new THREE.Color(1, 0.55, 0.15), C_WHITE = new THREE.Color(1, 1, 1), C_WAKE = new THREE.Color(0.5, 0.6, 0.65), C_GOLD = new THREE.Color(1, 0.8, 0.25);
 
 // --- Schiffe ------------------------------------------------------------
-const hullGeo = (() => {
-  const s = new THREE.Shape();
-  s.moveTo(0, 0.6); s.quadraticCurveTo(0.22, 0.25, 0.19, -0.5); s.lineTo(-0.19, -0.5); s.quadraticCurveTo(-0.22, 0.25, 0, 0.6);
-  const g = new THREE.ExtrudeGeometry(s, { depth:0.16, bevelEnabled:true, bevelThickness:0.03, bevelSize:0.03, bevelSegments:1 });
-  g.rotateX(Math.PI / 2); g.translate(0, 0.17, 0); return g;
-})();
-const hullMat = new THREE.MeshStandardMaterial({ color:lin(0x6e4423), roughness:0.8 });
-const goldHullMat = new THREE.MeshStandardMaterial({ color:0xc9962a, roughness:0.4, metalness:0.6, emissive:0x553300, emissiveIntensity:0.5 });
-const mastGeo = new THREE.CylinderGeometry(0.022, 0.022, 0.95, 5);
-const sailGeo = new THREE.PlaneGeometry(0.62, 0.42, 4, 1);
-function makeShip(side, gold) {
-  const g = new THREE.Group();
-  const hull = new THREE.Mesh(hullGeo, gold ? goldHullMat : hullMat); hull.castShadow = true; g.add(hull);
-  const mast = new THREE.Mesh(mastGeo, poleMat); mast.position.y = 0.6; g.add(mast);
-  const sail = new THREE.Mesh(sailGeo, flagMats[side]); sail.position.set(0, 0.68, 0.02); sail.castShadow = true; g.add(sail);
-  g.userData.sail = sail;
+// Jedes Schiff besteht aus wenigen zusammengefassten Teilen (Rumpf, Holz, Metall, Schilde, Segel, Ruder),
+// damit auch viele Flotten gleichzeitig flüssig laufen. Vorne ist +z.
+function mergeGeos(list) {
+  const parts = list.map(g => { const n = g.index ? g.toNonIndexed() : g; n.userData.col = g.userData.col; if (!n.attributes.normal) n.computeVertexNormals(); return n; });
+  let count = 0; parts.forEach(g => count += g.attributes.position.count);
+  const pos = new Float32Array(count * 3), nor = new Float32Array(count * 3), uv = new Float32Array(count * 2), col = new Float32Array(count * 3);
+  let o = 0;
+  for (const g of parts) {
+    const n = g.attributes.position.count;
+    pos.set(g.attributes.position.array, o * 3); nor.set(g.attributes.normal.array, o * 3);
+    if (g.attributes.uv) uv.set(g.attributes.uv.array, o * 2);
+    if (g.attributes.color) col.set(g.attributes.color.array, o * 3); else { const c = g.userData.col || [1, 1, 1]; for (let i = 0; i < n; i++) col.set(c, (o + i) * 3); }
+    o += n;
+  }
+  const m = new THREE.BufferGeometry();
+  m.setAttribute('position', new THREE.BufferAttribute(pos, 3)); m.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+  m.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); m.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  return m;
+}
+const tint = (g, hex) => { const c = lin(hex); g.userData.col = [c.r, c.g, c.b]; return g; };
+const at = (g, x, y, z, rx = 0, ry = 0, rz = 0) => { g.rotateX(rx); g.rotateY(ry); g.rotateZ(rz); g.translate(x, y, z); return g; };
+// gewölbtes Segel
+function sailGeom(w, h, bulge) {
+  const g = new THREE.PlaneGeometry(w, h, 8, 5), p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) { const x = p.getX(i) / (w / 2), y = p.getY(i) / (h / 2); p.setZ(i, bulge * (1 - x * x) * (1 - 0.45 * y * y)); }
+  g.computeVertexNormals(); return g;
+}
+// Rumpf als Spantenmodell mit Farbbändern (unten dunkel, Wasserlinie rot, oben helles Holz)
+function hullGeom(gold) {
+  const st = [[-0.55, 0.17, 0.33], [-0.42, 0.2, 0.3], [-0.2, 0.21, 0.24], [0.05, 0.21, 0.22], [0.3, 0.18, 0.23], [0.48, 0.11, 0.25], [0.62, 0.0, 0.29]]; // z, Halbbreite, Deckhöhe
+  const prof = [[1, 1], [0.97, 0.7], [0.82, 0.42], [0.5, 0.16], [0, 0]]; // (Breitenfaktor, Höhenfaktor) von Deck bis Kiel
+  const cDark = lin(gold ? '#8a5a12' : '#3b2414'), cRed = lin(gold ? '#c9962a' : '#7a2e1c'), cWood = lin(gold ? '#ffd54a' : '#8a5a33'), cTrim = lin(gold ? '#fff1b0' : '#c9a36b');
+  const pos = [], col = [];
+  const pt = (s, k, side) => { const [z, w, d] = s, [fw, fh] = prof[k]; return [side * w * fw, 0.03 + (d - 0.03) * fh, z]; };
+  const colOf = k => k === 0 ? cTrim : k === 1 ? cWood : k === 2 ? cRed : cDark;
+  for (let i = 0; i < st.length - 1; i++) for (const side of [-1, 1]) for (let k = 0; k < prof.length - 1; k++) {
+    const a = pt(st[i], k, side), b = pt(st[i + 1], k, side), c = pt(st[i], k + 1, side), d = pt(st[i + 1], k + 1, side);
+    const tri = side > 0 ? [a, c, b, b, c, d] : [a, b, c, b, d, c];
+    tri.forEach(p => pos.push(...p)); const cc = colOf(k); for (let q = 0; q < 6; q++) col.push(cc.r, cc.g, cc.b);
+  }
+  // Deck (oben) und Heckspiegel
+  const deck = lin(gold ? '#e8c46a' : '#b48a58');
+  for (let i = 0; i < st.length - 1; i++) {
+    const a = pt(st[i], 0, -1), b = pt(st[i], 0, 1), c = pt(st[i + 1], 0, -1), d = pt(st[i + 1], 0, 1);
+    [a, b, c, c, b, d].forEach(p => { pos.push(p[0], p[1] - 0.015, p[2]); col.push(deck.r, deck.g, deck.b); });
+  }
+  const s0 = st[0];
+  for (let k = 0; k < prof.length - 1; k++) {
+    const a = pt(s0, k, -1), b = pt(s0, k, 1), c = pt(s0, k + 1, -1), d = pt(s0, k + 1, 1);
+    [a, c, b, b, c, d].forEach(p => pos.push(...p)); const cc = colOf(k); for (let q = 0; q < 6; q++) col.push(cc.r, cc.g, cc.b);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  g.computeVertexNormals(); return g;
+}
+const SHIP_TPL = {};
+function shipTemplate(gold) {
+  const key = gold ? 'g' : 'n';
+  if (SHIP_TPL[key]) return SHIP_TPL[key];
+  const W = gold ? '#7a5a2a' : '#6b4a2b', W2 = gold ? '#a07a3a' : '#8a6238';
+  const wood = mergeGeos([
+    tint(at(new THREE.BoxGeometry(0.42, 0.13, 0.24), 0, 0.27, -0.43), W2),                       // Achterkastell
+    tint(at(new THREE.BoxGeometry(0.44, 0.03, 0.26), 0, 0.345, -0.43), W),
+    tint(at(new THREE.CylinderGeometry(0.018, 0.024, 1.1, 6), 0, 0.75, 0.02), W),                   // Großmast
+    tint(at(new THREE.CylinderGeometry(0.015, 0.02, 0.82, 6), 0, 0.6, 0.36), W),                    // Fockmast
+    tint(at(new THREE.CylinderGeometry(0.009, 0.009, 0.7, 5), 0, 1.13, 0.04, 0, 0, Math.PI / 2), W),  // Rahen
+    tint(at(new THREE.CylinderGeometry(0.008, 0.008, 0.56, 5), 0, 0.9, 0.38, 0, 0, Math.PI / 2), W),
+    tint(at(new THREE.CylinderGeometry(0.008, 0.008, 0.62, 5), 0, 0.6, 0.04, 0, 0, Math.PI / 2), W),
+    tint(at(new THREE.CylinderGeometry(0.012, 0.016, 0.42, 5), 0, 0.33, 0.78, Math.PI / 2 - 0.35), W), // Bugspriet
+    tint(at(new THREE.BoxGeometry(0.02, 0.05, 0.95), -0.215, 0.235, 0.0), W2),                      // Reling
+    tint(at(new THREE.BoxGeometry(0.02, 0.05, 0.95), 0.215, 0.235, 0.0), W2),
+    tint(at(new THREE.CylinderGeometry(0.03, 0.03, 0.05, 6), 0, 1.3, 0.02), W),                      // Mastkorb
+  ]);
+  const metal = mergeGeos([
+    ...[-0.12, 0.12].flatMap(z => [-1, 1].map(sd => tint(at(new THREE.CylinderGeometry(0.018, 0.022, 0.12, 6), sd * 0.24, 0.17, z, 0, 0, Math.PI / 2), '#2a2a2e'))),
+    tint(at(new THREE.SphereGeometry(0.03, 6, 5), 0, 0.42, -0.56), gold ? '#fff2b0' : '#ffd27a'),  // Hecklaterne
+  ]);
+  const shields = mergeGeos([-0.3, -0.12, 0.06, 0.24].flatMap(z => [-1, 1].map(sd => at(new THREE.CylinderGeometry(0.045, 0.045, 0.015, 10), sd * 0.225, 0.25, z, 0, 0, Math.PI / 2))).concat([
+    at((() => { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, 0, -0.06, 0, 0, -0.03, -0.22], 3)); return g; })(), 0, 1.4, 0.02), // Wimpel
+  ]));
+  const oars = side => mergeGeos([-0.28, -0.16, -0.04, 0.08, 0.2, 0.32].map(z => tint(at(new THREE.BoxGeometry(0.014, 0.014, 0.5), side * 0.42, -0.1, z, 0, side * 1.25, side * 0.45), '#a07a4a')));
+  const fore = mergeGeos([at(sailGeom(0.44, 0.34, 0.06), 0, 0.73, 0.4), at((() => { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute([0, 0.95, 0.38, 0, 0.42, 0.95, 0, 0.36, 0.42], 3)); g.computeVertexNormals(); return g; })(), 0, 0, 0)]);
+  return (SHIP_TPL[key] = { hull:hullGeom(gold), wood, metal, shields, oarsL:oars(-1), oarsR:oars(1), fore, main:at(sailGeom(0.62, 0.48, 0.09), 0, 0.86, 0.06) });
+}
+const hullMat = new THREE.MeshStandardMaterial({ vertexColors:true, roughness:0.8, flatShading:true });
+const goldHullMat = new THREE.MeshStandardMaterial({ vertexColors:true, roughness:0.35, metalness:0.55, emissive:0x3a2400, emissiveIntensity:0.6, flatShading:true });
+const woodMat = new THREE.MeshStandardMaterial({ vertexColors:true, roughness:0.85 });
+const metalMat = new THREE.MeshStandardMaterial({ vertexColors:true, roughness:0.4, metalness:0.6, emissive:0x221500, emissiveIntensity:0.4 });
+const whiteSail = new THREE.MeshStandardMaterial({ color:lin('#d9cdb0'), side:THREE.DoubleSide, roughness:0.95 });
+const sideMats = SIDES.map(s => new THREE.MeshStandardMaterial({ color:s.color, roughness:0.6, side:THREE.DoubleSide }));
+function makeShip(side, gold, mainMat) {
+  const T = shipTemplate(gold), g = new THREE.Group();
+  const add = (geo, mat, shadow = true) => { const m = new THREE.Mesh(geo, mat); m.castShadow = shadow; g.add(m); return m; };
+  add(T.hull, gold ? goldHullMat : hullMat); add(T.wood, woodMat); add(T.metal, metalMat, false); add(T.shields, sideMats[side], false);
+  const main = add(T.main, mainMat || flagMats[side]); add(T.fore, whiteSail);
+  const oL = new THREE.Group(), oR = new THREE.Group(); oL.position.set(0, 0.19, 0); oR.position.set(0, 0.19, 0);
+  oL.add(new THREE.Mesh(T.oarsL, woodMat)); oR.add(new THREE.Mesh(T.oarsR, woodMat)); g.add(oL, oR);
+  g.userData.sail = main; g.userData.oars = [oL, oR]; g.userData.ph = rnd() * 6;
   return g;
 }
 // Heldenschiff: großes goldenes Schiff mit Namenssegel und Krieger an Deck
@@ -922,39 +1005,82 @@ const heroSailMats = {};
 function heroSailMat(hero, side) {
   const k = hero.id + side;
   if (heroSailMats[k]) return heroSailMats[k];
-  const cv = document.createElement('canvas'); cv.width = 256; cv.height = 176;
+  const cv = document.createElement('canvas'); cv.width = 256; cv.height = 192;
   const x = cv.getContext('2d');
-  const gr = x.createLinearGradient(0, 0, 0, 176); gr.addColorStop(0, hero.css); gr.addColorStop(1, '#6b4a00');
-  x.fillStyle = gr; x.fillRect(0, 0, 256, 176);
-  x.fillStyle = SIDES[side].css; x.fillRect(0, 140, 256, 36);
-  x.fillStyle = '#1a1000'; x.font = 'italic 900 50px "Fira Sans Condensed", Arial, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
-  x.fillText(hero.name, 128, 64, 236);
-  x.font = '40px serif'; x.fillText('⚔', 128, 112);
-  x.fillStyle = '#fff'; x.font = '900 22px Manrope, sans-serif'; x.fillText(SIDES[side].flag, 128, 158);
+  const gr = x.createLinearGradient(0, 0, 0, 192); gr.addColorStop(0, hero.css); gr.addColorStop(1, '#6b4a00');
+  x.fillStyle = gr; x.fillRect(0, 0, 256, 192);
+  x.fillStyle = SIDES[side].css; x.fillRect(0, 156, 256, 36);
+  x.fillStyle = '#1a1000'; x.font = 'italic 900 52px "Fira Sans Condensed", Arial, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillText(hero.name, 128, 66, 236);
+  x.font = '44px serif'; x.fillText('⚔', 128, 118);
+  x.fillStyle = '#fff'; x.font = '900 22px Manrope, sans-serif'; x.fillText(SIDES[side].flag, 128, 174);
   const tx = new THREE.CanvasTexture(cv); tx.encoding = THREE.sRGBEncoding;
   return (heroSailMats[k] = new THREE.MeshStandardMaterial({ map:tx, side:THREE.DoubleSide, roughness:0.6, emissive:hero.color, emissiveIntensity:0.12 }));
 }
 function makeHeroShip(hero, side) {
-  const g = new THREE.Group();
-  const hull = new THREE.Mesh(hullGeo, goldHullMat); hull.castShadow = true; g.add(hull);
-  const mast = new THREE.Mesh(mastGeo, poleMat); mast.position.y = 0.6; g.add(mast);
-  const sail = new THREE.Mesh(new THREE.PlaneGeometry(0.72, 0.5), heroSailMat(hero, side)); sail.position.set(0, 0.72, 0.05); sail.castShadow = true; g.add(sail);
-  g.userData.sail = sail;
-  // Krieger
-  const skin = new THREE.MeshStandardMaterial({ color:lin(0xe0b48a) }), armor = new THREE.MeshStandardMaterial({ color:hero.color, metalness:0.6, roughness:0.35 });
-  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 0.24, 8), armor); body.position.set(0, 0.36, -0.28); g.add(body);
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 8), skin); head.position.set(0, 0.54, -0.28); g.add(head);
-  const helm = new THREE.Mesh(new THREE.ConeGeometry(0.065, 0.08, 8), armor); helm.position.set(0, 0.61, -0.28); g.add(helm);
-  const cape = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.26), new THREE.MeshStandardMaterial({ color:hero.cape, side:THREE.DoubleSide })); cape.position.set(0, 0.36, -0.36); cape.rotation.x = 0.25; g.add(cape);
-  const sword = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.32, 0.02), new THREE.MeshStandardMaterial({ color:0xeeeeee, metalness:0.9, roughness:0.2, emissive:0x444444 }));
-  sword.position.set(0.1, 0.6, -0.26); sword.rotation.z = -0.35; g.add(sword);
+  const g = makeShip(side, true, heroSailMat(hero, side));
+  // Krieger am Bug
+  const skin = new THREE.MeshStandardMaterial({ color:lin('#e0b48a') }), armor = new THREE.MeshStandardMaterial({ color:hero.color, metalness:0.6, roughness:0.35 });
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.06, 0.2, 8), armor); body.position.set(0, 0.32, 0.42); g.add(body);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 8), skin); head.position.set(0, 0.47, 0.42); g.add(head);
+  const helm = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.07, 8), armor); helm.position.set(0, 0.53, 0.42); g.add(helm);
+  const cape = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.22), new THREE.MeshStandardMaterial({ color:hero.cape, side:THREE.DoubleSide })); cape.position.set(0, 0.33, 0.36); cape.rotation.x = 0.3; g.add(cape);
+  const sword = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.26, 0.016), new THREE.MeshStandardMaterial({ color:0xeeeeee, metalness:0.9, roughness:0.2, emissive:0x444444 }));
+  sword.position.set(0.08, 0.5, 0.44); sword.rotation.z = -0.35; g.add(sword);
   g.userData.sword = sword;
-  // Aura
-  const aura = new THREE.Mesh(new THREE.RingGeometry(0.5, 0.9, 40), new THREE.MeshBasicMaterial({ color:hero.color, transparent:true, opacity:0.3, depthWrite:false, blending:THREE.AdditiveBlending }));
-  aura.rotation.x = -Math.PI / 2; aura.position.y = 0.06; g.add(aura);
+  const aura = new THREE.Mesh(new THREE.RingGeometry(0.55, 0.95, 40), new THREE.MeshBasicMaterial({ color:hero.color, transparent:true, opacity:0.3, depthWrite:false, blending:THREE.AdditiveBlending }));
+  aura.rotation.x = -Math.PI / 2; aura.position.y = 0.05; g.add(aura);
   g.userData.aura = aura;
-  g.scale.setScalar(2.8);
+  g.scale.setScalar(2.4);
   return g;
+}
+
+// --- Kanonenrauch: weiche Rauchwolken, die aufsteigen, wachsen und verblassen ---
+const SM_MAX = 700, smGeo = new THREE.BufferGeometry();
+const smPos = new Float32Array(SM_MAX * 3), smA = new Float32Array(SM_MAX), smS = new Float32Array(SM_MAX);
+smGeo.setAttribute('position', new THREE.BufferAttribute(smPos, 3)); smGeo.setAttribute('aA', new THREE.BufferAttribute(smA, 1)); smGeo.setAttribute('aS', new THREE.BufferAttribute(smS, 1));
+const smoke = new THREE.Points(smGeo, new THREE.ShaderMaterial({
+  transparent:true, depthWrite:false, uniforms:{ uScale:{ value:400 } },
+  vertexShader:'attribute float aA; attribute float aS; uniform float uScale; varying float vA; void main(){ vA = aA; vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_PointSize = aS * uScale / -mv.z; gl_Position = projectionMatrix * mv; }',
+  fragmentShader:'varying float vA; void main(){ vec2 d = gl_PointCoord - 0.5; float r = dot(d, d) * 4.0; if (r > 1.0) discard; float a = (1.0 - r) * (1.0 - r) * vA; gl_FragColor = vec4(vec3(0.6, 0.59, 0.57) - r * 0.1, a * 0.7); }',
+}));
+smoke.frustumCulled = false; smoke.renderOrder = 2; scene.add(smoke);
+const smP = Array.from({ length:SM_MAX }, () => ({ life:0 })); let smCur = 0;
+function puff(p, n = 3, size = 0.5, spread = 0.15, drift) {
+  for (let i = 0; i < n; i++) {
+    const q = smP[smCur]; smCur = (smCur + 1) % SM_MAX;
+    q.x = p.x + (rnd() - .5) * spread; q.y = p.y + rnd() * spread * 0.5; q.z = p.z + (rnd() - .5) * spread;
+    q.vx = (drift ? drift.x : 0) * (0.6 + rnd() * 0.8) + (rnd() - .5) * 0.3; q.vz = (drift ? drift.z : 0) * (0.6 + rnd() * 0.8) + (rnd() - .5) * 0.3; q.vy = 0.25 + rnd() * 0.3;
+    q.life = q.max = 1.8 + rnd() * 1.4; q.s0 = size * (0.7 + rnd() * 0.6);
+  }
+}
+function updateSmoke(dt) {
+  for (let i = 0; i < SM_MAX; i++) {
+    const q = smP[i];
+    if (q.life <= 0) { smA[i] = 0; continue; }
+    q.life -= dt; q.vx *= 0.97; q.vz *= 0.97;
+    q.x += q.vx * dt + 0.15 * dt; q.y += q.vy * dt; q.z += q.vz * dt;
+    const k = 1 - q.life / q.max;
+    smPos[i * 3] = q.x; smPos[i * 3 + 1] = q.y; smPos[i * 3 + 2] = q.z;
+    smA[i] = Math.max(0, (k < 0.1 ? k / 0.1 : 1) * (1 - k)) * 0.6; smS[i] = q.s0 * (1 + k * 1.6);
+  }
+  smGeo.attributes.position.needsUpdate = smGeo.attributes.aA.needsUpdate = smGeo.attributes.aS.needsUpdate = true;
+}
+// Breitseite: Mündungsfeuer und Rauch an den Kanonen, die zum Ziel zeigen
+const _cv = new THREE.Vector3();
+function broadside(f, toward, loud = true) {
+  if (!f.group.children.length) return;
+  const ry = f.group.rotation.y, right = new THREE.Vector3(Math.cos(ry), 0, -Math.sin(ry));
+  const toT = new THREE.Vector3().subVectors(toward, f.group.position), sd = toT.dot(right) >= 0 ? 1 : -1;
+  const ships = f.group.children.slice(0, 3);
+  for (const sh of ships) for (const z of [-0.12, 0.12]) {
+    _cv.set(sd * 0.32, 0.17, z); sh.localToWorld(_cv);
+    const out = right.clone().multiplyScalar(sd);
+    emit(_cv, C_FIRE, 5, 2.2, 0.25, 0.6, 0.05, 1);
+    puff(_cv, 2, f.big ? 0.55 : 0.28, 0.08, out.multiplyScalar(0.8));
+  }
+  boomLight(f.group.position, C_FIRE, f.big ? 5 : 2.5);
+  if (loud) SFX.boom();
 }
 
 // =====================================================================
@@ -1054,19 +1180,37 @@ function edgePoint(o, toward, pad) {
 }
 
 function patronHero(u, s) { return { id:'p_' + u.id, name:upper(short(u.nick, 11)), css:'#ffd54a', cape:s.css, color:new THREE.Color('#ffd54a') }; }
+// Route über Wasser: probiert mehrere Bögen und nimmt den mit den wenigsten Landpunkten
+const _rq = new THREE.Vector3();
+function landHits(from, ctrl, end) {
+  let n = 0;
+  for (let i = 2; i <= 22; i++) { const k = i / 24; bez(from, ctrl, end, k, _rq); if (hAt(_rq.x, _rq.z) > -0.02) n++; }
+  return n;
+}
+function seaRoute(from, end, dir) {
+  const L = dir.length(), perp = new THREE.Vector3(-dir.z, 0, dir.x).normalize(), mid = from.clone().lerp(end, 0.5);
+  const offs = [(rnd() - 0.5) * 0.3, 0.3, -0.3, 0.55, -0.55, 0.85, -0.85, 1.2, -1.2];
+  let best = null, bs = Infinity;
+  for (const o of offs) {
+    const c = mid.clone().addScaledVector(perp, o * L), h = landHits(from, c, end) * 10 + Math.abs(o) * 2;
+    if (h < bs) { bs = h; best = c; }
+    if (h < 2) break;
+  }
+  return best;
+}
 function launchFleet(s, src, target, troops, captain, gold, hero, patron) {
   troops = Math.floor(troops);
   if (troops < 1 || !target || !src) return;
-  const from = edgePoint(src, target.pos, hero ? 0.9 : 0.45), end = edgePoint(target, src.pos, hero ? 1.0 : 0.55);
+  const from = src.exitPos ? src.exitPos.clone() : edgePoint(src, target.pos, hero ? 0.9 : 0.45), end = edgePoint(target, from, hero ? 1.0 : 0.55);
   const dir = new THREE.Vector3().subVectors(end, from);
-  const ctrl = from.clone().lerp(end, 0.5).add(new THREE.Vector3(-dir.z, 0, dir.x).normalize().multiplyScalar((rnd() - 0.5) * dir.length() * 0.3));
+  const ctrl = seaRoute(from, end, dir);
   const len = from.distanceTo(ctrl) + ctrl.distanceTo(end);
   const dur = THREE.MathUtils.clamp(len / 6, 2.5, 7.5) / (gold ? 1.4 : 1) / (hero ? 1.2 : 1);
   const group = new THREE.Group();
   if (hero) group.add(makeHeroShip(hero, s.id));
   else if (patron) group.add(makeHeroShip(patronHero(patron, s), s.id));
   else {
-    const count = Math.min(1 + Math.floor(Math.sqrt(troops) / 2.3), 7);
+    const count = Math.min(1 + Math.floor(Math.sqrt(troops) / 2.3), 5);
     const offs = [[0, 0], [-0.5, -0.6], [0.5, -0.6], [-1, -1.2], [1, -1.2], [0, -1.2], [0, -1.8]];
     for (let i = 0; i < count; i++) { const sh = makeShip(s.id, gold); sh.position.set(offs[i][0], 0, offs[i][1]); if (i === 0 && (gold || captain)) sh.scale.setScalar(gold ? 1.6 : 1.25); group.add(sh); }
   }
@@ -1100,16 +1244,18 @@ function updateFleets(dt, time) {
     const m = a.group.position.clone().lerp(b.group.position, 0.5); m.y = 0.5;
     if (a.hero && b.hero) {
       const dmg = Math.min(40 * dt, a.troops, b.troops); a.troops -= dmg; b.troops -= dmg;
+      for (const [x, y] of [[a, b], [b, a]]) if (!(now < x.fireT)) { x.fireT = now + 0.5; broadside(x, y.group.position); }
       emit(m, a.hero.color, 6, 4, 0.7, 4); emit(m, b.hero.color, 6, 4, 0.7, 4); shake = Math.min(shake + 0.05, 0.9);
       if (!a.hero.duelShown) { a.hero.duelShown = b.hero.duelShown = true; banner(t('heroDuel', { a:a.hero.name, b:b.hero.name })); focusOn(m, 3); }
     } else if (a.hero || b.hero) {
       const h = a.hero ? a : b, o = h === a ? b : a;
-      h.troops -= o.troops * 0.15; o.troops = 0; o.sunkBy = h;
+      h.troops -= o.troops * 0.15; o.troops = 0; o.sunkBy = h; broadside(h, o.group.position);
       emit(m, h.hero.color, 50, 5, 1, 5); shake = Math.min(shake + 0.3, 0.9);
       feed(t('heroSink', { hero:h.hero.name }), h.hero.css, { hero:h.hero }, 'hero');
     } else {
       const dmg = Math.min(30 * dt, a.troops, b.troops); a.troops -= dmg; b.troops -= dmg;
       if (rnd() < 0.5) emit(m, C_FIRE, 4, 2.5, 0.5, 2);
+      for (const [x, y] of [[a, b], [b, a]]) if (!(now < x.fireT)) { x.fireT = now + 0.6 + rnd() * 0.4; broadside(x, y.group.position, x === a); }
       shake = Math.min(shake + 0.02, 0.5);
       [a, b].forEach((f, k) => { if (f.troops <= 0.5) { const o = k ? a : b; if (f.captain && o.captain) feed(t('seaBattle', { a:o.captain.nick, b:f.captain.nick }), o.side.css, o.captain); addPts(o.captain, 5); } });
     }
@@ -1127,6 +1273,14 @@ function updateFleets(dt, time) {
     f.group.position.set(tA.x, waveH(tA.x, tA.z, time) + 0.02, tA.z);
     if (tB.distanceToSquared(tA) > 1e-6) f.group.rotation.y = Math.atan2(tB.x - tA.x, tB.z - tA.z);
     f.group.rotation.z = Math.sin(time * 3 + i) * 0.06;
+    for (let si = 0; si < f.group.children.length; si++) {
+      const sh = f.group.children[si], ud = sh.userData; if (!ud.oars) continue;
+      const ph = time * (f.big ? 3 : 4.2) + ud.ph, row = ceaseT > 0 || roundOver ? 0 : 1;
+      ud.oars[0].rotation.set(0, Math.sin(ph) * 0.3 * row, Math.cos(ph) * 0.12 * row);
+      ud.oars[1].rotation.set(0, -Math.sin(ph) * 0.3 * row, -Math.cos(ph) * 0.12 * row);
+      ud.sail.scale.z = 1 + Math.sin(time * 2.2 + ud.ph) * 0.18;
+    }
+    if (!f.fired && !roundOver && f.t > 0.78 && f.target.owner !== f.side.id) { f.fired = true; broadside(f, f.target.pos); }
     if (f.big) {
       const hs = f.group.children[0];
       hs.userData.aura.rotation.z += dt * 2; hs.userData.aura.scale.setScalar(1 + Math.sin(time * 5) * 0.15);
@@ -1758,7 +1912,8 @@ function frame() {
   const dt = Math.min(clock.getDelta(), 0.05), tt = clock.elapsedTime; now = tt;
   if (demo) demoTick(dt);
   tick(dt);
-  waterUniforms.uTime.value = tt; updateFlags(tt, dt);
+  waterUniforms.uTime.value = tt; updateFlags(tt, dt); updateSmoke(dt);
+  smoke.material.uniforms.uScale.value = renderer.getPixelRatio() * innerHeight / 2 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
   windmills.forEach((w, i) => w.rotation.z += dt * (1.2 + (i % 3) * 0.3) * (stormT > 0 ? 3 : 1));
   beacons.forEach((b, i) => b.rotation.y += dt * 0.9);
   flash.intensity *= Math.pow(0.02, dt); updateFleets(dt, tt); updateParticles(dt); updateDoves(dt, tt);
