@@ -399,6 +399,9 @@ const SFX = (() => {
     fanfare() { [392, 523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.35, 'triangle', 0.12, i * 0.12)); },
     calm() { [659, 784, 880, 784].forEach((f, i) => tone(f, 0.8, 'sine', 0.07, i * 0.4)); },
     peaceMusic() { [523, 587, 659, 784, 659, 587, 523, 392, 440, 523].forEach((f, i) => tone(f, 0.9, 'triangle', 0.08, i * 0.45)); [261, 329, 392].forEach(f => tone(f, 5, 'sine', 0.045)); },
+    pop() { if (thr('pop', 90)) { noise(0.5, 0.28, 2400); tone(900 + Math.random() * 500, 0.15, 'triangle', 0.05, 0.02, 0.4); } },
+    whistle() { if (thr('whi', 120)) tone(500, 0.9, 'sine', 0.025, 0, 3); },
+    sink() { if (thr('sink', 400)) { noise(1.6, 0.22, 500); tone(160, 1.4, 'sawtooth', 0.04, 0.1, 0.4); noise(1.2, 0.12, 3000, 0.4); } },
     gull() { if (thr('gull', 5000)) { tone(1800, 0.25, 'sine', 0.025, 0, 0.6); tone(1700, 0.25, 'sine', 0.025, 0.3, 0.6); } },
   };
 })();
@@ -1066,6 +1069,93 @@ function updateSmoke(dt) {
   }
   smGeo.attributes.position.needsUpdate = smGeo.attributes.aA.needsUpdate = smGeo.attributes.aS.needsUpdate = true;
 }
+// --- Wracks: versenkte Schiffe kippen, brennen, sinken; Planken treiben, Luftblasen steigen ---
+const wrecks = [];
+const DEB_MAX = 160, debris = new THREE.InstancedMesh(new THREE.BoxGeometry(0.22, 0.03, 0.07), new THREE.MeshStandardMaterial({ color:lin('#6b4a2b'), roughness:0.9 }), DEB_MAX);
+debris.count = DEB_MAX; debris.frustumCulled = false; scene.add(debris);
+const debP = Array.from({ length:DEB_MAX }, () => ({ life:0 })); let debCur = 0; const _dm = new THREE.Object3D();
+const C_BUBBLE = new THREE.Color(0.55, 0.75, 0.85);
+function sinkFleet(f) {
+  f.el.remove();
+  const p = f.group.position;
+  for (let k = 0; k < (f.big ? 22 : 10); k++) { const d = debP[debCur]; debCur = (debCur + 1) % DEB_MAX; Object.assign(d, { x:p.x + (rnd() - .5) * 1.2, z:p.z + (rnd() - .5) * 1.2, y:0.4 + rnd() * 0.6, vx:(rnd() - .5) * 1.6, vz:(rnd() - .5) * 1.6, vy:1 + rnd() * 1.5, ry:rnd() * 6, spin:(rnd() - .5) * 3, life:9 + rnd() * 4, s:(f.big ? 1.6 : 1) * (0.6 + rnd() * 0.8) }); }
+  emit(new THREE.Vector3(p.x, 0.5, p.z), C_FIRE, 30, 2.5, 0.8, 3); puff(new THREE.Vector3(p.x, 0.6, p.z), 6, f.big ? 1 : 0.55, 0.4);
+  boomLight(p, C_FIRE, f.big ? 10 : 5); SFX.boom(); SFX.sink();
+  const axis = rnd() < 0.5 ? 1 : -1;
+  wrecks.push({ group:f.group, t:0, axis, dur:f.big ? 6 : 4.5, y0:f.group.position.y, pitch:(rnd() - .5) * 0.6 });
+}
+function updateWrecks(dt, time) {
+  for (let i = wrecks.length - 1; i >= 0; i--) {
+    const w = wrecks[i]; w.t += dt; const k = Math.min(1, w.t / w.dur), g = w.group;
+    g.rotation.z = w.axis * (0.15 + 1.15 * smooth(0, 0.6, k)); g.rotation.x = w.pitch * smooth(0.2, 1, k);
+    g.position.y = w.y0 - smooth(0.15, 1, k) * 2.2 * (g.children[0]?.scale.x || 1);
+    if (w.t < 2.2 && rnd() < 0.5) { const q = g.position.clone(); q.y = Math.max(q.y, 0) + 0.4; emit(q, C_FIRE, 2, 0.6, 0.6, 1.8, 0.4, 0.5); if (rnd() < 0.3) puff(q, 1, 0.4, 0.3); }
+    if (rnd() < 0.6) { const q = g.position.clone(); q.y = 0.05; emit(q, C_BUBBLE, 2, 0.35, 0.9, 1.1, 0.7, 0.3); }
+    if (k >= 1) { scene.remove(g); wrecks.splice(i, 1); }
+  }
+  for (let i = 0; i < DEB_MAX; i++) {
+    const d = debP[i];
+    if (d.life <= 0) { _dm.position.set(0, -50, 0); _dm.scale.setScalar(0.001); }
+    else {
+      d.life -= dt; d.vy -= 6 * dt; d.x += d.vx * dt; d.z += d.vz * dt; d.vx *= 0.985; d.vz *= 0.985;
+      const wy = waveH(d.x, d.z, time) + 0.02; d.y += d.vy * dt; if (d.y < wy) { d.y = wy; d.vy = 0; d.spin *= 0.97; }
+      if (d.life < 2) d.y -= (2 - d.life) * 0.12; // zum Schluss versinken
+      d.ry += d.spin * dt;
+      _dm.position.set(d.x, d.y, d.z); _dm.rotation.set(Math.sin(time * 1.3 + i) * 0.15, d.ry, Math.cos(time * 1.1 + i) * 0.15); _dm.scale.setScalar(d.s);
+    }
+    _dm.updateMatrix(); debris.setMatrixAt(i, _dm.matrix);
+  }
+  debris.instanceMatrix.needsUpdate = true;
+}
+function clearWrecks() { wrecks.forEach(w => scene.remove(w.group)); wrecks.length = 0; debP.forEach(d => d.life = 0); }
+
+// --- Feuerwerk: Raketen steigen mit Leuchtspur auf und zerplatzen in Teamfarbe ---
+// eigenes Funkensystem mit größeren Funken, damit es auch in der Kartenansicht gut sichtbar ist
+const FW_MAX = 2400, fwGeo = new THREE.BufferGeometry(), fwPos = new Float32Array(FW_MAX * 3), fwCol = new Float32Array(FW_MAX * 3);
+fwGeo.setAttribute('position', new THREE.BufferAttribute(fwPos, 3)); fwGeo.setAttribute('color', new THREE.BufferAttribute(fwCol, 3));
+const fwPts = new THREE.Points(fwGeo, new THREE.PointsMaterial({ size:1.0, map:spriteTex, vertexColors:true, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending }));
+fwPts.frustumCulled = false; scene.add(fwPts);
+const fwP = Array.from({ length:FW_MAX }, () => ({ life:0 })); let fwCur = 0;
+function burst(pos, color, n, speed) {
+  for (let i = 0; i < n; i++) {
+    const q = fwP[fwCur]; fwCur = (fwCur + 1) % FW_MAX;
+    const u = rnd() * 2 - 1, a = rnd() * Math.PI * 2, r = Math.sqrt(1 - u * u), sp = speed * (0.92 + rnd() * 0.16); // Kugelschale statt gefüllter Ball
+    Object.assign(q, { x:pos.x, y:pos.y, z:pos.z, vx:Math.cos(a) * r * sp, vy:u * sp + 1, vz:Math.sin(a) * r * sp, life:1.4 + rnd() * 0.8, r:color.r, g:color.g, b:color.b, tw:rnd() * 6 });
+    q.max = q.life;
+  }
+}
+function updateBursts(dt, time) {
+  for (let i = 0; i < FW_MAX; i++) {
+    const q = fwP[i];
+    if (q.life <= 0) { fwPos[i * 3 + 1] = -999; continue; }
+    q.life -= dt; q.vx *= 0.97; q.vy = q.vy * 0.97 - 2.2 * dt; q.vz *= 0.97;
+    q.x += q.vx * dt; q.y += q.vy * dt; q.z += q.vz * dt;
+    const f = Math.max(0, q.life / q.max), tw = q.life < 0.6 ? 0.6 + 0.4 * Math.sin(time * 30 + q.tw) : 1;
+    fwPos[i * 3] = q.x; fwPos[i * 3 + 1] = q.y; fwPos[i * 3 + 2] = q.z;
+    fwCol[i * 3] = q.r * f * tw * 0.75; fwCol[i * 3 + 1] = q.g * f * tw * 0.75; fwCol[i * 3 + 2] = q.b * f * tw * 0.75;
+  }
+  fwGeo.attributes.position.needsUpdate = fwGeo.attributes.color.needsUpdate = true;
+  // nah dran (POV) kleinere Funken, sonst überstrahlt die Mitte zu Weiß
+  fwPts.material.size = 0.35 + 0.65 * Math.min(1, camera.position.y / 30);
+}
+const rockets = [];
+function rocket(from, color, color2 = C_WHITE, h = 6) {
+  rockets.push({ p:from.clone(), v:new THREE.Vector3((rnd() - .5) * 1.2, 7 + rnd() * 2.5, (rnd() - .5) * 1.2), color, color2, fuse:(h / 8) * (0.8 + rnd() * 0.4) });
+  SFX.whistle();
+}
+function fireworks(pos, color, color2, n = 4, spread = 1.2) { for (let k = 0; k < n; k++) setTimeout(() => rocket(new THREE.Vector3(pos.x + (rnd() - .5) * spread, 0.6, pos.z + (rnd() - .5) * spread), color, color2, 5 + rnd() * 3), k * 220); }
+function updateRockets(dt) {
+  for (let i = rockets.length - 1; i >= 0; i--) {
+    const r = rockets[i];
+    r.fuse -= dt; r.v.y -= 3 * dt; r.p.addScaledVector(r.v, dt);
+    r.tr = (r.tr || 0) - dt; if (r.tr <= 0) { r.tr = 0.03; emit(r.p, C_GOLD, 1, 0.15, 0.22, 0, 0.01, 0.5); }
+    if (r.fuse <= 0) {
+      burst(r.p, r.color, 90, 6.5); burst(r.p, r.color2, 22, 3.5);
+      boomLight(r.p, r.color, 4); SFX.pop(); rockets.splice(i, 1);
+    }
+  }
+}
+
 // Breitseite: Mündungsfeuer und Rauch an den Kanonen, die zum Ziel zeigen
 const _cv = new THREE.Vector3();
 function broadside(f, toward, loud = true) {
@@ -1143,7 +1233,7 @@ const bases = s => [...ports.filter(p => p.owner === s.id), ...owned(s)];
 
 function resetRound() {
   roundNo++; roundOver = false; timeLeft = CONFIG.roundSeconds; peace = 0; crisisT = CONFIG.crisisEvery; crisisOn = 0;
-  fleets.forEach(f => { scene.remove(f.group); f.el.remove(); }); fleets.length = 0;
+  fleets.forEach(f => { scene.remove(f.group); f.el.remove(); }); fleets.length = 0; clearWrecks(); rockets.length = 0;
   islands.forEach(i => { i.owner = -1; i.troops = i.startTroops; i.governor = null; });
   ports.forEach(p => { p.troops = 15; p.flag.material = flagMats[p.owner]; });
   SIDES.forEach(s => { s.reserve = 0; s.target = null; s.launchT = 1 + s.id * 1.5; s.voteT = 0; });
@@ -1263,9 +1353,8 @@ function updateFleets(dt, time) {
   for (let i = fleets.length - 1; i >= 0; i--) {
     const f = fleets[i];
     if (f.troops <= 0.5 && !roundOver) {
-      const p = f.group.position.clone(); p.y = 0.3; emit(p, C_WHITE, 25, 1.5, 0.9, 2.5); emit(p, C_FIRE, 20, 2, 0.6, 3); SFX.boom();
       if (f.hero) endHero(f.hero);
-      scene.remove(f.group); f.el.remove(); fleets.splice(i, 1); continue;
+      sinkFleet(f); fleets.splice(i, 1); continue;
     }
     if (!roundOver && ceaseT <= 0) f.t += dt / f.dur * (stormT > 0 && f.side.id !== stormSide ? CONFIG.stormSlow : 1);
     const k = Math.min(f.t, 1);
@@ -1323,7 +1412,8 @@ function arrive(f) {
     addPts(f.hero ? f.summoner : o.governor, 20 + o.value * 15);
     paintIsland(o); SFX.capture();
     const top = o.pos.clone(); top.y = 1.6;
-    emit(top, s.color, 120 + o.value * 30, 6, 1.6, 7, 1);
+    emit(top, s.color, 60 + o.value * 20, 4, 1.2, 5, 1);
+    fireworks(o.pos, s.id ? new THREE.Color(1, 0.06, 0.08) : new THREE.Color(0.1, 0.35, 1), C_WHITE, 3 + o.value, Math.max(o.rx, o.rz));
     shake = Math.min(shake + 0.4, 1);
     const isl = upper(islandName(o));
     if (f.hero) {
@@ -1398,7 +1488,7 @@ function goalReached() {
   goalDone = true;
   const names = [...users.values()].filter(u => u.roundDia > 0).sort((a, b) => b.roundDia - a.roundDia).slice(0, 3).map(u => esc(u.nick)).join(', ');
   banner(t('goalDone', { names })); feed(t('goalFeed'), '#ffd54a', null, 'big'); SFX.fanfare();
-  for (let k = 0; k < 10; k++) setTimeout(() => emit(new THREE.Vector3((rnd() - .5) * 26, 6 + rnd() * 3, (rnd() - .5) * 30), k % 2 ? C_GOLD : C_WHITE, 120, 6, 1.6, 3, 0.5, 2.5), k * 300);
+  for (let k = 0; k < 10; k++) setTimeout(() => rocket(new THREE.Vector3((rnd() - .5) * 26, 0.6, (rnd() - .5) * 30), C_GOLD, C_WHITE, 7), k * 300);
 }
 function nextHeroHop(f, from) {
   f.hops--;
@@ -1495,7 +1585,7 @@ function peaceFinale(reason, side) {
   for (let k = 0; k < 30; k++) spawnDove(k);
   SFX.peaceMusic(); dome.visible = false; stormT = 0; ceaseT = 0; document.getElementById('cease').classList.remove('on');
   const colors = [SIDES[0].color, C_WHITE, SIDES[1].color, HEROES[0].color, HEROES[1].color];
-  for (let k = 0; k < 14; k++) setTimeout(() => emit(new THREE.Vector3((rnd() - .5) * 26, 6 + rnd() * 3, (rnd() - .5) * 30), colors[k % colors.length], 130, 6, 1.8, 3, 0.5, 2.5), 300 + k * 450);
+  for (let k = 0; k < 18; k++) setTimeout(() => { const isl = islands[k % islands.length]; rocket(new THREE.Vector3(isl.pos.x, 0.6, isl.pos.z), colors[k % colors.length], C_WHITE, 7); }, 300 + k * 380);
   focusOn(new THREE.Vector3(0, 0, 2), CONFIG.finaleSeconds);
   const all = [...users.values()];
   lastFinale = {
@@ -1912,7 +2002,7 @@ function frame() {
   const dt = Math.min(clock.getDelta(), 0.05), tt = clock.elapsedTime; now = tt;
   if (demo) demoTick(dt);
   tick(dt);
-  waterUniforms.uTime.value = tt; updateFlags(tt, dt); updateSmoke(dt);
+  waterUniforms.uTime.value = tt; updateFlags(tt, dt); updateSmoke(dt); updateWrecks(dt, tt); updateRockets(dt); updateBursts(dt, tt);
   smoke.material.uniforms.uScale.value = renderer.getPixelRatio() * innerHeight / 2 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
   windmills.forEach((w, i) => w.rotation.z += dt * (1.2 + (i % 3) * 0.3) * (stormT > 0 ? 3 : 1));
   beacons.forEach((b, i) => b.rotation.y += dt * 0.9);

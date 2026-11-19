@@ -9,7 +9,7 @@ Zypern ist der Hauptpreis (5 Punkte). **Am Ende jeder Runde gewinnt immer der Fr
 Der Link läuft im Demo-Modus mit simulierten Zuschauern, auch auf dem Handy. Am Handy tippst du auf die Knöpfe rechts. Am PC gehen auch Tasten: `Q` / `W` = Geschenk, `U` / `C` = Helden, `K` = Legendenschiff, `F` = Waffenruhe, `P` = Finale, `L` = Sprache, `M` = Ton.
 Die alte Götter-Version: https://cembot90.github.io/aegean-island-live/goetter.html?demo=1
 
-![Karte](screenshot.png) ![Schiffe](screenshot-schiffe.png) ![POV](screenshot-pov.png) ![POV Griechisch](screenshot-pov-el.png) ![Held](screenshot-held.png) ![Friedensgipfel](screenshot-frieden.png)
+![Karte](screenshot.png) ![Schiffe](screenshot-schiffe.png) ![Versenkt](screenshot-versenkt.png) ![Feuerwerk](screenshot-feuerwerk.png) ![POV](screenshot-pov.png) ![POV Griechisch](screenshot-pov-el.png) ![Held](screenshot-held.png) ![Friedensgipfel](screenshot-frieden.png)
 
 ## Neu: Extras für mehr Beteiligung
 | Extra | So funktioniert es |
@@ -34,6 +34,8 @@ Die alte Götter-Version: https://cembot90.github.io/aegean-island-live/goetter.
   - Die Taste `V` funktioniert auch im echten Stream.
 - **Gelände**: Festland und Inseln sind eine zusammenhängende 3D-Landschaft mit Bergen, Stränden, Wäldern, Dörfern, Windmühlen, Burgen und Leuchttürmen. Dazu kommen genauere Küsten (Dardanellen, Euböa, Kreta, Zypern mit Karpas-Halbinsel) und kleine Deko-Inseln.
 - **Schiffe**: Jedes Schiff hat zwei Masten mit gewölbten Segeln (das Großsegel zeigt die Flagge), Achterkastell, Bugspriet, Schilde in der Teamfarbe, eine Hecklaterne und Ruderreihen, die rudern. Bei Seeschlachten und Angriffen feuern die Kanonen Breitseiten mit Mündungsfeuer und Rauchwolken. Helden- und Legendenschiffe sind golden und groß.
+- **Versenkte Schiffe**: Sie kippen zur Seite, brennen und sinken. Planken treiben auf den Wellen, Luftblasen steigen auf, dazu gibt es ein Knarz- und Wassergeräusch.
+- **Feuerwerk**: Bei jeder Eroberung steigen Raketen mit Leuchtspur auf und zerplatzen in der Teamfarbe (Rot oder Blau mit Weiß). Wertvolle Inseln bekommen mehr Raketen. Auch das Geschenkziel und das Friedensfinale werden mit Feuerwerk gefeiert.
 - **Wasser und Himmel**: Wellen und Schaum an den Stränden, Abendhimmel mit Sonne am Horizont und ein dezentes Glühen (`?fx=0` schaltet es aus).
 - **Langsamer Rechner?** Mit `?q=low` gibt es weniger Bäume, keine Effekte und eine geringere Auflösung.
 - **Sprachen**: 🇹🇷 Türkisch (Standard), 🇩🇪 Deutsch, 🇬🇷 Griechisch. Umschalten mit dem Knopf, der Taste `L` oder `?lang=tr|de|el`.
