@@ -68,7 +68,10 @@ const server = http.createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
   fs.createReadStream(path.join(dir, 'index.html')).pipe(res);
 });
-const wss = new WebSocketServer({ server });
+// Nur das Spiel selbst (http://localhost / 127.0.0.1) und Programme ohne Browser-Origin dürfen sich verbinden.
+// So können fremde Webseiten in deinem Browser die gespeicherten Zuschauernamen nicht auslesen.
+const allowedOrigin = o => !o || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(o);
+const wss = new WebSocketServer({ server, verifyClient: info => allowedOrigin(info.origin) });
 const broadcast = obj => { const s = JSON.stringify(obj); wss.clients.forEach(c => c.readyState === 1 && c.send(s)); };
 // Status geht als Code ans Spiel, das ihn in der eingestellten Sprache (TR/DE) anzeigt
 let statusMsg = { type: 'status', code: 'waiting' };

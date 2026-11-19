@@ -168,7 +168,7 @@
   <button type="button" data-tap="w" style="--c:var(--tr)">🎁 🇹🇷</button>
   <button type="button" data-tap="u" style="--c:#ffd54a">⚔ UĞURCAN</button>
   <button type="button" data-tap="c" style="--c:#7ef0ff">⚔ CEM</button>
-  <button type="button" data-tap="k" style="--c:#ffd54a">👑 99 💎</button>
+  <button type="button" data-tap="k" style="--c:#ffd54a">👑 99 🪙</button>
   <button type="button" data-tap="f" style="--c:#fff">🕊 <span data-i="tapPeace"></span></button>
   <button type="button" data-tap="p" style="--c:#fff">🏁 <span data-i="tapFinale"></span></button>
 </div>
@@ -186,15 +186,15 @@ const CONFIG = {
   peaceGoal: +(params.get('peace') || 650),    // so viele Friedenspunkte beenden die Runde früher
   peacePerComment: 5, peacePerLike: 0.08, peacePerSecond: 0.4,
   likeTroops: 1, commentTroops: 3, followTroops: 25, shareTroops: 15,
-  troopsPerDiamond: 5,    // Rose = 1 Diamant = 5 Soldaten
+  troopsPerDiamond: 5,    // pro Coin Geschenkwert (Rose = 1 Coin = 5 Soldaten)
   launchEvery: 3.0, launchShare: 0.65, minLaunch: 8,
   crisisEvery: 75, crisisLength: 20,
   finaleSeconds: 16,
   heroCharge: 25,         // Ruf-Punkte, bis ein Held erscheint (Kommentar = 1, Geschenk = 1 pro Diamant)
   heroTroops: 140, heroPower: 2, heroHops: 3, heroCooldown: 40,
   stormLength: 10, stormSlow: 0.45, shieldLength: 20,   // Fähigkeiten der Helden
-  patronDiamonds: 99,     // so viele Diamanten in einer Runde → eigenes Legendenschiff (fester Wert, kein Zufall)
-  giftGoal: +(params.get('goal') || 500), // Diamanten-Ziel pro Runde → Feuerwerk + Dank an alle Schenkenden
+  patronDiamonds: 99,     // so viele Coins Geschenkwert in einer Runde → eigenes Legendenschiff (fester Wert, kein Zufall)
+  giftGoal: +(params.get('goal') || 500), // Coin-Ziel pro Runde → Feuerwerk + Dank an alle Schenkenden
   ceasefireNeed: 3, ceasefireLength: 8, ceasefireCooldown: 45, // „barış“ von beiden Seiten → Waffenruhe
   bottomInset: +(params.get('bottom') || 0), // Pixel Abstand unten, falls der TikTok-Chat das Spiel verdeckt
   sound: params.get('sound') !== '0',
@@ -244,13 +244,13 @@ const I18N = {
     heroFinale:'🤝 {a} & {b} barış anlaşmasını imzaladı', heroFinaleSub:'İki kahraman el sıkıştı',
     st_waiting:'TikTok bekleniyor…', st_connected:'● CANLI: @{user}', st_failed:'Bağlantı başarısız (canlı mısın?), 15 sn sonra tekrar',
     st_ended:'Yayın bitti', st_disconnected:'Bağlantı koptu, 15 sn sonra tekrar', st_noServer:'server.js bağlantısı yok', st_open:'● bağlı', st_reconnect:'⟳ yeniden bağlanıyor…',
-    giftMenu1:'🌹 Gül = 5 asker', giftMenu2:'🍩 30 💎 = 150 asker', giftMenu3:'👑 {n} 💎 = kendi efsane gemin', giftMenu4:'⚔ Hediye = kahraman puanı', giftMenu5:'🎯 Hedef dolunca havai fişek',
+    giftMenu1:'🌹 Gül = 5 asker', giftMenu2:'🍩 30 🪙 = 150 asker', giftMenu3:'👑 {n} 🪙 = kendi efsane gemin', giftMenu4:'⚔ Hediye = kahraman puanı', giftMenu5:'🎯 Hedef dolunca havai fişek',
     goal:'Hediye hedefi', goalDone:'🎆 HEDİYE HEDEFİ TAMAM! 🎆<small>Teşekkürler {names}!</small>', goalFeed:'🎆 Hediye hedefi doldu! Teşekkürler!',
     patron:'👑 EFSANE GEMİSİ 👑<small>{nick} · {flag}</small>', patronFeed:'👑 {nick} efsane gemisiyle denizde! {flag}', patronShow:'Efsane gemisi · {n} asker {flag}',
     storm:'🌪 {hero} FIRTINASI! 🌪<small>Düşman gemileri yavaşladı</small>', shield:'🛡 {hero} KALKANI! 🛡<small>{isl} korunuyor</small>',
     stormFeed:'🌪 {hero} fırtına çıkardı!', shieldFeed:'🛡 {hero}, {isl} adasını koruyor', shieldHit:'🛡 Kalkan saldırıyı durdurdu!',
     ceasefire:'🕊 ATEŞKES! 🕊<small>İki taraf da barış istedi</small>', ceaseBar:'🕊 ATEŞKES: gemiler bekliyor 🕊', ceaseFeed:'🕊 Ateşkes: iki taraf da barış yazdı!',
-    heroMaster:'sağ kolu', topSupporter:'🎁 Turun destekçisi · {n} 💎', tapPeace:'barış', tapFinale:'final',
+    heroMaster:'sağ kolu', topSupporter:'🎁 Turun destekçisi · {n} 🪙', tapPeace:'barış', tapFinale:'final',
   },
   de: {
     gr:'GRIECHENLAND', tr:'TÜRKEI', grShort:'Griechenland', trShort:'Türkei',
@@ -280,13 +280,13 @@ const I18N = {
     heroFinale:'🤝 {a} & {b} unterzeichnen den Frieden', heroFinaleSub:'Die zwei Helden reichen sich die Hand',
     st_waiting:'Warte auf TikTok…', st_connected:'● LIVE: @{user}', st_failed:'Verbindung fehlgeschlagen (bist du live?), neuer Versuch in 15 s',
     st_ended:'Stream beendet', st_disconnected:'Getrennt, neuer Versuch in 15 s', st_noServer:'Keine Verbindung zu server.js', st_open:'● verbunden', st_reconnect:'⟳ verbinde neu…',
-    giftMenu1:'🌹 Rose = 5 Soldaten', giftMenu2:'🍩 30 💎 = 150 Soldaten', giftMenu3:'👑 {n} 💎 = dein Legendenschiff', giftMenu4:'⚔ Geschenk = Heldenpunkte', giftMenu5:'🎯 Ziel voll = Feuerwerk',
+    giftMenu1:'🌹 Rose = 5 Soldaten', giftMenu2:'🍩 30 🪙 = 150 Soldaten', giftMenu3:'👑 {n} 🪙 = dein Legendenschiff', giftMenu4:'⚔ Geschenk = Heldenpunkte', giftMenu5:'🎯 Ziel voll = Feuerwerk',
     goal:'Geschenkziel', goalDone:'🎆 GESCHENKZIEL ERREICHT! 🎆<small>Danke {names}!</small>', goalFeed:'🎆 Geschenkziel erreicht! Danke!',
     patron:'👑 LEGENDENSCHIFF 👑<small>{nick} · {flag}</small>', patronFeed:'👑 {nick} segelt mit dem Legendenschiff! {flag}', patronShow:'Legendenschiff · {n} Krieger {flag}',
     storm:'🌪 STURM VON {hero}! 🌪<small>Gegnerische Schiffe werden langsam</small>', shield:'🛡 SCHILD VON {hero}! 🛡<small>{isl} ist geschützt</small>',
     stormFeed:'🌪 {hero} ruft einen Sturm!', shieldFeed:'🛡 {hero} schützt {isl}', shieldHit:'🛡 Der Schild hält den Angriff auf!',
     ceasefire:'🕊 WAFFENRUHE! 🕊<small>Beide Seiten wollen Frieden</small>', ceaseBar:'🕊 WAFFENRUHE: die Schiffe warten 🕊', ceaseFeed:'🕊 Waffenruhe: beide Seiten schreiben Frieden!',
-    heroMaster:'rechte Hand', topSupporter:'🎁 Top-Unterstützer·in der Runde · {n} 💎', tapPeace:'Frieden', tapFinale:'Finale',
+    heroMaster:'rechte Hand', topSupporter:'🎁 Top-Unterstützer·in der Runde · {n} 🪙', tapPeace:'Frieden', tapFinale:'Finale',
   },
 };
 let lang = (() => {
@@ -1263,7 +1263,7 @@ function updateHud() {
   document.getElementById('peaceFill').style.width = pp + '%';
   document.getElementById('peacePct').textContent = Math.floor(pp) + '%';
   document.getElementById('goalFill').style.width = Math.min(100, roundDia / CONFIG.giftGoal * 100) + '%';
-  document.getElementById('goalTxt').textContent = goalDone ? `✅ ${roundDia} 💎` : `${roundDia} / ${CONFIG.giftGoal} 💎`;
+  document.getElementById('goalTxt').textContent = goalDone ? `✅ ${roundDia} 🪙` : `${roundDia} / ${CONFIG.giftGoal} 🪙`;
   heroesEl.innerHTML = HEROES.map(h => {
     const state = h.active ? t('heroActive', { flag:h.active.flag }) : h.rest > 0 ? t('heroRest', { s:Math.ceil(h.rest) }) : t('heroCall', { key:h.keys[0] });
     const bars = SIDES.filter(s => heroFor(h, s.id)).map(s => `<div class="hb"><i style="width:${h.charge[s.id] / CONFIG.heroCharge * 100}%;background:${s.css}"></i></div>`).join('');
@@ -1370,6 +1370,8 @@ function demoTick(dt) {
 addEventListener('keydown', ev => testKey(ev.key.toLowerCase()));
 tapEl.addEventListener('click', ev => { const b = ev.target.closest('[data-tap]'); if (b) testKey(b.dataset.tap); });
 function testKey(k) {
+  // Im echten Stream: nur Sprache (L) und Ton (M), keine Test-Geschenke oder Demo
+  if (everLive && k !== 'l' && k !== 'm') return;
   const i = 'qw'.indexOf(k);
   if (i >= 0) { const user = 'tester_' + i; const u = getUser({ user, nick:'Test ' + SIDES[i].flag }); u.side = i; handleEvent({ type:'gift', user, nick:u.nick, giftName:'Test-Galaxy', diamonds:30, count:1 }); }
   if (k === 'u' || k === 'c') {

@@ -19,8 +19,8 @@ Die alte Götter-Version: https://cembot90.github.io/aegean-island-live/goetter.
 | 🛡 **CEMs Schild** | 20 Sekunden lang ist die wertvollste Insel seiner Seite unangreifbar. Hat die Seite noch keine Insel, schützt er die erste Insel, die er erobert. |
 | 🤝 **Rechte Hand** | Wer einen Helden am meisten gerufen hat, steht mit Bild und Namen neben dem Helden („sağ kolu“). |
 | 🕊 **Waffenruhe** | Schreiben beide Seiten innerhalb von 10 Sekunden je dreimal „barış“, halten alle Schiffe 8 Sekunden an, und Tauben fliegen über Zypern. |
-| 👑 **Legendenschiff** | Wer in einer Runde 99 💎 schenkt, bekommt ein eigenes großes Schiff mit Profilbild und Namen im Segel, das doppelt so hart trifft (ein Schiff pro Person und Runde, fester Wert, kein Zufall). |
-| 🎯 **Geschenkziel** | Ein Balken pro Runde (Standard 500 💎, ändern mit `?goal=800`). Ist er voll, gibt es ein Feuerwerk und einen Dank an die drei größten Unterstützer·innen. |
+| 👑 **Legendenschiff** | Wer in einer Runde 99 🪙 (Coins) schenkt, bekommt ein eigenes großes Schiff mit Profilbild und Namen im Segel, das doppelt so hart trifft (ein Schiff pro Person und Runde, fester Wert, kein Zufall). |
+| 🎯 **Geschenkziel** | Ein Balken pro Runde (Standard 500 🪙 Coins, ändern mit `?goal=800`). Ist er voll, gibt es ein Feuerwerk und einen Dank an die drei größten Unterstützer·innen. |
 | 🎁 **Geschenk-Menü** | Die Hilfezeile wechselt alle 8 Sekunden zwischen Steuerung und den Geschenkwerten („🌹 Gül = 5 asker“ …). |
 | 🏆 **Ränge über alle Streams** | `server.js` speichert Punkte in `data/ranks.json` auf deinem Rechner. Stammzuschauer steigen so über mehrere Streams zu Kapitän, Amiral und Efsane auf. |
 | 📊 **Deine Statistik** | `http://localhost:8787/stats` zeigt Geschenkwert, geschätzte Diamanten und Dollar sowie die Top-Unterstützer. Die Seite ist nur für dich und nur auf deinem Rechner erreichbar. |
@@ -41,7 +41,7 @@ Mit `?ui=0` verschwindet er immer. Den Standard änderst du in `CONFIG.defaultLa
 
 ## Die Helden UĞURCAN und CEM
 - Zuschauer rufen einen Helden, indem sie `ugurcan` oder `cem` kommentieren. Jeder Kommentar bringt 1 Ruf-Punkt.
-- Geschenke laden den Helden mit auf, den man zuletzt gerufen hat (1 Punkt pro Diamant).
+- Geschenke laden den Helden mit auf, den man zuletzt gerufen hat (1 Punkt pro Coin Geschenkwert).
 - Bei 25 Punkten erscheint der Held für **die Seite, die ihn gerufen hat**. Er kommt auf einem großen goldenen Schiff mit seinem Namen im Segel und einem Krieger an Deck.
 - Ein Held versenkt normale Flotten bei Berührung, kämpft doppelt so stark und erobert bis zu 3 Inseln hintereinander. Danach ruht er 40 Sekunden.
 - Treffen UĞURCAN und CEM auf verschiedenen Seiten aufeinander, gibt es ein **Helden-Duell**.
@@ -56,7 +56,7 @@ Mit `?ui=0` verschwindet er immer. Den Standard änderst du in `CONFIG.defaultLa
 | Inselname (`zypern`, `kıbrıs`, `kreta`, `girit`, `rodos`, `ρόδος` …) | Ziel der eigenen Flotte |
 | Kommentar | +3 Soldaten |
 | Like | +1 Soldat und ein bisschen Frieden |
-| Geschenk | goldene Flotte **mit Profilbild und Namen** des Schenkenden (5 Soldaten pro Diamant) |
+| Geschenk | goldene Flotte **mit Profilbild und Namen** des Schenkenden (5 Soldaten pro Coin Geschenkwert) |
 | `frieden` / `barış` / `ειρήνη` / `peace` / 🕊 | füllt den Friedensbalken |
 
 ## Damit sich die Spieler sehen
