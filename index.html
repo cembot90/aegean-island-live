@@ -1,0 +1,961 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ägäis Friedensspiel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@500;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root { --gr:#2f7bff; --tr:#ff3b3b; --peace:#f4f1e6; --panel:rgba(4,22,38,.66); --sh:0 2px 6px rgba(0,0,0,.6); }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { width:100%; height:100%; overflow:hidden; background:#06263d; font-family:Inter,system-ui,sans-serif; color:#fff; }
+  canvas#c { position:fixed; inset:0; width:100%; height:100%; display:block; }
+  #labels { position:fixed; inset:0; pointer-events:none; overflow:hidden; }
+
+  .av { display:inline-flex; align-items:center; justify-content:center; flex:none; border-radius:50%; overflow:hidden; font-weight:900; color:#fff; border:2px solid var(--c,#fff); background:var(--c,#555); vertical-align:middle; }
+  .av img { width:100%; height:100%; object-fit:cover; display:block; }
+
+  .lbl { position:absolute; transform:translate(-50%,-100%); text-align:center; text-shadow:var(--sh); white-space:nowrap; display:flex; flex-direction:column; align-items:center; gap:1px; }
+  .lbl .n { font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+  .lbl .t { min-width:34px; padding:0 7px; border-radius:999px; font-size:13px; font-weight:900; background:rgba(0,0,0,.55); border:2px solid #ddd; }
+  .lbl .g { display:flex; align-items:center; gap:3px; font-size:9.5px; font-weight:800; padding:1px 5px 1px 1px; border-radius:999px; background:rgba(0,0,0,.5); }
+  .lbl.big .n { font-size:13px; color:#ffe27a; }
+  .lbl.big .t { font-size:16px; }
+  .lbl.crisis .t { animation:pulse .6s infinite alternate; }
+  @keyframes pulse { to { transform:scale(1.2); box-shadow:0 0 14px #ffd54a; } }
+  .port { position:absolute; transform:translate(-50%,-50%); font-size:9.5px; font-weight:800; padding:1px 6px; border-radius:6px; background:rgba(0,0,0,.45); border-bottom:2px solid var(--c); white-space:nowrap; text-shadow:var(--sh); }
+  .land { position:absolute; transform:translate(-50%,-50%); font-family:Cinzel,serif; font-weight:900; font-size:14px; letter-spacing:.22em; opacity:.85; text-shadow:0 0 6px rgba(0,0,0,.8), 0 2px 8px rgba(0,0,0,.6); white-space:nowrap; }
+  .flt { position:absolute; transform:translate(-50%,-150%); display:flex; align-items:center; gap:3px; font-size:10.5px; font-weight:900; padding:1px 6px 1px 1px; border-radius:999px; background:rgba(0,0,0,.6); border:1.5px solid var(--c); white-space:nowrap; text-shadow:var(--sh); }
+  .flt.gold { border-color:#ffd54a; background:rgba(70,45,0,.8); font-size:12px; }
+  .flt.anon { padding:1px 6px; }
+
+  #hud { position:fixed; top:0; left:0; right:0; padding:10px 10px 0; pointer-events:none; }
+  #vs { display:grid; grid-template-columns:1fr auto 1fr; gap:6px; align-items:stretch; }
+  .side { padding:6px 9px; border-radius:10px; background:var(--panel); border-top:3px solid var(--c); }
+  .side.r { text-align:right; }
+  .side b { display:block; font-size:13px; font-weight:900; letter-spacing:.06em; color:var(--c); text-shadow:var(--sh); }
+  .side .s { font-size:11px; font-weight:700; opacity:.9; }
+  .side .pts { font-size:22px; font-weight:900; line-height:1.05; }
+  #mid { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:4px 8px; border-radius:10px; background:var(--panel); }
+  #timer { font-weight:900; font-size:20px; font-variant-numeric:tabular-nums; }
+  #round { font-size:9.5px; font-weight:800; opacity:.75; letter-spacing:.08em; }
+  #tug { position:relative; height:10px; margin-top:6px; border-radius:999px; overflow:hidden; background:var(--tr); box-shadow:0 1px 4px rgba(0,0,0,.4); }
+  #tugGr { position:absolute; left:0; top:0; bottom:0; width:50%; background:var(--gr); transition:width .6s; }
+  #tug::after { content:''; position:absolute; left:50%; top:-2px; bottom:-2px; width:2px; background:#fff; }
+  #peace { display:flex; align-items:center; gap:7px; margin-top:6px; padding:5px 9px; border-radius:10px; background:rgba(30,30,20,.62); }
+  #peace .dove { font-size:20px; filter:drop-shadow(0 0 6px rgba(255,255,255,.6)); }
+  #peace .txt { font-size:10.5px; font-weight:800; white-space:nowrap; }
+  #peace .txt small { display:block; font-size:9.5px; opacity:.8; font-weight:700; }
+  #peaceBar { flex:1; height:9px; border-radius:999px; background:rgba(255,255,255,.15); overflow:hidden; }
+  #peaceFill { height:100%; width:0; background:linear-gradient(90deg,#9fd8ff,#fff,#ffe9a8); transition:width .5s; box-shadow:0 0 10px #fff; }
+  #peacePct { font-weight:900; font-size:13px; min-width:38px; text-align:right; }
+  #crisis { display:none; margin-top:6px; text-align:center; font-size:12px; font-weight:900; padding:5px; border-radius:10px; background:linear-gradient(90deg,rgba(255,170,0,.85),rgba(255,90,0,.85)); animation:pulse2 .7s infinite alternate; }
+  #crisis.on { display:block; }
+  @keyframes pulse2 { to { filter:brightness(1.25); } }
+
+  #feed { position:fixed; left:8px; bottom:166px; width:min(66vw,350px); display:flex; flex-direction:column-reverse; gap:4px; pointer-events:none; }
+  .ev { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; padding:3px 9px 3px 3px; border-radius:999px; background:var(--panel); border-left:3px solid var(--c,#fff); text-shadow:0 1px 2px rgba(0,0,0,.6); animation:in .25s ease-out; }
+  .ev.noav { padding-left:9px; }
+  .ev.big { background:rgba(70,45,0,.78); border-left-color:#ffd54a; }
+  .ev.peace { background:rgba(60,60,50,.75); border-left-color:#fff; }
+  @keyframes in { from { transform:translateX(-24px); opacity:0; } }
+
+  #board { position:fixed; left:8px; right:8px; bottom:66px; display:grid; grid-template-columns:1fr 1fr; gap:6px; pointer-events:none; }
+  .col { padding:5px 6px; border-radius:10px; background:var(--panel); border-top:3px solid var(--c); min-height:30px; }
+  .col h4 { font-size:9.5px; letter-spacing:.1em; opacity:.85; margin:0 0 3px 3px; }
+  .pl { display:flex; align-items:center; gap:5px; font-size:11px; font-weight:800; margin-bottom:1px; line-height:1.1; }
+  .pl .nm { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pl .rk { font-size:9px; opacity:.8; font-weight:700; display:block; }
+  .pl .sc { font-variant-numeric:tabular-nums; }
+  .pl .medal { width:14px; text-align:center; }
+
+  #help { position:fixed; left:6px; right:6px; bottom:8px; display:flex; flex-wrap:wrap; justify-content:center; gap:4px; pointer-events:none; }
+  #help span { font-size:11px; font-weight:800; padding:4px 8px; border-radius:999px; background:rgba(3,20,35,.75); }
+
+  #showcase { position:fixed; left:50%; top:31%; transform:translate(-50%,-50%) scale(.6); opacity:0; display:flex; align-items:center; gap:12px; padding:10px 18px 10px 10px; border-radius:999px; background:linear-gradient(90deg,rgba(80,50,0,.92),rgba(40,25,0,.92)); border:2px solid #ffd54a; box-shadow:0 0 30px rgba(255,200,60,.5); transition:transform .3s cubic-bezier(.2,1.6,.4,1), opacity .25s; pointer-events:none; max-width:94vw; }
+  #showcase.on { opacity:1; transform:translate(-50%,-50%) scale(1); }
+  #showcase .who { font-size:17px; font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:56vw; }
+  #showcase .what { font-size:12.5px; font-weight:800; color:#ffe27a; }
+  #banner { position:fixed; left:50%; top:42%; transform:translate(-50%,-50%) scale(.8); width:94vw; text-align:center; font-family:Cinzel,serif; font-weight:900; font-size:clamp(18px,5.6vw,36px); text-shadow:0 4px 16px rgba(0,0,0,.85); opacity:0; transition:opacity .25s, transform .25s; pointer-events:none; }
+  #banner.on { opacity:1; transform:translate(-50%,-50%) scale(1); }
+
+  #finale { position:fixed; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:20px; text-align:center; background:radial-gradient(circle at 50% 42%, rgba(255,255,255,.2), rgba(0,10,25,.82)); }
+  body.fin #labels, body.fin #feed { opacity:.15; transition:opacity 1s; }
+  #finale.on { display:flex; animation:fade 1s ease-out; }
+  @keyframes fade { from { opacity:0; } }
+  #finale .big { font-family:Cinzel,serif; font-size:clamp(34px,11vw,70px); font-weight:900; text-shadow:0 0 30px rgba(255,255,255,.6), 0 6px 20px rgba(0,0,0,.6); }
+  #finale .langs { font-size:19px; font-weight:800; letter-spacing:.05em; }
+  #finale .flags { font-size:42px; }
+  #finale .card { display:flex; align-items:center; gap:10px; padding:8px 16px 8px 8px; border-radius:999px; background:rgba(0,0,0,.45); border:2px solid var(--c,#fff); font-weight:800; font-size:14px; text-align:left; }
+  #finale .card small { display:block; font-size:11px; opacity:.8; }
+  #finale .row { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  #finale .meta { font-size:13px; font-weight:700; opacity:.9; }
+
+  #demo { position:fixed; right:8px; top:178px; font-size:10px; font-weight:900; letter-spacing:.1em; padding:3px 7px; border-radius:6px; background:#b3261e; display:none; }
+  #status { position:fixed; left:8px; top:178px; font-size:10px; opacity:.6; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="labels"></div>
+
+<div id="hud">
+  <div id="vs">
+    <div class="side" style="--c:var(--gr)"><b>🇬🇷 GRIECHENLAND</b><div class="pts" id="ptsGr">0</div><div class="s" id="infGr"></div></div>
+    <div id="mid"><div id="timer">6:00</div><div id="round">RUNDE 1</div></div>
+    <div class="side r" style="--c:var(--tr)"><b>TÜRKEI 🇹🇷</b><div class="pts" id="ptsTr">0</div><div class="s" id="infTr"></div></div>
+  </div>
+  <div id="tug"><div id="tugGr"></div></div>
+  <div id="peace"><span class="dove">🕊</span><div class="txt">FRIEDEN<small>schreib: frieden · barış · ειρήνη</small></div><div id="peaceBar"><div id="peaceFill"></div></div><span id="peacePct">0%</span></div>
+  <div id="crisis">⚡ ZYPERN-KRISE! Alle Flotten nach Zypern, doppelte Truppen! ⚡</div>
+</div>
+
+<div id="feed"></div>
+<div id="board">
+  <div class="col" style="--c:var(--gr)"><h4>🇬🇷 TOP KAPITÄNE</h4><div id="lbGr"></div></div>
+  <div class="col" style="--c:var(--tr)"><h4>🇹🇷 TOP KAPITÄNE</h4><div id="lbTr"></div></div>
+</div>
+<div id="help">
+  <span>💬 1 = 🇬🇷 · 2 = 🇹🇷</span>
+  <span>💬 Inselname = Ziel</span>
+  <span>❤️ Like = Soldaten</span>
+  <span>🎁 Geschenk = Flotte mit deinem Namen</span>
+  <span>🕊 „frieden“ = Friedensbalken</span>
+</div>
+
+<div id="showcase"><span id="scAv"></span><div><div class="who" id="scWho"></div><div class="what" id="scWhat"></div></div></div>
+<div id="banner"></div>
+<div id="finale"></div>
+<div id="demo">DEMO-MODUS</div>
+<div id="status"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// =====================================================================
+//  KONFIGURATION
+// =====================================================================
+const params = new URLSearchParams(location.search);
+const CONFIG = {
+  roundSeconds: +(params.get('round') || 360), // Rundendauer, danach immer Friedensgipfel
+  peaceGoal: +(params.get('peace') || 650),    // so viele Friedenspunkte beenden die Runde früher
+  peacePerComment: 5,     // Kommentar mit „frieden / barış / ειρήνη / peace / 🕊“
+  peacePerLike: 0.08,     // jedes Like, egal welche Seite, nährt auch den Frieden
+  peacePerSecond: 0.4,    // der Frieden wächst von allein
+  likeTroops: 1, commentTroops: 3, followTroops: 25, shareTroops: 15,
+  troopsPerDiamond: 5,    // Rose = 1 Diamant = 5 Soldaten
+  launchEvery: 3.0, launchShare: 0.65, minLaunch: 8,
+  crisisEvery: 75, crisisLength: 20, // Zypern-Krise
+  finaleSeconds: 16,
+  wsUrl: params.get('ws') || `ws://${location.hostname || 'localhost'}:${params.get('port') || 8787}`,
+  // Auf einer Webseite (z. B. GitHub Pages) gibt es keinen lokalen server.js: dann direkt Demo-Modus
+  forceDemo: params.get('demo') === '1' || (!params.get('ws') && location.protocol === 'https:'),
+};
+
+const norm = s => String(s).toLowerCase().replace(/ı/g, 'i').normalize('NFD').replace(/[̀-ͯ]/g, '');
+const tokenize = s => norm(s).split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+
+const SIDES = [
+  { id:0, name:'GRIECHENLAND', short:'Griechenland', flag:'🇬🇷', css:'#2f7bff', keys:['1','gr','griechenland','greece','hellas','ellada','yunanistan','griechen','grieche','ελλαδα','ελλας'] },
+  { id:1, name:'TÜRKEI',       short:'Türkei',       flag:'🇹🇷', css:'#ff3b3b', keys:['2','tr','turkei','tuerkei','turkey','turkiye','turk','turken','τουρκια'] },
+].map(s => ({ ...s, color:new THREE.Color(s.css), keys:s.keys.map(norm) }));
+const PEACE_WORDS = ['frieden','peace','baris','ειρηνη','eirini','irini','pace','paz','paix','salam','shalom','friede','kardeslik','φιλια','dostluk'].map(norm);
+
+// Projektion: Ostteil (Türkei-Südküste, Zypern) wird gestaucht, damit alles ins Hochformat passt
+const LONMID = 26.8, LAT0 = 37.75, SX = 4.4, SZ = 5.6;
+const lonC = lon => lon <= 28 ? lon - LONMID : (28 - LONMID) + (lon - 28) * 0.42;
+const P = (lon, lat) => new THREE.Vector3(lonC(lon) * SX, 0, -(lat - LAT0) * SZ);
+
+// [Name, Länge, Breite, rx, rz, Start-Truppen, Produktion/s, Punktwert, Aliase]
+const ISLAND_DATA = [
+  ['Thasos',     24.70, 40.68, 0.85,0.7, 14, 1, 1, ['tasos','tasoz','θασος']],
+  ['Samothraki', 25.55, 40.47, 0.6, 0.5, 10, 1, 1, ['semadirek','σαμοθρακη']],
+  ['Gökçeada',   25.85, 40.18, 0.75,0.45,12, 1, 1, ['gokceada','imbros','imvros','ιμβρος']],
+  ['Limnos',     25.20, 39.90, 1.0, 0.8, 16, 1, 1, ['lemnos','limni','λημνος']],
+  ['Lesbos',     26.25, 39.20, 1.35,1.15,24, 2, 2, ['lesvos','midilli','λεσβος']],
+  ['Skyros',     24.55, 38.88, 0.9, 0.55,12, 1, 1, ['skiros','iskiri','σκυρος']],
+  ['Chios',      26.00, 38.40, 0.7, 1.0, 18, 1, 1, ['hios','sakiz','χιος']],
+  ['Samos',      26.75, 37.73, 0.9, 0.5, 16, 1, 1, ['sisam','σαμος']],
+  ['Ikaria',     26.12, 37.60, 0.9, 0.4, 12, 1, 1, ['nikarya','ικαρια']],
+  ['Andros',     24.85, 37.85, 0.5, 0.8, 12, 1, 1, ['ανδρος']],
+  ['Mykonos',    25.35, 37.45, 0.5, 0.4, 12, 1, 1, ['mikonos','μυκονος']],
+  ['Naxos',      25.50, 37.05, 0.8, 0.9, 18, 1, 1, ['naksos','nakşa','ναξος']],
+  ['Milos',      24.43, 36.70, 0.8, 0.55,12, 1, 1, ['melos','μηλος']],
+  ['Santorini',  25.43, 36.40, 0.55,0.6, 14, 1, 1, ['thira','santorin','σαντορινη','θηρα']],
+  ['Kos',        27.12, 36.82, 0.75,0.35,14, 1, 1, ['istankoy','κως']],
+  ['Rhodos',     28.00, 36.20, 0.8, 1.3, 24, 2, 2, ['rhodes','rodos','rodi','ροδος']],
+  ['Karpathos',  27.15, 35.60, 0.4, 0.9, 12, 1, 1, ['kerpe','καρπαθος']],
+  ['Kreta',      24.90, 35.25, 5.8, 0.95,50, 3, 3, ['crete','girit','kriti','κρητη']],
+  ['Zypern',     32.90, 35.55, 3.0, 1.5, 70, 4, 5, ['cyprus','kibris','kypros','κυπρος','cypern','zypern']],
+];
+// Häfen auf dem Festland: hier starten die Flotten
+const PORTS = [
+  ['Kavala', 24.40, 40.93, 0], ['Volos', 22.95, 39.36, 0], ['Piräus', 23.62, 37.94, 0], ['Sounion', 24.02, 37.66, 0],
+  ['Çanakkale', 26.40, 40.15, 1], ['İzmir', 27.10, 38.42, 1], ['Bodrum', 27.43, 37.03, 1], ['Mersin', 34.62, 36.80, 1],
+];
+const GREECE = [[19,42],[26.4,42],[26.05,40.73],[25.87,40.85],[25.2,40.95],[24.8,40.85],[24.4,40.93],[23.9,40.75],[23.75,40.4],[24.4,40.15],[23.9,40.35],[23.95,39.95],[23.65,40.2],[23.35,39.95],[23.0,40.25],[22.95,40.6],[22.6,40.45],[22.6,40.0],[22.9,39.55],[23.3,39.15],[23.05,39.05],[23.35,39.0],[23.6,38.95],[24.15,38.65],[24.58,38.16],[24.3,38.05],[23.75,38.3],[24.03,37.66],[23.62,37.94],[23.15,37.85],[23.2,37.45],[23.15,37.3],[22.75,37.0],[23.05,36.45],[22.5,36.45],[22.4,36.7],[22.15,36.4],[21.95,36.95],[21.6,37.5],[19,37.5]];
+const TURKEY = [[26.4,42],[37,42],[37,36.5],[36,36.0],[35.5,36.6],[34.62,36.8],[34.15,36.4],[33.6,36.15],[32.85,36.08],[32.0,36.55],[31.4,36.78],[30.7,36.88],[30.55,36.5],[30.3,36.25],[29.6,36.2],[29.1,36.62],[28.6,36.65],[28.25,36.82],[28.0,36.72],[27.4,36.68],[27.6,36.82],[28.2,37.02],[27.6,37.0],[27.25,37.0],[27.43,37.15],[27.25,37.35],[27.2,37.6],[27.25,37.88],[27.0,38.05],[26.55,38.15],[26.3,38.3],[26.4,38.45],[26.5,38.65],[26.75,38.4],[27.1,38.42],[26.75,38.6],[26.95,38.75],[26.75,39.05],[26.7,39.3],[26.95,39.55],[26.6,39.55],[26.07,39.48],[26.15,39.75],[26.2,40.0],[26.4,40.15],[26.18,40.05],[26.0,40.3],[26.6,40.6],[26.05,40.73]];
+
+// =====================================================================
+//  SZENE
+// =====================================================================
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a3756);
+scene.fog = new THREE.Fog(0x0a3756, 90, 200);
+const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 500);
+const camHome = new THREE.Vector3(1.2, 0, 0), camTarget = camHome.clone(), camDir = new THREE.Vector3(0, 0.93, 0.37).normalize();
+let camDist = 80, zoom = 1, shake = 0, focus = null;
+
+const hemi = new THREE.HemisphereLight(0xd6ecff, 0x1d4a5e, 0.75); scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff0d6, 1.3);
+sun.position.set(-25, 55, 20); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left:-30, right:30, top:30, bottom:-30, near:1, far:150 });
+sun.shadow.bias = -0.0005;
+scene.add(sun);
+
+let seed = 11;
+const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const noise3 = (x, y, z) => Math.sin(x * 1.7 + z * 2.3) * 0.5 + Math.sin(z * 3.1 - y * 1.3 + x) * 0.3 + Math.sin((x + z) * 5.3) * 0.2;
+const lin = hex => new THREE.Color(hex).convertSRGBToLinear();
+const ellipseR = (o, ang) => 1 / Math.sqrt((Math.cos(ang) / o.rx) ** 2 + (Math.sin(ang) / o.rz) ** 2);
+
+// --- Flaggen-Texturen -----------------------------------------------
+function flagTex(kind) {
+  const cv = document.createElement('canvas'); cv.width = 192; cv.height = 128;
+  const x = cv.getContext('2d'), W = 192, H = 128;
+  if (kind === 0) {
+    const sh = H / 9;
+    for (let i = 0; i < 9; i++) { x.fillStyle = i % 2 ? '#fff' : '#0D5EAF'; x.fillRect(0, i * sh, W, sh + 1); }
+    x.fillStyle = '#0D5EAF'; x.fillRect(0, 0, sh * 5, sh * 5);
+    x.fillStyle = '#fff'; x.fillRect(sh * 2, 0, sh, sh * 5); x.fillRect(0, sh * 2, sh * 5, sh);
+  } else if (kind === 1) {
+    x.fillStyle = '#E30A17'; x.fillRect(0, 0, W, H);
+    const G = H, cx = G * 0.5, cy = H / 2;
+    x.fillStyle = '#fff'; x.beginPath(); x.arc(cx, cy, G * 0.25, 0, 7); x.fill();
+    x.fillStyle = '#E30A17'; x.beginPath(); x.arc(cx + G * 0.0625, cy, G * 0.2, 0, 7); x.fill();
+    x.fillStyle = '#fff'; x.beginPath();
+    const sx = cx + G * 0.4, r = G * 0.125;
+    for (let i = 0; i < 10; i++) { const a = Math.PI + i * Math.PI / 5, rr = i % 2 ? r * 0.4 : r; x.lineTo(sx + Math.cos(a) * rr, cy + Math.sin(a) * rr); }
+    x.closePath(); x.fill();
+  } else if (kind === 2) {
+    x.fillStyle = '#fbfaf4'; x.fillRect(0, 0, W, H);
+    x.font = '84px serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('🕊', W / 2, H / 2 + 4);
+  } else { x.fillStyle = '#d9d9d9'; x.fillRect(0, 0, W, H); }
+  const t = new THREE.CanvasTexture(cv); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; return t;
+}
+const FLAG_TEX = [flagTex(0), flagTex(1), flagTex(2), flagTex(3)];
+const flagMats = FLAG_TEX.map(t => new THREE.MeshStandardMaterial({ map:t, side:THREE.DoubleSide, roughness:0.8 }));
+const flagMatFor = owner => owner === 'peace' ? flagMats[2] : owner >= 0 ? flagMats[owner] : flagMats[3];
+
+// --- Geometrie-Helfer -----------------------------------------------
+const toPts = poly => poly.map(([lo, la]) => P(lo, la));
+const GR_PTS = toPts(GREECE), TR_PTS = toPts(TURKEY);
+function inPoly(x, z, pts) {
+  let ins = false;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const a = pts[i], b = pts[j];
+    if ((a.z > z) !== (b.z > z) && x < (b.x - a.x) * (z - a.z) / (b.z - a.z) + a.x) ins = !ins;
+  }
+  return ins;
+}
+function edgeDist(x, z, pts) {
+  let best = Infinity;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const a = pts[i], b = pts[j], dx = b.x - a.x, dz = b.z - a.z, l = dx * dx + dz * dz || 1;
+    const t = THREE.MathUtils.clamp(((x - a.x) * dx + (z - a.z) * dz) / l, 0, 1);
+    best = Math.min(best, Math.hypot(x - a.x - t * dx, z - a.z - t * dz));
+  }
+  return best;
+}
+
+// --- Inseln & Häfen als Objekte --------------------------------------
+const islands = ISLAND_DATA.map(([name, lon, lat, rx, rz, troops, prod, value, alias]) => ({
+  kind:'island', name, pos:P(lon, lat), rx, rz, startTroops:troops, prod, value,
+  aliases:[name, ...alias].map(norm), owner:-1, troops, governor:null,
+}));
+const CYPRUS = islands.find(i => i.name === 'Zypern');
+const ports = PORTS.map(([name, lon, lat, side]) => ({ kind:'port', name, pos:P(lon, lat), rx:0.45, rz:0.45, owner:side, troops:15, prod:0.8 }));
+
+// --- Wasser -----------------------------------------------------------
+const WS = 150, WSEG = 110;
+const waterGeo = new THREE.PlaneGeometry(WS, WS, WSEG, WSEG);
+waterGeo.rotateX(-Math.PI / 2);
+{
+  const deep = lin(0x0b5a92), mid = lin(0x168fc6), shallow = lin(0x46dcd4);
+  const pos = waterGeo.attributes.position, cols = new Float32Array(pos.count * 3), c = new THREE.Color();
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), z = pos.getZ(i);
+    let best = 99;
+    for (const o of islands) { const dx = (x - o.pos.x) / (o.rx + 0.5), dz = (z - o.pos.z) / (o.rz + 0.5); best = Math.min(best, Math.hypot(dx, dz) - 1); }
+    if (Math.abs(x) < 40 && Math.abs(z) < 40) best = Math.min(best, edgeDist(x, z, GR_PTS) / 1.2, edgeDist(x, z, TR_PTS) / 1.2);
+    const k = THREE.MathUtils.clamp(best / 1.3, 0, 1);
+    c.copy(shallow).lerp(mid, k).lerp(deep, THREE.MathUtils.clamp((best - 1.5) / 5, 0, 1));
+    cols.set([c.r, c.g, c.b], i * 3);
+  }
+  waterGeo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+}
+const water = new THREE.Mesh(waterGeo, new THREE.MeshStandardMaterial({ vertexColors:true, flatShading:true, roughness:0.22, metalness:0.1 }));
+water.receiveShadow = true; scene.add(water);
+const waterBase = Float32Array.from(waterGeo.attributes.position.array);
+const waveH = (x, z, t) => Math.sin(x * 0.35 + t * 1.1) * 0.09 + Math.cos(z * 0.3 + t * 1.4) * 0.08 + Math.sin((x + z) * 0.8 + t * 2) * 0.03;
+
+// --- Festland ----------------------------------------------------------
+const sandMat = new THREE.MeshStandardMaterial({ color:0xe6cf96, roughness:0.95, flatShading:true });
+const landTopMat = new THREE.MeshStandardMaterial({ color:0x7fa04e, roughness:0.95, flatShading:true });
+function buildMainland(pts) {
+  const shape = new THREE.Shape(pts.map(p => new THREE.Vector2(p.x, -p.z)));
+  const geo = new THREE.ExtrudeGeometry(shape, { depth:0.6, bevelEnabled:true, bevelThickness:0.12, bevelSize:0.22, bevelSegments:2, curveSegments:1 });
+  geo.rotateX(-Math.PI / 2); geo.translate(0, -0.18, 0);
+  const m = new THREE.Mesh(geo, [landTopMat, sandMat]);
+  m.receiveShadow = true; m.castShadow = true; scene.add(m);
+  // Berge und Wälder
+  let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+  pts.forEach(p => { minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x); minZ = Math.min(minZ, p.z); maxZ = Math.max(maxZ, p.z); });
+  minX = Math.max(minX, -30); maxX = Math.min(maxX, 30); minZ = Math.max(minZ, -30); maxZ = Math.min(maxZ, 30);
+  const mtnCols = [lin(0x7d9a4c), lin(0x9c8a62), lin(0x8a7b5e)], snow = lin(0xf2efe8), forest = new THREE.MeshStandardMaterial({ color:lin(0x3f6b2e), flatShading:true });
+  const treeGeo = new THREE.ConeGeometry(0.16, 0.45, 5);
+  for (let k = 0; k < 900; k++) {
+    const x = minX + rnd() * (maxX - minX), z = minZ + rnd() * (maxZ - minZ);
+    if (!inPoly(x, z, pts)) continue;
+    const d = edgeDist(x, z, pts);
+    if (d < 0.6) continue;
+    if (rnd() < 0.07 && d > 1.4) {
+      const h = 0.5 + rnd() * Math.min(1.6, d * 0.4), r = 0.6 + rnd() * 0.8;
+      const g = new THREE.ConeGeometry(r, h, 7, 2);
+      const gp = g.attributes.position, cc = new Float32Array(gp.count * 3), base = mtnCols[Math.floor(rnd() * 3)], c = new THREE.Color();
+      for (let i = 0; i < gp.count; i++) {
+        const y = gp.getY(i), n = noise3(gp.getX(i) * 3 + x, y, gp.getZ(i) * 3 + z) * 0.18;
+        gp.setXYZ(i, gp.getX(i) * (1 + n), y, gp.getZ(i) * (1 + n));
+        const hy = (y + h / 2) / h;
+        c.copy(base); if (hy > 0.7 && h > 1.4) c.lerp(snow, 0.85);
+        cc.set([c.r, c.g, c.b], i * 3);
+      }
+      g.setAttribute('color', new THREE.BufferAttribute(cc, 3)); g.computeVertexNormals();
+      const mm = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors:true, flatShading:true, roughness:1 }));
+      mm.position.set(x, 0.42 + h / 2 - 0.05, z); mm.rotation.y = rnd() * 3; mm.castShadow = true; mm.receiveShadow = true;
+      scene.add(mm);
+    } else if (rnd() < 0.5) {
+      const tr = new THREE.Mesh(treeGeo, forest); tr.position.set(x, 0.62, z); tr.castShadow = true; scene.add(tr);
+    }
+  }
+}
+[sandMat, landTopMat].forEach(m => m.color.convertSRGBToLinear());
+buildMainland(GR_PTS); buildMainland(TR_PTS);
+
+// --- Insel-Meshes -----------------------------------------------------
+const landMat = new THREE.MeshStandardMaterial({ vertexColors:true, roughness:0.9, flatShading:true });
+const houseMat = new THREE.MeshStandardMaterial({ color:0xfbfbf6, roughness:0.7 });
+const roofMat = new THREE.MeshStandardMaterial({ color:0x1e5fc0, roughness:0.6 });
+const poleMat = new THREE.MeshStandardMaterial({ color:0x6b4a2b });
+const houseGeo = new THREE.BoxGeometry(0.18, 0.16, 0.18);
+const domeGeo = new THREE.SphereGeometry(0.075, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2);
+[houseMat, roofMat, poleMat].forEach(m => m.color.convertSRGBToLinear());
+const labelsEl = document.getElementById('labels');
+
+function addFlag(parent, y, scale = 1) {
+  const fg = new THREE.Group();
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.2, 6), poleMat);
+  pole.position.y = 0.6; pole.castShadow = true; fg.add(pole);
+  const geo = new THREE.PlaneGeometry(0.75, 0.5, 8, 1); geo.translate(0.375, 0, 0);
+  const flag = new THREE.Mesh(geo, flagMats[3]); flag.position.y = 0.95; flag.castShadow = true; fg.add(flag);
+  fg.position.y = y; fg.scale.setScalar(scale); parent.add(fg);
+  return { flag, base:Float32Array.from(geo.attributes.position.array) };
+}
+
+function buildIsland(o) {
+  const g = new THREE.Group(); g.position.copy(o.pos);
+  const sx = o.rx, sz = o.rz, ph = rnd() * 10, hgt = Math.min(0.7 + Math.min(sx, sz) * 0.9, 1.9);
+  const beach = new THREE.CylinderGeometry(1.0, 1.12, 0.45, 44, 1), bp = beach.attributes.position;
+  const jit = a => 1 + 0.1 * Math.sin(a * 5 + ph) + 0.06 * Math.sin(a * 11 + ph * 2);
+  for (let i = 0; i < bp.count; i++) { const x = bp.getX(i), z = bp.getZ(i), j = jit(Math.atan2(z, x)); bp.setXYZ(i, x * j * sx, bp.getY(i), z * j * sz); }
+  beach.computeVertexNormals();
+  const bm = new THREE.Mesh(beach, sandMat); bm.position.y = 0.05; bm.receiveShadow = bm.castShadow = true; g.add(bm);
+  const hill = new THREE.SphereGeometry(1, 40, 14, 0, Math.PI * 2, 0, Math.PI / 2), hp = hill.attributes.position;
+  const hc = new Float32Array(hp.count * 3), col = new THREE.Color();
+  const grass = lin(0x6f9a3e), olive = lin(0x8d9146), rock = lin(0xa59078), peak = lin(0xe2dacb);
+  for (let i = 0; i < hp.count; i++) {
+    const x = hp.getX(i), y = hp.getY(i), z = hp.getZ(i), j = jit(Math.atan2(z, x));
+    const n = noise3(x * 2 + ph, y * 2, z * 2 + (sx > 3 ? x * 3 : 0)), ny = Math.max(0, y * (0.75 + 0.35 * n));
+    hp.setXYZ(i, x * j * sx * 0.88, ny * hgt + 0.22, z * j * sz * 0.88);
+    col.copy(grass).lerp(olive, THREE.MathUtils.clamp(n * 0.5 + 0.5, 0, 1));
+    if (ny > 0.45) col.lerp(rock, THREE.MathUtils.clamp((ny - 0.45) * 2.5, 0, 1));
+    if (ny > 0.85) col.lerp(peak, 0.6);
+    hc.set([col.r, col.g, col.b], i * 3);
+  }
+  hill.setAttribute('color', new THREE.BufferAttribute(hc, 3)); hill.computeVertexNormals();
+  const hm = new THREE.Mesh(hill, landMat); hm.castShadow = hm.receiveShadow = true; g.add(hm);
+  const nh = Math.round(3 + Math.min(sx * sz * 1.5, 10));
+  for (let k = 0; k < nh; k++) {
+    const a = rnd() * Math.PI * 2, d = 0.5 + rnd() * 0.3, hx = Math.cos(a) * d * sx * 0.85, hz = Math.sin(a) * d * sz * 0.85;
+    const hy = 0.22 + hgt * Math.sqrt(Math.max(0, 1 - d * d)) * 0.7;
+    const h = new THREE.Mesh(houseGeo, houseMat); h.position.set(hx, hy, hz); h.rotation.y = rnd() * 3; h.castShadow = true; g.add(h);
+    if (rnd() < 0.35) { const dm = new THREE.Mesh(domeGeo, roofMat); dm.position.set(hx, hy + 0.08, hz); g.add(dm); }
+  }
+  const ring = new THREE.Mesh(new THREE.RingGeometry(1.16, 1.4, 56), new THREE.MeshBasicMaterial({ color:0xffffff, transparent:true, opacity:0.22, depthWrite:false }));
+  ring.rotation.x = -Math.PI / 2; ring.scale.set(sx, sz, 1); ring.position.y = 0.3; g.add(ring);
+  const big = o.value >= 3;
+  const f = addFlag(g, hgt + 0.1, big ? 1.5 : 1);
+  scene.add(g);
+  Object.assign(o, { group:g, ring, flag:f.flag, flagBase:f.base, top:hgt + (big ? 2.2 : 1.5), ph, pulse:0 });
+  const el = document.createElement('div');
+  el.className = 'lbl' + (big ? ' big' : '');
+  el.innerHTML = `<div class="n">${o.value > 1 ? '★'.repeat(Math.min(o.value, 3)) + ' ' : ''}${o.name}</div><div class="t">0</div><div class="g" style="display:none"></div>`;
+  labelsEl.appendChild(el);
+  o.el = el; o.elT = el.querySelector('.t'); o.elG = el.querySelector('.g');
+}
+islands.forEach(buildIsland);
+
+function buildPort(o) {
+  const g = new THREE.Group(); g.position.copy(o.pos); g.position.y = 0.42;
+  for (let k = 0; k < 6; k++) { const h = new THREE.Mesh(houseGeo, houseMat); h.position.set((rnd() - .5) * 0.8, 0.08, (rnd() - .5) * 0.8); h.castShadow = true; g.add(h); }
+  const f = addFlag(g, 0, 0.9);
+  f.flag.material = flagMats[o.owner];
+  scene.add(g);
+  Object.assign(o, { flag:f.flag, flagBase:f.base, ph:rnd() * 10 });
+  const el = document.createElement('div'); el.className = 'port'; el.style.setProperty('--c', SIDES[o.owner].css);
+  labelsEl.appendChild(el); o.el = el;
+}
+ports.forEach(buildPort);
+const landLabels = [['GRIECHENLAND', 23.5, 39.65, '#dbe8ff'], ['TÜRKEI', 28.9, 38.9, '#ffe0e0']].map(([t, lo, la, c]) => {
+  const el = document.createElement('div'); el.className = 'land'; el.textContent = t; el.style.color = c; labelsEl.appendChild(el);
+  return { el, pos:P(lo, la) };
+});
+
+function paintIsland(o) {
+  const s = SIDES[o.owner];
+  o.ring.material.color.copy(s ? s.color : new THREE.Color(0xeeeeee));
+  o.ring.material.opacity = s ? 0.75 : 0.22;
+  o.flag.material = flagMatFor(o.owner);
+  o.elT.style.borderColor = s ? s.css : '#ddd';
+  o.elT.style.color = s ? s.css : '#fff';
+  if (o.governor && s) { o.elG.style.display = 'flex'; o.elG.innerHTML = avatar(o.governor, 15) + '👑 ' + esc(short(o.governor.nick, 12)); }
+  else o.elG.style.display = 'none';
+}
+
+// --- Wolken -----------------------------------------------------------
+const clouds = [];
+{
+  const cm = new THREE.MeshStandardMaterial({ color:0xffffff, roughness:1, transparent:true, opacity:0.5, flatShading:true, depthWrite:false });
+  const cg = new THREE.IcosahedronGeometry(1, 1);
+  for (let k = 0; k < 5; k++) {
+    const g = new THREE.Group();
+    for (let i = 0; i < 5; i++) { const s = new THREE.Mesh(cg, cm); s.position.set((i - 2) * 0.9 + rnd() * 0.4, rnd() * 0.4, rnd() * 0.8); s.scale.setScalar(0.7 + rnd() * 0.7); s.castShadow = true; g.add(s); }
+    g.position.set((rnd() - .5) * 60, 12 + rnd() * 3, (rnd() - .5) * 50); g.scale.setScalar(0.6 + rnd() * 0.5);
+    scene.add(g); clouds.push({ g, v:0.4 + rnd() * 0.5 });
+  }
+}
+
+// --- Partikel -----------------------------------------------------------
+const P_MAX = 2600, pGeo = new THREE.BufferGeometry(), pPos = new Float32Array(P_MAX * 3), pCol = new Float32Array(P_MAX * 3);
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3)); pGeo.setAttribute('color', new THREE.BufferAttribute(pCol, 3));
+const spriteTex = (() => { const cv = document.createElement('canvas'); cv.width = cv.height = 64; const x = cv.getContext('2d'), gr = x.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, '#fff'); gr.addColorStop(0.4, 'rgba(255,255,255,.6)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = gr; x.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(cv); })();
+const points = new THREE.Points(pGeo, new THREE.PointsMaterial({ size:0.5, map:spriteTex, vertexColors:true, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending }));
+points.frustumCulled = false; scene.add(points);
+const parts = Array.from({ length:P_MAX }, () => ({ life:0 })); let pCur = 0;
+function emit(pos, color, n, speed = 4, life = 1, up = 3, spread = 0.3, grav = 6) {
+  for (let i = 0; i < n; i++) {
+    const p = parts[pCur]; pCur = (pCur + 1) % P_MAX;
+    p.x = pos.x + (rnd() - .5) * spread; p.y = pos.y + rnd() * spread; p.z = pos.z + (rnd() - .5) * spread;
+    const a = rnd() * Math.PI * 2, s = speed * (0.3 + rnd());
+    p.vx = Math.cos(a) * s; p.vz = Math.sin(a) * s; p.vy = up * (0.4 + rnd()); p.g = grav;
+    p.life = p.max = life * (0.6 + rnd() * 0.6); p.r = color.r; p.gg = color.g; p.b = color.b;
+  }
+}
+function updateParticles(dt) {
+  for (let i = 0; i < P_MAX; i++) {
+    const p = parts[i];
+    if (p.life <= 0) { pPos[i * 3 + 1] = -999; continue; }
+    p.life -= dt; p.vy -= p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt;
+    if (p.y < 0.05) { p.y = 0.05; p.vy *= -0.2; p.vx *= 0.8; p.vz *= 0.8; }
+    const f = Math.max(0, p.life / p.max);
+    pPos[i * 3] = p.x; pPos[i * 3 + 1] = p.y; pPos[i * 3 + 2] = p.z;
+    pCol[i * 3] = p.r * f; pCol[i * 3 + 1] = p.gg * f; pCol[i * 3 + 2] = p.b * f;
+  }
+  pGeo.attributes.position.needsUpdate = pGeo.attributes.color.needsUpdate = true;
+}
+const C_FIRE = new THREE.Color(1, 0.55, 0.15), C_WHITE = new THREE.Color(1, 1, 1), C_WAKE = new THREE.Color(0.5, 0.6, 0.65), C_GOLD = new THREE.Color(1, 0.8, 0.25);
+
+// --- Schiffe ------------------------------------------------------------
+const hullGeo = (() => {
+  const s = new THREE.Shape();
+  s.moveTo(0, 0.6); s.quadraticCurveTo(0.22, 0.25, 0.19, -0.5); s.lineTo(-0.19, -0.5); s.quadraticCurveTo(-0.22, 0.25, 0, 0.6);
+  const g = new THREE.ExtrudeGeometry(s, { depth:0.16, bevelEnabled:true, bevelThickness:0.03, bevelSize:0.03, bevelSegments:1 });
+  g.rotateX(Math.PI / 2); g.translate(0, 0.17, 0); return g;
+})();
+const hullMat = new THREE.MeshStandardMaterial({ color:lin(0x6e4423), roughness:0.8 });
+const goldHullMat = new THREE.MeshStandardMaterial({ color:0xc9962a, roughness:0.4, metalness:0.6, emissive:0x553300, emissiveIntensity:0.5 });
+const mastGeo = new THREE.CylinderGeometry(0.022, 0.022, 0.95, 5);
+const sailGeo = new THREE.PlaneGeometry(0.62, 0.42, 4, 1);
+const whiteSail = new THREE.MeshStandardMaterial({ color:0xffffff, side:THREE.DoubleSide, roughness:0.8 });
+function makeShip(side, gold) {
+  const g = new THREE.Group();
+  const hull = new THREE.Mesh(hullGeo, gold ? goldHullMat : hullMat); hull.castShadow = true; g.add(hull);
+  const mast = new THREE.Mesh(mastGeo, poleMat); mast.position.y = 0.6; g.add(mast);
+  const sail = new THREE.Mesh(sailGeo, flagMats[side]); sail.position.set(0, 0.68, 0.02); sail.castShadow = true; g.add(sail);
+  g.userData.sail = sail;
+  return g;
+}
+
+// =====================================================================
+//  SPIELER (Zuschauer)
+// =====================================================================
+const users = new Map();
+const RANKS = [[0, 'Rekrut', '🪖'], [25, 'Matrose', '⚓'], [80, 'Bootsmann', '🧭'], [200, 'Kapitän', '🎖'], [500, 'Admiral', '⭐'], [1200, 'Legende', '👑']];
+const rankOf = u => { let r = RANKS[0]; for (const x of RANKS) if (u.total >= x[0]) r = x; return r; };
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+const short = (s, n) => (s = String(s)).length > n ? s.slice(0, n - 1) + '…' : s;
+function avatar(u, size) {
+  const c = u && SIDES[u.side] ? SIDES[u.side].css : '#888';
+  const inner = u && u.avatar ? `<img src="${esc(u.avatar)}" referrerpolicy="no-referrer" onerror="this.remove()">` : esc((u?.nick || '?').replace(/^[^\p{L}\p{N}]+/u, '').slice(0, 1).toUpperCase() || '?');
+  return `<span class="av" style="width:${size}px;height:${size}px;font-size:${Math.round(size * 0.48)}px;--c:${c}">${inner}</span>`;
+}
+function getUser(e) {
+  const id = e.user || e.nick || 'anon';
+  let u = users.get(id);
+  if (!u) { u = { id, nick:e.nick || id, avatar:null, side:-1, pts:0, total:0, peace:0, last:0, likeWin:[], rank:RANKS[0] }; users.set(id, u); }
+  if (e.nick) u.nick = e.nick;
+  if (e.avatar) u.avatar = e.avatar;
+  u.last = now;
+  return u;
+}
+const members = s => { let n = 0; users.forEach(u => { if (u.side === s.id) n++; }); return n; };
+function ensureSide(u) {
+  if (u.side >= 0) return SIDES[u.side];
+  const s = members(SIDES[0]) <= members(SIDES[1]) ? SIDES[0] : SIDES[1];
+  u.side = s.id; return s;
+}
+function addPts(u, n) {
+  u.pts += n; u.total += n;
+  const r = rankOf(u);
+  if (r !== u.rank) { u.rank = r; if (r[0] > 0) feed(`${r[2]} ${u.nick} ist jetzt ${r[1]}!`, SIDES[u.side]?.css, u, 'big'); }
+}
+// Kapitän für automatische Flotten: aktive Spieler der Seite, gewichtet nach Punkten
+function pickCaptain(side) {
+  const pool = [...users.values()].filter(u => u.side === side.id && now - u.last < 60);
+  if (!pool.length) return null;
+  let sum = pool.reduce((s, u) => s + Math.sqrt(u.pts + 1), 0), r = rnd() * sum;
+  for (const u of pool) { r -= Math.sqrt(u.pts + 1); if (r <= 0) return u; }
+  return pool[0];
+}
+
+// =====================================================================
+//  SPIEL-LOGIK
+// =====================================================================
+let now = 0, timeLeft = CONFIG.roundSeconds, roundOver = false, roundNo = 0, peace = 0, crisisT = CONFIG.crisisEvery, crisisOn = 0;
+let treaties = 0; try { treaties = +localStorage.getItem('aegean_treaties') || 0; } catch {}
+const fleets = [];
+const owned = s => islands.filter(i => i.owner === s.id);
+const score = s => owned(s).reduce((a, i) => a + i.value, 0);
+const bases = s => [...ports.filter(p => p.owner === s.id), ...owned(s)];
+
+function resetRound() {
+  roundNo++; roundOver = false; timeLeft = CONFIG.roundSeconds; peace = 0; crisisT = CONFIG.crisisEvery; crisisOn = 0;
+  fleets.forEach(f => { scene.remove(f.group); f.el.remove(); }); fleets.length = 0;
+  islands.forEach(i => { i.owner = -1; i.troops = i.startTroops; i.governor = null; });
+  ports.forEach(p => { p.troops = 15; p.flag.material = flagMats[p.owner]; });
+  SIDES.forEach(s => { s.reserve = 0; s.target = null; s.launchT = 1 + s.id * 1.5; s.voteT = 0; });
+  users.forEach(u => { u.pts = 0; u.peace = 0; });
+  islands.forEach(paintIsland);
+  doves.forEach(d => scene.remove(d.g)); doves.length = 0;
+  document.getElementById('finale').classList.remove('on'); document.body.classList.remove('fin');
+  document.getElementById('round').textContent = `RUNDE ${roundNo}`;
+  feed(`⚓ Runde ${roundNo}: Schreib 1 für 🇬🇷 oder 2 für 🇹🇷!`, '#fff', null, 'big');
+}
+
+function pickTarget(s) {
+  if (crisisOn > 0 && CYPRUS.owner !== s.id) return (s.target = CYPRUS);
+  if (s.target && s.target.owner !== s.id) return s.target;
+  const from = bases(s);
+  let best = null, bs = Infinity;
+  for (const i of islands) {
+    if (i.owner === s.id) continue;
+    const d = Math.min(...from.map(b => b.pos.distanceTo(i.pos) - ellipseR(i, Math.atan2(b.pos.z - i.pos.z, b.pos.x - i.pos.x))));
+    const sc = d + i.troops * 0.06 - i.value * 1.2 + (i.owner === -1 ? 0 : 1.5);
+    if (sc < bs) { bs = sc; best = i; }
+  }
+  return (s.target = best);
+}
+function front(s) {
+  const t = pickTarget(s); if (!t) return null;
+  return bases(s).reduce((a, b) => (a.pos.distanceTo(t.pos) - a.troops * 0.03 <= b.pos.distanceTo(t.pos) - b.troops * 0.03 ? a : b));
+}
+function edgePoint(o, toward, pad) {
+  const ang = Math.atan2(toward.z - o.pos.z, toward.x - o.pos.x);
+  return o.pos.clone().add(new THREE.Vector3(Math.cos(ang), 0, Math.sin(ang)).multiplyScalar(ellipseR(o, ang) + pad));
+}
+
+function launchFleet(s, src, target, troops, captain, gold) {
+  troops = Math.floor(troops);
+  if (troops < 1 || !target || !src) return;
+  const from = edgePoint(src, target.pos, 0.45), end = edgePoint(target, src.pos, 0.55);
+  const dir = new THREE.Vector3().subVectors(end, from);
+  const ctrl = from.clone().lerp(end, 0.5).add(new THREE.Vector3(-dir.z, 0, dir.x).normalize().multiplyScalar((rnd() - 0.5) * dir.length() * 0.3));
+  const len = from.distanceTo(ctrl) + ctrl.distanceTo(end);
+  const dur = THREE.MathUtils.clamp(len / 6, 2.5, 7.5) / (gold ? 1.4 : 1);
+  const group = new THREE.Group();
+  const count = Math.min(1 + Math.floor(Math.sqrt(troops) / 2.3), 7);
+  const offs = [[0, 0], [-0.5, -0.6], [0.5, -0.6], [-1, -1.2], [1, -1.2], [0, -1.2], [0, -1.8]];
+  for (let i = 0; i < count; i++) { const sh = makeShip(s.id, gold); sh.position.set(offs[i][0], 0, offs[i][1]); if (i === 0 && (gold || captain)) sh.scale.setScalar(gold ? 1.6 : 1.25); group.add(sh); }
+  scene.add(group);
+  const el = document.createElement('div');
+  el.className = 'flt' + (gold ? ' gold' : '') + (captain ? '' : ' anon');
+  el.style.setProperty('--c', s.css);
+  labelsEl.appendChild(el);
+  const f = { side:s, troops, captain, from, ctrl, end, target, t:0, dur, group, el, gold, wake:0, shown:-1 };
+  fleets.push(f); updateFleetLabel(f);
+  return f;
+}
+function updateFleetLabel(f) {
+  const n = Math.max(0, Math.floor(f.troops));
+  if (n === f.shown) return; f.shown = n;
+  f.el.innerHTML = f.captain ? `${avatar(f.captain, f.gold ? 22 : 18)}<span>${esc(short(f.captain.nick, 12))}</span><span style="color:${f.gold ? '#ffd54a' : f.side.css}">${f.gold ? '🎁' : '⚔'}${n}</span>` : `⚔ ${n}`;
+}
+const bez = (a, b, c, t, out) => out.set((1 - t) ** 2 * a.x + 2 * (1 - t) * t * b.x + t * t * c.x, 0, (1 - t) ** 2 * a.z + 2 * (1 - t) * t * b.z + t * t * c.z);
+const tA = new THREE.Vector3(), tB = new THREE.Vector3();
+
+function updateFleets(dt, time) {
+  // Seeschlachten: gegnerische Flotten, die sich begegnen, kämpfen
+  if (!roundOver) for (let i = 0; i < fleets.length; i++) for (let j = i + 1; j < fleets.length; j++) {
+    const a = fleets[i], b = fleets[j];
+    if (a.side === b.side || a.troops <= 0 || b.troops <= 0) continue;
+    if (a.group.position.distanceToSquared(b.group.position) > 1.6) continue;
+    const dmg = Math.min(30 * dt, a.troops, b.troops);
+    a.troops -= dmg; b.troops -= dmg;
+    if (rnd() < 0.5) { const m = a.group.position.clone().lerp(b.group.position, 0.5); m.y = 0.5; emit(m, C_FIRE, 4, 2.5, 0.5, 2); }
+    shake = Math.min(shake + 0.02, 0.5);
+    [a, b].forEach((f, k) => { if (f.troops <= 0.5) { f.sunk = true; const o = k ? a : b; if (f.captain && o.captain) feed(`💥 Seeschlacht! ${o.captain.nick} versenkt die Flotte von ${f.captain.nick}`, o.side.css, o.captain); addPts(o.captain || { pts:0, total:0 }, 5); } });
+  }
+  for (let i = fleets.length - 1; i >= 0; i--) {
+    const f = fleets[i];
+    if (f.sunk) { const p = f.group.position.clone(); p.y = 0.3; emit(p, C_WHITE, 25, 1.5, 0.9, 2.5); emit(p, C_FIRE, 20, 2, 0.6, 3); scene.remove(f.group); f.el.remove(); fleets.splice(i, 1); continue; }
+    if (roundOver) { f.group.position.y -= 0; } else f.t += dt / f.dur;
+    const t = Math.min(f.t, 1);
+    bez(f.from, f.ctrl, f.end, t, tA); bez(f.from, f.ctrl, f.end, Math.min(t + 0.01, 1), tB);
+    f.group.position.set(tA.x, waveH(tA.x, tA.z, time) + 0.02, tA.z);
+    if (tB.distanceToSquared(tA) > 1e-6) f.group.rotation.y = Math.atan2(tB.x - tA.x, tB.z - tA.z);
+    f.group.rotation.z = Math.sin(time * 3 + i) * 0.06;
+    f.wake -= dt;
+    if (f.wake <= 0 && !roundOver) { f.wake = 0.07; emit(f.group.position, C_WAKE, 2, 0.4, 0.9, 0.2, 0.2); if (f.gold) emit(f.group.position, C_GOLD, 2, 0.6, 0.7, 1.2, 0.3, 1); }
+    updateFleetLabel(f);
+    if (f.t >= 1) { arrive(f); scene.remove(f.group); f.el.remove(); fleets.splice(i, 1); }
+  }
+}
+
+function arrive(f) {
+  const o = f.target, s = f.side, hit = f.end.clone(); hit.y = 0.4;
+  if (o.owner === s.id) { o.troops += f.troops; emit(hit, s.color, 10, 1.5, 0.8, 2); return; }
+  const mult = o === CYPRUS && crisisOn > 0 ? 2 : 1;
+  o.troops -= f.troops * mult;
+  emit(hit, C_FIRE, 25 + Math.min(f.troops, 70), 4, 1.1, 4); emit(hit, s.color, 18, 3, 1, 3);
+  shake = Math.min(shake + 0.12 + f.troops * 0.003, 0.7);
+  if (o.troops < 0) {
+    const prev = SIDES[o.owner];
+    o.owner = s.id; o.troops = -o.troops; o.pulse = 1; o.governor = f.captain || pickCaptain(s);
+    if (o.governor) addPts(o.governor, 20 + o.value * 15);
+    paintIsland(o);
+    const top = o.pos.clone(); top.y = 1.6;
+    emit(top, s.color, 120 + o.value * 30, 6, 1.6, 7, 1);
+    shake = Math.min(shake + 0.4, 1);
+    const gov = o.governor ? `<br><span style="font-size:.55em;font-family:Inter">👑 ${esc(o.governor.nick)} ist Gouverneur</span>` : '';
+    banner(`<span style="color:${s.css}">${s.flag} ${s.name}</span><br>erobert ${o.name.toUpperCase()}!${gov}`);
+    feed(`🏴 ${s.flag} ${o.governor ? o.governor.nick + ' erobert' : 'erobert'} ${o.name}${prev ? ' von ' + prev.flag : ''}`, s.css, o.governor);
+    if (o.value >= 2) focusOn(o.pos, 2.5);
+    if (s.target === o) s.target = null;
+  }
+}
+
+function focusOn(pos, sec) { focus = { pos:pos.clone(), t:sec }; }
+
+function tick(dt) {
+  if (roundOver) return;
+  timeLeft -= dt;
+  peace += CONFIG.peacePerSecond * dt;
+  for (const i of islands) i.troops = i.owner >= 0 ? Math.min(i.troops + i.prod * dt, 999) : Math.min(i.troops + 0.12 * dt, i.startTroops * 2);
+  for (const p of ports) p.troops = Math.min(p.troops + p.prod * dt, 400);
+  users.forEach(u => { if (u.side >= 0) islands.forEach(i => { if (i.governor === u && i.owner === u.side) u.pts += 0, addPts(u, 0.1 * i.value * dt); }); });
+  // Zypern-Krise
+  crisisT -= dt;
+  if (crisisOn > 0) { crisisOn -= dt; if (crisisOn <= 0) { SIDES.forEach(s => { if (s.target === CYPRUS) s.target = null; }); CYPRUS.el.classList.remove('crisis'); } }
+  if (crisisT <= 0) {
+    crisisT = CONFIG.crisisEvery; crisisOn = CONFIG.crisisLength;
+    banner('⚡ ZYPERN-KRISE! ⚡<br><span style="font-size:.6em">Alle Flotten nach Zypern!</span>');
+    CYPRUS.el.classList.add('crisis'); focusOn(CYPRUS.pos, 3);
+  }
+  document.getElementById('crisis').classList.toggle('on', crisisOn > 0);
+  for (const s of SIDES) {
+    const fr = front(s);
+    if (fr && s.reserve > 0) { fr.troops += s.reserve; s.reserve = 0; }
+    s.launchT -= dt;
+    if (s.launchT <= 0 && fr) {
+      s.launchT = CONFIG.launchEvery * (crisisOn > 0 ? 0.6 : 1);
+      if (fr.troops >= CONFIG.minLaunch) { const n = fr.troops * CONFIG.launchShare; fr.troops -= n; launchFleet(s, fr, s.target, n, pickCaptain(s), false); }
+    }
+  }
+  const allOne = SIDES.find(s => owned(s).length === islands.length);
+  if (peace >= CONFIG.peaceGoal) peaceFinale('Die Zuschauer haben den Frieden gewählt!');
+  else if (allOne) peaceFinale(`${allOne.flag} ${allOne.short} hält alle Inseln und reicht die Hand zum Frieden.`);
+  else if (timeLeft <= 0) peaceFinale('Die Zeit ist um: an den Verhandlungstisch!');
+}
+
+// =====================================================================
+//  FRIEDENSFINALE (am Ende gewinnt immer der Frieden)
+// =====================================================================
+const doves = [];
+const doveBody = new THREE.SphereGeometry(1, 10, 8), wingGeo = new THREE.PlaneGeometry(1, 0.5); wingGeo.translate(0.5, 0, 0);
+const doveMat = new THREE.MeshStandardMaterial({ color:0xffffff, roughness:0.6, side:THREE.DoubleSide, emissive:0x333333 });
+function spawnDove(i) {
+  const g = new THREE.Group();
+  const b = new THREE.Mesh(doveBody, doveMat); b.scale.set(0.18, 0.15, 0.36); g.add(b);
+  const h = new THREE.Mesh(doveBody, doveMat); h.scale.setScalar(0.11); h.position.set(0, 0.08, 0.32); g.add(h);
+  const wl = new THREE.Mesh(wingGeo, doveMat), wr = new THREE.Mesh(wingGeo, doveMat); wr.rotation.y = Math.PI; g.add(wl, wr);
+  const a = rnd() * Math.PI * 2, r = 28;
+  g.position.set(Math.cos(a) * r, 3 + rnd() * 4, Math.sin(a) * r);
+  const target = new THREE.Vector3((rnd() - .5) * 20, 3 + rnd() * 3, (rnd() - .5) * 26);
+  g.scale.setScalar(1.2 + rnd() * 0.8); scene.add(g);
+  doves.push({ g, wl, wr, target, ph:rnd() * 6, sp:4 + rnd() * 3, delay:i * 0.12 });
+}
+function updateDoves(dt, t) {
+  for (const d of doves) {
+    if ((d.delay -= dt) > 0) continue;
+    const dir = tA.subVectors(d.target, d.g.position);
+    if (dir.length() < 1) d.target.set((rnd() - .5) * 26, 3 + rnd() * 4, (rnd() - .5) * 30);
+    dir.normalize();
+    d.g.position.addScaledVector(dir, d.sp * dt);
+    d.g.rotation.y = Math.atan2(dir.x, dir.z);
+    const flap = Math.sin(t * 12 + d.ph) * 0.8;
+    d.wl.rotation.z = flap; d.wr.rotation.z = -flap;
+  }
+}
+
+function peaceFinale(reason) {
+  roundOver = true; crisisOn = 0; CYPRUS.el.classList.remove('crisis'); document.getElementById('crisis').classList.remove('on');
+  treaties++; try { localStorage.setItem('aegean_treaties', treaties); } catch {}
+  fleets.forEach(f => f.group.children.forEach(sh => sh.userData.sail && (sh.userData.sail.material = flagMats[2])));
+  islands.forEach(i => { i.flag.material = flagMats[2]; i.ring.material.color.set(0xffffff); i.ring.material.opacity = 0.9; i.pulse = 1; });
+  ports.forEach(p => p.flag.material = flagMats[2]);
+  for (let k = 0; k < 30; k++) spawnDove(k);
+  const colors = [SIDES[0].color, C_WHITE, SIDES[1].color];
+  for (let k = 0; k < 14; k++) setTimeout(() => emit(new THREE.Vector3((rnd() - .5) * 26, 6 + rnd() * 3, (rnd() - .5) * 30), colors[k % 3], 130, 6, 1.8, 3, 0.5, 2.5), 300 + k * 450);
+  focusOn(new THREE.Vector3(0, 0, 2), CONFIG.finaleSeconds);
+  const all = [...users.values()];
+  const peacemaker = all.filter(u => u.peace > 0).sort((a, b) => b.peace - a.peace)[0];
+  const bestOf = s => all.filter(u => u.side === s.id).sort((a, b) => b.pts - a.pts)[0];
+  const card = (u, label, c) => u ? `<div class="card" style="--c:${c}">${avatar(u, 44)}<div>${esc(u.nick)}<small>${label}</small></div></div>` : '';
+  const gr = SIDES[0], tr = SIDES[1];
+  document.getElementById('finale').innerHTML = `
+    <div class="flags">🇬🇷 🕊 🇹🇷</div>
+    <div class="big">FRIEDEN<br>GEWINNT</div>
+    <div class="langs">Ειρήνη · Barış · Frieden</div>
+    <div class="meta">${esc(reason)}</div>
+    ${card(peacemaker, `🕊 Friedensstifter·in der Runde (${Math.floor(peacemaker?.peace || 0)} Friedenspunkte)`, '#fff')}
+    <div class="row">${card(bestOf(gr), `🇬🇷 tapferste·r Kapitän·in · ${Math.floor(bestOf(gr)?.pts || 0)} P.`, gr.css)}${card(bestOf(tr), `🇹🇷 tapferste·r Kapitän·in · ${Math.floor(bestOf(tr)?.pts || 0)} P.`, tr.css)}</div>
+    <div class="meta">Inseln am Ende: 🇬🇷 ${owned(gr).length} · 🇹🇷 ${owned(tr).length}${CYPRUS.owner >= 0 ? '' : ' · Zypern blieb frei'}<br>🤝 Friedensverträge in diesem Stream: <b>${treaties}</b></div>`;
+  setTimeout(() => { document.getElementById('finale').classList.add('on'); document.body.classList.add('fin'); }, 900);
+  feed('🕊 Friedensgipfel! Ειρήνη · Barış · Frieden', '#fff', null, 'peace');
+  setTimeout(resetRound, CONFIG.finaleSeconds * 1000);
+}
+
+// =====================================================================
+//  ZUSCHAUER-EVENTS
+// =====================================================================
+function handleEvent(e) {
+  if (roundOver && e.type !== 'chat') return;
+  const u = getUser(e);
+  switch (e.type) {
+    case 'chat': {
+      const raw = e.comment || '', toks = tokenize(raw);
+      const isPeace = raw.includes('🕊') || raw.includes('☮') || toks.some(t => PEACE_WORDS.includes(t));
+      if (isPeace) { peace += CONFIG.peacePerComment; u.peace += CONFIG.peacePerComment; addPts(u, 2); if (u.peace % 25 < CONFIG.peacePerComment) feed(`🕊 ${u.nick} wünscht Frieden`, '#fff', u, 'peace'); }
+      if (roundOver) return;
+      const joinGr = raw.includes('🇬🇷') || toks.some(t => SIDES[0].keys.includes(t));
+      const joinTr = raw.includes('🇹🇷') || toks.some(t => SIDES[1].keys.includes(t));
+      const join = joinGr && !joinTr ? SIDES[0] : joinTr && !joinGr ? SIDES[1] : null;
+      if (join && join.id !== u.side) { u.side = join.id; feed(`👋 ${u.nick} segelt für ${join.flag} ${join.short}`, join.css, u); }
+      const s = ensureSide(u);
+      const isl = islands.find(i => toks.some(t => i.aliases.includes(t)));
+      if (isl && isl.owner !== s.id && isl !== s.target && crisisOn <= 0 && now > s.voteT) {
+        s.target = isl; s.voteT = now + 4;
+        feed(`🎯 ${u.nick}: ${s.flag} Kurs auf ${isl.name}!`, s.css, u);
+      }
+      s.reserve += CONFIG.commentTroops; addPts(u, 1);
+      break;
+    }
+    case 'like': {
+      const s = ensureSide(u), n = Math.max(1, e.count | 0);
+      s.reserve += n * CONFIG.likeTroops; addPts(u, n);
+      peace += n * CONFIG.peacePerLike;
+      u.likeWin.push([now, n]); u.likeWin = u.likeWin.filter(x => now - x[0] < 6);
+      const combo = u.likeWin.reduce((a, x) => a + x[1], 0);
+      if (combo >= 40 && !u.comboShown) { u.comboShown = true; feed(`🔥 ${u.nick} Like-Combo x${combo}!`, s.css, u, 'big'); setTimeout(() => u.comboShown = false, 8000); }
+      const fr = front(s); if (fr) { const p = fr.pos.clone(); p.y = 1.2; emit(p, s.color, Math.min(n, 6), 1, 0.7, 2.5); }
+      break;
+    }
+    case 'gift': {
+      const s = ensureSide(u), dia = Math.max(1, e.diamonds || 1), cnt = Math.max(1, e.count || 1), troops = dia * cnt * CONFIG.troopsPerDiamond;
+      addPts(u, troops);
+      const t = pickTarget(s), fr = front(s);
+      if (t && fr) launchFleet(s, fr, t, troops, u, true);
+      showcase(u, `${e.giftName || 'Geschenk'}${cnt > 1 ? ' x' + cnt : ''} → Flotte mit ${troops} Kriegern ${s.flag}`);
+      feed(`🎁 ${u.nick}: ${e.giftName || 'Geschenk'}${cnt > 1 ? ' x' + cnt : ''} → ${troops} Krieger`, s.css, u, 'big');
+      if (troops >= 150 && t) focusOn(t.pos, 2);
+      break;
+    }
+    case 'follow': { const s = ensureSide(u); s.reserve += CONFIG.followTroops; addPts(u, 10); feed(`⭐ ${u.nick} folgt → +${CONFIG.followTroops} für ${s.flag}`, s.css, u); break; }
+    case 'share':  { const s = ensureSide(u); s.reserve += CONFIG.shareTroops;  addPts(u, 5);  feed(`🔁 ${u.nick} teilt → +${CONFIG.shareTroops} für ${s.flag}`, s.css, u); break; }
+  }
+}
+
+// =====================================================================
+//  HUD
+// =====================================================================
+const feedEl = document.getElementById('feed');
+function feed(text, color, u, cls) {
+  const d = document.createElement('div');
+  d.className = 'ev' + (cls ? ' ' + cls : '') + (u ? '' : ' noav');
+  d.style.setProperty('--c', color || '#fff');
+  d.innerHTML = (u ? avatar(u, 22) : '') + `<span>${esc(text)}</span>`;
+  feedEl.prepend(d);
+  while (feedEl.children.length > 3) feedEl.lastChild.remove();
+  setTimeout(() => d.remove(), 9000);
+}
+let bannerT;
+function banner(html) { const b = document.getElementById('banner'); b.innerHTML = html; b.classList.add('on'); clearTimeout(bannerT); bannerT = setTimeout(() => b.classList.remove('on'), 2400); }
+const scQueue = []; let scBusy = false;
+function showcase(u, what) { scQueue.push([u, what]); if (!scBusy) nextShowcase(); }
+function nextShowcase() {
+  const el = document.getElementById('showcase'), it = scQueue.shift();
+  if (!it) { scBusy = false; return; }
+  scBusy = true;
+  const [u, what] = it, r = rankOf(u);
+  document.getElementById('scAv').innerHTML = avatar(u, 56);
+  document.getElementById('scWho').textContent = `${r[2]} ${u.nick}`;
+  document.getElementById('scWhat').textContent = what;
+  el.classList.add('on');
+  setTimeout(() => { el.classList.remove('on'); setTimeout(nextShowcase, 300); }, scQueue.length > 2 ? 1400 : 2600);
+}
+function updateHud() {
+  const m = Math.max(0, Math.ceil(timeLeft));
+  document.getElementById('timer').textContent = `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`;
+  const [gr, tr] = SIDES, sg = score(gr), st = score(tr);
+  document.getElementById('ptsGr').textContent = sg; document.getElementById('ptsTr').textContent = st;
+  document.getElementById('infGr').textContent = `👥 ${members(gr)} · 🏝 ${owned(gr).length}${gr.target ? ' · → ' + gr.target.name : ''}`;
+  document.getElementById('infTr').textContent = `${tr.target ? tr.target.name + ' ← · ' : ''}🏝 ${owned(tr).length} · 👥 ${members(tr)}`;
+  document.getElementById('tugGr').style.width = (sg + st ? sg / (sg + st) * 100 : 50) + '%';
+  const pp = Math.min(100, peace / CONFIG.peaceGoal * 100);
+  document.getElementById('peaceFill').style.width = pp + '%';
+  document.getElementById('peacePct').textContent = Math.floor(pp) + '%';
+  const medals = ['🥇', '🥈', '🥉'];
+  for (const s of SIDES) {
+    const top = [...users.values()].filter(u => u.side === s.id && u.pts >= 1).sort((a, b) => b.pts - a.pts).slice(0, 3);
+    document.getElementById(s.id ? 'lbTr' : 'lbGr').innerHTML = top.map((u, k) => {
+      const r = rankOf(u);
+      return `<div class="pl"><span class="medal">${medals[k]}</span>${avatar(u, 20)}<span class="nm">${esc(u.nick)}<span class="rk">${r[2]} ${r[1]}</span></span><span class="sc">${Math.floor(u.pts)}</span></div>`;
+    }).join('') || '<div class="pl" style="opacity:.6">Schreib ' + (s.id + 1) + ' zum Mitmachen!</div>';
+  }
+}
+
+// =====================================================================
+//  VERBINDUNG + DEMO
+// =====================================================================
+let demo = CONFIG.forceDemo;
+const statusEl = document.getElementById('status');
+function setDemo(on) { demo = on; document.getElementById('demo').style.display = on ? 'block' : 'none'; }
+function connect() {
+  if (CONFIG.forceDemo) { setDemo(true); return; }
+  let ws; try { ws = new WebSocket(CONFIG.wsUrl); } catch { setDemo(true); return; }
+  ws.onopen = () => { setDemo(false); statusEl.textContent = '● verbunden'; };
+  ws.onmessage = m => { try { const e = JSON.parse(m.data); if (e.type === 'status') statusEl.textContent = e.text; else handleEvent(e); } catch {} };
+  ws.onclose = () => { statusEl.textContent = 'Keine Verbindung zu server.js'; setDemo(true); setTimeout(connect, 4000); };
+}
+const FAKE_NAMES = ['nikos_88','eleni.gr','kostas_kapitan','maria_ath','yannis92','sofia_kreta','dimitris.gr','katerina_r','giorgos7','ayse.tr','mehmet_35','elif_izmir','emre.kaptan','zeynep06','deniz_ege','can_bodrum','burak_tr','selin_ege','hakan35','ali_antalya','lena_hh','jonas.b','mia_koeln','tom_ber','sara_muc','anna_ege','leo_sea','kaptan_mavi','poseidon_fan','meltem_wind'];
+const FAKE = Array.from({ length:60 }, (_, i) => FAKE_NAMES[i % FAKE_NAMES.length] + (i >= FAKE_NAMES.length ? '_' + i : ''));
+const FAKE_CHAT = ['1','2','🇬🇷','🇹🇷','zypern','kıbrıs','kreta','rhodos','lesbos','chios','naxos','frieden','barış','ειρήνη','peace 🕊','los!!','💪💪','samos','santorini','limnos'];
+const FAKE_GIFTS = [['Rose', 1], ['Rose', 1], ['GG', 1], ['Finger Heart', 5], ['Doughnut', 30], ['Galaxy', 1000]];
+let demoAcc = 0;
+function demoTick(dt) {
+  demoAcc += dt;
+  while (demoAcc > 0.13) {
+    demoAcc -= 0.13;
+    const user = FAKE[Math.floor(rnd() * FAKE.length)], r = rnd();
+    if (r < 0.55) handleEvent({ type:'like', user, nick:user, count:1 + Math.floor(rnd() * 12) });
+    else if (r < 0.86) handleEvent({ type:'chat', user, nick:user, comment:FAKE_CHAT[Math.floor(rnd() * FAKE_CHAT.length)] });
+    else if (r < 0.89) { const g = FAKE_GIFTS[Math.floor(rnd() * (rnd() < 0.97 ? 5 : 6))]; handleEvent({ type:'gift', user, nick:user, giftName:g[0], diamonds:g[1], count:1 + Math.floor(rnd() * 3) }); }
+    else if (r < 0.894) handleEvent({ type:'follow', user, nick:user });
+    else if (r < 0.897) handleEvent({ type:'share', user, nick:user });
+  }
+}
+// Testtasten: Q = Geschenk 🇬🇷, W = Geschenk 🇹🇷, F = Frieden, D = Demo an/aus
+addEventListener('keydown', ev => {
+  const k = ev.key.toLowerCase(), i = 'qw'.indexOf(k);
+  if (i >= 0) { const user = 'tester_' + i; const u = getUser({ user, nick:'Tester ' + SIDES[i].flag }); u.side = i; handleEvent({ type:'gift', user, nick:u.nick, giftName:'Test-Galaxy', diamonds:30, count:1 }); }
+  if (k === 'f') handleEvent({ type:'chat', user:'tester_f', nick:'Friedenstaube', comment:'frieden 🕊' });
+  if (k === 'p') peace = CONFIG.peaceGoal;
+  if (k === 'd') setDemo(!demo);
+});
+
+// =====================================================================
+//  LOOP
+// =====================================================================
+function updateWater(t) { const p = waterGeo.attributes.position.array; for (let i = 0; i < p.length; i += 3) p[i + 1] = waveH(waterBase[i], waterBase[i + 2], t); waterGeo.attributes.position.needsUpdate = true; }
+function waveFlag(o, t) { const a = o.flag.geometry.attributes.position, b = o.flagBase; for (let i = 0; i < a.count; i++) a.setZ(i, Math.sin(b[i * 3] * 6 - t * 6 + o.ph) * 0.12 * b[i * 3]); a.needsUpdate = true; }
+function updateFlags(t, dt) {
+  for (const o of islands) { waveFlag(o, t); if (o.pulse > 0) { o.pulse = Math.max(0, o.pulse - dt); const s = 1 + o.pulse * 0.3; o.ring.scale.set(o.rx * s, o.rz * s, 1); } }
+  ports.forEach(p => waveFlag(p, t));
+  if (crisisOn > 0) { CYPRUS.ring.material.opacity = 0.5 + Math.sin(t * 8) * 0.4; if (rnd() < 0.3) emit(new THREE.Vector3(CYPRUS.pos.x + (rnd() - .5) * 5, 0.5, CYPRUS.pos.z + (rnd() - .5) * 2.5), C_GOLD, 2, 0.5, 1, 2, 0.5, 0.5); }
+}
+function resize() {
+  renderer.setSize(innerWidth, innerHeight, false);
+  camera.aspect = innerWidth / innerHeight;
+  const tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  camDist = Math.max(23 / tanV, 19.2 / (tanV * camera.aspect));
+  scene.fog.near = camDist + 20; scene.fog.far = camDist + 150;
+  camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize); resize();
+
+const v = new THREE.Vector3();
+function place(el, x, y, z) {
+  v.set(x, y, z).project(camera);
+  el.style.left = ((v.x + 1) / 2 * innerWidth) + 'px'; el.style.top = ((1 - v.y) / 2 * innerHeight) + 'px';
+}
+function updateLabels() {
+  for (const o of islands) { place(o.el, o.pos.x, o.top, o.pos.z); o.elT.textContent = Math.floor(o.troops); }
+  for (const p of ports) { place(p.el, p.pos.x, 0.6, p.pos.z + 0.75); p.el.textContent = `⚓ ${p.name} ${Math.floor(p.troops)}`; }
+  for (const l of landLabels) { place(l.el, l.pos.x, 0.6, l.pos.z); const w = l.el.offsetWidth / 2 + 6; l.el.style.left = THREE.MathUtils.clamp(parseFloat(l.el.style.left), w, innerWidth - w) + 'px'; }
+  for (const f of fleets) place(f.el, f.group.position.x, 1.1, f.group.position.z);
+}
+
+const clock = new THREE.Clock(); let hudAcc = 0;
+function frame() {
+  const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime; now = t;
+  if (demo) demoTick(dt);
+  tick(dt);
+  updateWater(t); updateFlags(t, dt); updateFleets(dt, t); updateParticles(dt); updateDoves(dt, t);
+  clouds.forEach(c => { c.g.position.x += c.v * dt; if (c.g.position.x > 35) c.g.position.x = -35; });
+  // Kamera: fährt bei großen Ereignissen kurz heran
+  let goal = camHome, z = 1;
+  if (focus) { focus.t -= dt; goal = focus.pos; z = roundOver ? 0.92 : 0.72; if (focus.t <= 0) focus = null; }
+  camTarget.lerp(goal, Math.min(1, dt * 2)); zoom += (z - zoom) * Math.min(1, dt * 2);
+  shake *= 0.9;
+  const sway = new THREE.Vector3(Math.sin(t * 0.13) * 0.5, 0, Math.cos(t * 0.11) * 0.35);
+  camera.position.copy(camTarget).add(sway).addScaledVector(camDir, camDist * zoom);
+  camera.position.x += (rnd() - .5) * shake; camera.position.y += (rnd() - .5) * shake;
+  camera.lookAt(tB.copy(camTarget).add(sway));
+  renderer.render(scene, camera);
+  updateLabels();
+  hudAcc += dt; if (hudAcc > 0.25) { hudAcc = 0; updateHud(); }
+  requestAnimationFrame(frame);
+}
+resetRound(); connect(); frame();
+</script>
+</body>
+</html>

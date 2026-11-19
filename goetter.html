@@ -1,0 +1,735 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kampf um die Ägäis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@500;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#fff; --shadow:0 2px 6px rgba(0,0,0,.55); }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { width:100%; height:100%; overflow:hidden; background:#06263d; font-family:Inter,system-ui,sans-serif; color:var(--ink); }
+  canvas#c { position:fixed; inset:0; width:100%; height:100%; display:block; }
+  #labels { position:fixed; inset:0; pointer-events:none; }
+  .lbl { position:absolute; transform:translate(-50%,-100%); text-align:center; text-shadow:var(--shadow); white-space:nowrap; transition:opacity .2s; }
+  .lbl .n { font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; opacity:.92; }
+  .lbl .t { display:inline-block; min-width:38px; margin-top:2px; padding:1px 8px; border-radius:999px; font-size:15px; font-weight:900; background:rgba(0,0,0,.5); border:2px solid #fff; }
+  .flt { position:absolute; transform:translate(-50%,-140%); font-size:12px; font-weight:900; padding:0 6px; border-radius:6px; background:rgba(0,0,0,.55); text-shadow:var(--shadow); white-space:nowrap; }
+  #hud { position:fixed; top:0; left:0; right:0; padding:12px 12px 0; pointer-events:none; }
+  #title { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  #title h1 { font-family:Cinzel,serif; font-weight:900; font-size:clamp(18px,5.2vw,30px); letter-spacing:.04em; text-shadow:0 3px 10px rgba(0,0,0,.6); line-height:1; }
+  #timer { font-weight:900; font-size:20px; padding:4px 12px; border-radius:10px; background:rgba(0,0,0,.45); font-variant-numeric:tabular-nums; }
+  #teams { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:10px; }
+  .team { position:relative; padding:6px 9px 8px; border-radius:10px; background:rgba(3,20,35,.62); border-left:5px solid var(--c); overflow:hidden; }
+  .team .row { display:flex; justify-content:space-between; align-items:baseline; gap:6px; }
+  .team b { font-size:14px; font-weight:900; letter-spacing:.05em; color:var(--c); text-shadow:0 1px 3px rgba(0,0,0,.6); }
+  .team .k { font-size:11px; font-weight:800; opacity:.8; }
+  .team .s { font-size:11px; opacity:.9; margin-top:2px; display:flex; justify-content:space-between; gap:6px; }
+  .team .bar { position:absolute; left:0; bottom:0; height:3px; background:var(--c); transition:width .5s; }
+  .team.out { opacity:.45; }
+  #feed { position:fixed; left:10px; bottom:84px; width:min(60vw,330px); flex-direction:column-reverse; display:flex; flex-direction:column; gap:4px; pointer-events:none; }
+  .ev { font-size:12.5px; font-weight:700; padding:4px 9px; border-radius:8px; background:rgba(3,20,35,.6); border-left:3px solid var(--c,#fff); text-shadow:0 1px 2px rgba(0,0,0,.6); animation:in .25s ease-out; }
+  .ev.big { font-size:14px; background:rgba(60,40,0,.7); border-left-color:#ffd54a; }
+  @keyframes in { from { transform:translateX(-20px); opacity:0; } }
+  #top { position:fixed; right:10px; bottom:84px; width:min(36vw,170px); font-size:11.5px; pointer-events:none; }
+  #top h3 { font-size:11px; letter-spacing:.1em; opacity:.85; margin-bottom:4px; }
+  #top li { list-style:none; display:flex; justify-content:space-between; gap:6px; padding:2px 7px; margin-bottom:2px; border-radius:6px; background:rgba(3,20,35,.55); border-left:3px solid var(--c); font-weight:700; }
+  #top li span:first-child { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #help { position:fixed; left:10px; right:10px; bottom:12px; display:flex; flex-wrap:wrap; justify-content:center; gap:5px; pointer-events:none; }
+  #help span { font-size:12px; font-weight:800; padding:5px 9px; border-radius:999px; background:rgba(3,20,35,.7); text-shadow:0 1px 2px rgba(0,0,0,.5); }
+  #banner { position:fixed; left:50%; top:36%; transform:translate(-50%,-50%) scale(.8); font-family:Cinzel,serif; font-weight:900; font-size:clamp(20px,6vw,40px); text-align:center; text-shadow:0 4px 16px rgba(0,0,0,.8); opacity:0; transition:opacity .25s, transform .25s; pointer-events:none; width:92vw; }
+  #banner.on { opacity:1; transform:translate(-50%,-50%) scale(1); }
+  #win { position:fixed; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; gap:10px; background:radial-gradient(circle at 50% 45%, rgba(0,0,0,.25), rgba(0,0,0,.75)); text-align:center; }
+  #win.on { display:flex; }
+  #win h2 { font-family:Cinzel,serif; font-size:clamp(30px,10vw,64px); text-shadow:0 6px 24px rgba(0,0,0,.8); }
+  #win p { font-size:18px; font-weight:800; }
+  #demo { position:fixed; right:10px; top:168px; font-size:11px; font-weight:900; letter-spacing:.1em; padding:3px 8px; border-radius:6px; background:#b3261e; display:none; }
+  #status { position:fixed; left:10px; bottom:66px; font-size:10px; opacity:.6; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="labels"></div>
+<div id="hud">
+  <div id="title"><h1>KAMPF UM DIE ÄGÄIS</h1><div id="timer">5:00</div></div>
+  <div id="teams"></div>
+</div>
+<div id="feed"></div>
+<div id="top"><h3>🏆 TOP KRIEGER</h3><ul id="toplist"></ul></div>
+<div id="help">
+  <span>💬 1–4 = Team wählen</span>
+  <span>💬 Inselname = Angriffsziel</span>
+  <span>❤️ Like = +1 Soldat</span>
+  <span>🎁 Geschenk = Sturmflotte</span>
+</div>
+<div id="banner"></div>
+<div id="win"><h2 id="winT"></h2><p id="winP"></p></div>
+<div id="demo">DEMO-MODUS</div>
+<div id="status"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// =====================================================================
+//  KONFIGURATION – hier kannst du das Spiel anpassen
+// =====================================================================
+const params = new URLSearchParams(location.search);
+const CONFIG = {
+  roundSeconds: +(params.get('round') || 300), // Rundendauer in Sekunden
+  likeTroops: 1,          // Soldaten pro Like
+  commentTroops: 3,       // Soldaten pro Kommentar
+  followTroops: 25,       // Soldaten pro Follow
+  shareTroops: 15,        // Soldaten pro Share
+  troopsPerDiamond: 5,    // Soldaten pro Diamant eines Geschenks (Rose = 1 Diamant)
+  launchEvery: 3.5,       // Sekunden zwischen automatischen Angriffen pro Team
+  launchShare: 0.7,       // Anteil der Truppen, die pro Angriff losfahren
+  minLaunch: 8,           // Mindesttruppen für einen Angriff
+  comebackTroops: 40,     // Reserve, mit der ein ausgelöschtes Team neu landet
+  shipSpeed: 6,           // Einheiten pro Sekunde
+  wsUrl: params.get('ws') || `ws://${location.hostname || 'localhost'}:${params.get('port') || 8787}`,
+  forceDemo: params.get('demo') === '1',
+};
+
+const norm = s => String(s).toLowerCase().replace(/ı/g, 'i').normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+const TEAMS = [
+  { name:'POSEIDON', css:'#2f8cff', keys:['1','poseidon','blau','blue','mavi'],                  home:'Skiathos', corner:[-22,-12] },
+  { name:'ARES',     css:'#ff4040', keys:['2','ares','rot','red','kirmizi'],                     home:'Lesbos',   corner:[ 20,-14] },
+  { name:'ATHENA',   css:'#2fd47c', keys:['3','athena','grun','gruen','green','yesil'],          home:'Milos',    corner:[-22, 12] },
+  { name:'APOLLON',  css:'#ffc21a', keys:['4','apollon','apollo','gelb','yellow','sari'],        home:'Rhodos',   corner:[ 22, 18] },
+].map((t, i) => ({ ...t, id:i, color:new THREE.Color(t.css), keys:t.keys.map(norm) }));
+
+// [Name, Länge, Breite, Radius X, Radius Z, Start-Truppen, Produktion/s, Aliase]
+const ISLAND_DATA = [
+  ['Thasos',     24.70, 40.68, 1.3, 1.2, 15, 1, ['tasos','tasoz']],
+  ['Samothraki', 25.55, 40.47, 1.0, 0.9, 10, 1, ['samothrake','semadirek']],
+  ['Limnos',     25.20, 39.90, 1.5, 1.2, 18, 1, ['lemnos','limni']],
+  ['Skiathos',   23.47, 39.16, 1.1, 0.9, 10, 1, []],
+  ['Skyros',     24.55, 38.88, 1.4, 0.9, 15, 1, ['skiros','iskiri']],
+  ['Lesbos',     26.30, 39.20, 2.2, 1.7, 25, 2, ['lesvos','midilli']],
+  ['Chios',      26.00, 38.40, 1.2, 1.7, 20, 1, ['hios','sakiz']],
+  ['Andros',     24.85, 37.85, 0.9, 1.3, 12, 1, []],
+  ['Tinos',      25.10, 37.60, 0.8, 0.8, 10, 1, ['istendil']],
+  ['Mykonos',    25.35, 37.45, 0.75,0.65,10, 1, ['mikonos']],
+  ['Ikaria',     26.15, 37.60, 1.5, 0.6, 12, 1, ['nikarya']],
+  ['Samos',      26.80, 37.73, 1.4, 0.8, 18, 1, ['sisam']],
+  ['Paros',      25.00, 37.05, 1.0, 1.0, 12, 1, ['bare']],
+  ['Naxos',      25.50, 37.05, 1.2, 1.4, 20, 1, ['naksos','naksa']],
+  ['Milos',      24.43, 36.70, 1.2, 0.9, 10, 1, ['melos','milo']],
+  ['Santorini',  25.43, 36.40, 0.8, 0.9, 15, 1, ['thira','santorin','santoroni']],
+  ['Kos',        27.15, 36.85, 1.3, 0.55,15, 1, ['istankoy']],
+  ['Rhodos',     28.00, 36.20, 1.3, 2.0, 25, 2, ['rhodes','rodos','rodi']],
+  ['Karpathos',  27.15, 35.60, 0.6, 1.4, 12, 1, ['kerpe']],
+  ['Kreta',      24.90, 35.25, 8.5, 1.5, 60, 3, ['crete','girit','kriti']],
+];
+const S = 7, LON0 = 25.6, LAT0 = 37.9;
+
+// =====================================================================
+//  RENDERER / SZENE
+// =====================================================================
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0b3a5c);
+scene.fog = new THREE.Fog(0x0b3a5c, 90, 190);
+
+const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 500);
+const camTarget = new THREE.Vector3(1, 0, 3.6);
+const camDir = new THREE.Vector3(0, 0.86, 0.51).normalize();
+let camDist = 80, shake = 0;
+
+scene.add(new THREE.HemisphereLight(0xcfeaff, 0x1d4a5e, 0.75));
+const sun = new THREE.DirectionalLight(0xfff0d6, 1.25);
+sun.position.set(-30, 50, 25);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left:-35, right:35, top:35, bottom:-35, near:1, far:150 });
+sun.shadow.bias = -0.0005;
+scene.add(sun);
+
+// --- Seeded random & noise -------------------------------------------
+let seed = 7;
+const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const noise3 = (x, y, z) => Math.sin(x * 1.7 + z * 2.3) * 0.5 + Math.sin(z * 3.1 - y * 1.3 + x) * 0.3 + Math.sin((x + z) * 5.3) * 0.2;
+
+const toWorld = (lon, lat) => new THREE.Vector3((lon - LON0) * S, 0, -(lat - LAT0) * S);
+const ellipseR = (isl, ang) => 1 / Math.sqrt((Math.cos(ang) / isl.rx) ** 2 + (Math.sin(ang) / isl.rz) ** 2);
+
+// --- Islands ---------------------------------------------------------
+const islands = ISLAND_DATA.map(([name, lon, lat, rx, rz, troops, prod, alias]) => ({
+  name, pos: toWorld(lon, lat), rx, rz, startTroops: troops, prod,
+  aliases: [name, ...alias].map(norm), owner: -1, troops,
+}));
+const islandByName = Object.fromEntries(islands.map(i => [i.name, i]));
+
+// --- Water with depth colors ----------------------------------------
+const WATER_SEG = 90, WATER_SIZE = 180;
+const waterGeo = new THREE.PlaneGeometry(WATER_SIZE, WATER_SIZE, WATER_SEG, WATER_SEG);
+waterGeo.rotateX(-Math.PI / 2);
+{
+  const deep = new THREE.Color(0x0c5d93), mid = new THREE.Color(0x1590c4), shallow = new THREE.Color(0x3fd6d2);
+  const pos = waterGeo.attributes.position, cols = new Float32Array(pos.count * 3), c = new THREE.Color();
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), z = pos.getZ(i);
+    let best = 99;
+    for (const isl of islands) {
+      const dx = (x - isl.pos.x) / (isl.rx + 0.6), dz = (z - isl.pos.z) / (isl.rz + 0.6);
+      best = Math.min(best, Math.sqrt(dx * dx + dz * dz));
+    }
+    const k = THREE.MathUtils.clamp((best - 1) / 1.6, 0, 1);
+    c.copy(shallow).lerp(mid, k);
+    c.lerp(deep, THREE.MathUtils.clamp((best - 2.5) / 6, 0, 1));
+    c.convertSRGBToLinear();
+    cols.set([c.r, c.g, c.b], i * 3);
+  }
+  waterGeo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+}
+const water = new THREE.Mesh(waterGeo, new THREE.MeshStandardMaterial({ vertexColors:true, flatShading:true, roughness:0.32, metalness:0.08 }));
+water.receiveShadow = true;
+scene.add(water);
+const waterBase = Float32Array.from(waterGeo.attributes.position.array);
+
+// --- Island meshes ---------------------------------------------------
+const sandMat = new THREE.MeshStandardMaterial({ color:0xe8d29a, roughness:0.95, flatShading:true });
+const landMat = new THREE.MeshStandardMaterial({ vertexColors:true, roughness:0.9, flatShading:true });
+const houseMat = new THREE.MeshStandardMaterial({ color:0xfbfbf6, roughness:0.7 });
+const roofMat = new THREE.MeshStandardMaterial({ color:0x1e5fc0, roughness:0.6 });
+const poleMat = new THREE.MeshStandardMaterial({ color:0x6b4a2b });
+const houseGeo = new THREE.BoxGeometry(0.22, 0.2, 0.22);
+const domeGeo = new THREE.SphereGeometry(0.09, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2);
+
+function buildIsland(isl) {
+  const g = new THREE.Group();
+  g.position.copy(isl.pos);
+  const sx = isl.rx, sz = isl.rz, phase = rnd() * 10;
+  const hgt = Math.min(0.9 + Math.min(sx, sz) * 0.9, 2.4);
+
+  const beach = new THREE.CylinderGeometry(1.0, 1.12, 0.5, 40, 1);
+  const bp = beach.attributes.position;
+  for (let i = 0; i < bp.count; i++) {
+    const x = bp.getX(i), z = bp.getZ(i), a = Math.atan2(z, x), j = 1 + 0.1 * Math.sin(a * 5 + phase) + 0.06 * Math.sin(a * 11 + phase * 2);
+    bp.setXYZ(i, x * j * sx, bp.getY(i), z * j * sz);
+  }
+  beach.computeVertexNormals();
+  const bm = new THREE.Mesh(beach, sandMat);
+  bm.position.y = 0.05; bm.receiveShadow = true; bm.castShadow = true;
+  g.add(bm);
+
+  const hill = new THREE.SphereGeometry(1, 36, 14, 0, Math.PI * 2, 0, Math.PI / 2);
+  const hp = hill.attributes.position, hc = new Float32Array(hp.count * 3), col = new THREE.Color();
+  const grass = new THREE.Color(0x6f9a3e), olive = new THREE.Color(0x8b8f45), rock = new THREE.Color(0xa59078), peak = new THREE.Color(0xd8cfc0);
+  for (let i = 0; i < hp.count; i++) {
+    let x = hp.getX(i), y = hp.getY(i), z = hp.getZ(i);
+    const a = Math.atan2(z, x), j = 1 + 0.1 * Math.sin(a * 5 + phase) + 0.06 * Math.sin(a * 11 + phase * 2);
+    const n = noise3(x * 2 + phase, y * 2, z * 2);
+    const ny = Math.max(0, y * (0.75 + 0.35 * n));
+    hp.setXYZ(i, x * j * sx * 0.88, ny * hgt + 0.25, z * j * sz * 0.88);
+    const t = ny;
+    col.copy(grass).lerp(olive, THREE.MathUtils.clamp(n * 0.5 + 0.5, 0, 1));
+    if (t > 0.45) col.lerp(rock, THREE.MathUtils.clamp((t - 0.45) * 2.5, 0, 1));
+    if (t > 0.85) col.lerp(peak, 0.6);
+    col.convertSRGBToLinear();
+    hc.set([col.r, col.g, col.b], i * 3);
+  }
+  hill.setAttribute('color', new THREE.BufferAttribute(hc, 3));
+  hill.computeVertexNormals();
+  const hm = new THREE.Mesh(hill, landMat);
+  hm.castShadow = true; hm.receiveShadow = true;
+  g.add(hm);
+
+  // Cycladic houses
+  const nh = Math.round(3 + Math.min(sx * sz, 6));
+  for (let k = 0; k < nh; k++) {
+    const a = rnd() * Math.PI * 2, d = 0.55 + rnd() * 0.25;
+    const hx = Math.cos(a) * d * sx * 0.85, hz = Math.sin(a) * d * sz * 0.85;
+    const hy = 0.25 + hgt * Math.sqrt(Math.max(0, 1 - d * d)) * 0.72;
+    const h = new THREE.Mesh(houseGeo, houseMat);
+    h.position.set(hx, hy, hz); h.rotation.y = rnd() * 3; h.castShadow = true;
+    g.add(h);
+    if (rnd() < 0.35) { const dm = new THREE.Mesh(domeGeo, roofMat); dm.position.set(hx, hy + 0.1, hz); g.add(dm); }
+  }
+
+  // Ring (owner color)
+  const ring = new THREE.Mesh(new THREE.RingGeometry(1.18, 1.42, 48), new THREE.MeshBasicMaterial({ color:0xffffff, transparent:true, opacity:0.22, depthWrite:false }));
+  ring.rotation.x = -Math.PI / 2; ring.scale.set(sx, sz, 1); ring.position.y = 0.32;
+  g.add(ring);
+
+  // Flag
+  const flagGroup = new THREE.Group();
+  const top = hgt + 0.25;
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 1.3, 6), poleMat);
+  pole.position.y = 0.65; pole.castShadow = true;
+  flagGroup.add(pole);
+  const flagGeo = new THREE.PlaneGeometry(0.75, 0.45, 8, 1);
+  flagGeo.translate(0.375, 0, 0);
+  const flag = new THREE.Mesh(flagGeo, new THREE.MeshStandardMaterial({ color:0xdddddd, side:THREE.DoubleSide, roughness:0.8 }));
+  flag.position.y = 1.05; flag.castShadow = true;
+  flagGroup.add(flag);
+  flagGroup.position.y = top - 0.15;
+  g.add(flagGroup);
+
+  scene.add(g);
+  Object.assign(isl, { group:g, ring, flag, flagBase:Float32Array.from(flagGeo.attributes.position.array), top:top + 1.4, phase, pulse:0 });
+
+  const el = document.createElement('div');
+  el.className = 'lbl';
+  el.innerHTML = `<div class="n">${isl.name}</div><div class="t">0</div>`;
+  document.getElementById('labels').appendChild(el);
+  isl.el = el; isl.elT = el.querySelector('.t');
+}
+islands.forEach(buildIsland);
+
+function paintIsland(isl) {
+  const team = TEAMS[isl.owner];
+  const c = team ? team.color : new THREE.Color(0xeeeeee);
+  isl.ring.material.color.copy(c);
+  isl.ring.material.opacity = team ? 0.7 : 0.22;
+  isl.flag.material.color.copy(c);
+  isl.elT.style.borderColor = team ? team.css : '#ddd';
+  isl.elT.style.color = team ? team.css : '#fff';
+}
+
+// --- Particles (one draw call) ---------------------------------------
+const P_MAX = 2000;
+const pGeo = new THREE.BufferGeometry();
+const pPos = new Float32Array(P_MAX * 3), pCol = new Float32Array(P_MAX * 3);
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+pGeo.setAttribute('color', new THREE.BufferAttribute(pCol, 3));
+const spriteTex = (() => {
+  const cv = document.createElement('canvas'); cv.width = cv.height = 64;
+  const x = cv.getContext('2d'), gr = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.4, 'rgba(255,255,255,.6)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+  x.fillStyle = gr; x.fillRect(0, 0, 64, 64);
+  return new THREE.CanvasTexture(cv);
+})();
+const points = new THREE.Points(pGeo, new THREE.PointsMaterial({ size:0.55, map:spriteTex, vertexColors:true, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending }));
+points.frustumCulled = false;
+scene.add(points);
+const parts = Array.from({ length:P_MAX }, () => ({ life:0 }));
+let pCursor = 0;
+function emit(pos, color, n, speed = 4, life = 1, up = 3, spread = 0.3) {
+  for (let i = 0; i < n; i++) {
+    const p = parts[pCursor]; pCursor = (pCursor + 1) % P_MAX;
+    p.x = pos.x + (rnd() - .5) * spread; p.y = pos.y + rnd() * spread; p.z = pos.z + (rnd() - .5) * spread;
+    const a = rnd() * Math.PI * 2, s = speed * (0.3 + rnd());
+    p.vx = Math.cos(a) * s; p.vz = Math.sin(a) * s; p.vy = up * (0.4 + rnd());
+    p.life = p.max = life * (0.6 + rnd() * 0.6);
+    p.r = color.r; p.g = color.g; p.b = color.b;
+  }
+}
+function updateParticles(dt) {
+  for (let i = 0; i < P_MAX; i++) {
+    const p = parts[i];
+    if (p.life <= 0) { pPos[i * 3 + 1] = -999; continue; }
+    p.life -= dt; p.vy -= 6 * dt;
+    p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt;
+    if (p.y < 0.05) { p.y = 0.05; p.vy *= -0.2; p.vx *= 0.8; p.vz *= 0.8; }
+    const f = Math.max(0, p.life / p.max);
+    pPos.set([p.x, p.y, p.z], i * 3);
+    pCol.set([p.r * f, p.g * f, p.b * f], i * 3);
+  }
+  pGeo.attributes.position.needsUpdate = true;
+  pGeo.attributes.color.needsUpdate = true;
+}
+
+// --- Ships -------------------------------------------------------------
+const hullGeo = (() => {
+  const s = new THREE.Shape();
+  s.moveTo(0, 0.55); s.quadraticCurveTo(0.2, 0.2, 0.17, -0.45); s.lineTo(-0.17, -0.45); s.quadraticCurveTo(-0.2, 0.2, 0, 0.55);
+  const g = new THREE.ExtrudeGeometry(s, { depth:0.16, bevelEnabled:false });
+  g.rotateX(Math.PI / 2); g.translate(0, 0.16, 0);
+  return g;
+})();
+const hullMat = new THREE.MeshStandardMaterial({ color:0x7a4b26, roughness:0.8 });
+const mastGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.8, 5);
+const sailGeo = (() => { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute([0, 0.95, 0.05, 0, 0.25, 0.3, 0, 0.25, -0.25], 3)); g.computeVertexNormals(); return g; })();
+const sailMats = TEAMS.map(t => new THREE.MeshStandardMaterial({ color:t.color, side:THREE.DoubleSide, roughness:0.7, emissive:t.color, emissiveIntensity:0.15 }));
+const goldMat = new THREE.MeshStandardMaterial({ color:0xffd54a, side:THREE.DoubleSide, emissive:0xffa000, emissiveIntensity:0.5 });
+
+function makeShip(teamId, gold) {
+  const g = new THREE.Group();
+  const hull = new THREE.Mesh(hullGeo, hullMat); hull.castShadow = true; g.add(hull);
+  const mast = new THREE.Mesh(mastGeo, poleMat); mast.position.y = 0.55; g.add(mast);
+  const sail = new THREE.Mesh(sailGeo, gold ? goldMat : sailMats[teamId]); sail.rotation.y = Math.PI / 2; sail.castShadow = true; g.add(sail);
+  return g;
+}
+
+const fleets = [];
+function launchFleet(team, fromPos, target, troops, gold = false) {
+  if (troops < 1 || !target) return;
+  troops = Math.floor(troops);
+  const dir = new THREE.Vector3().subVectors(target.pos, fromPos);
+  const ang = Math.atan2(dir.z, dir.x);
+  const end = target.pos.clone().addScaledVector(new THREE.Vector3(Math.cos(ang), 0, Math.sin(ang)), -(ellipseR(target, ang) + 0.6));
+  const ctrl = fromPos.clone().lerp(end, 0.5).add(new THREE.Vector3(-dir.z, 0, dir.x).normalize().multiplyScalar((rnd() - 0.5) * dir.length() * 0.35));
+  const len = fromPos.distanceTo(ctrl) + ctrl.distanceTo(end);
+  const group = new THREE.Group();
+  const count = Math.min(1 + Math.floor(Math.sqrt(troops) / 2.2), 7);
+  const offs = [[0, 0], [-0.55, -0.6], [0.55, -0.6], [-1.1, -1.2], [1.1, -1.2], [0, -1.2], [0, -1.9]];
+  for (let i = 0; i < count; i++) {
+    const s = makeShip(team.id, gold);
+    s.position.set(offs[i][0], 0, offs[i][1]);
+    if (gold && i === 0) s.scale.setScalar(1.5);
+    group.add(s);
+  }
+  scene.add(group);
+  const el = document.createElement('div');
+  el.className = 'flt'; el.style.color = gold ? '#ffd54a' : team.css; el.textContent = (gold ? '🎁 ' : '⚔ ') + troops;
+  document.getElementById('labels').appendChild(el);
+  fleets.push({ team, troops, from:fromPos.clone(), ctrl, end, target, t:0, len, group, el, gold, wake:0 });
+}
+
+const bez = (a, b, c, t, out) => out.set(
+  (1 - t) ** 2 * a.x + 2 * (1 - t) * t * b.x + t * t * c.x, 0,
+  (1 - t) ** 2 * a.z + 2 * (1 - t) * t * b.z + t * t * c.z);
+const tmpA = new THREE.Vector3(), tmpB = new THREE.Vector3();
+
+function updateFleets(dt, time) {
+  for (let i = fleets.length - 1; i >= 0; i--) {
+    const f = fleets[i];
+    f.t += (CONFIG.shipSpeed * (f.gold ? 1.6 : 1)) * dt / f.len;
+    const t = Math.min(f.t, 1);
+    bez(f.from, f.ctrl, f.end, t, tmpA);
+    bez(f.from, f.ctrl, f.end, Math.min(t + 0.01, 1), tmpB);
+    f.group.position.set(tmpA.x, waveH(tmpA.x, tmpA.z, time) + 0.02, tmpA.z);
+    if (tmpB.distanceToSquared(tmpA) > 1e-6) f.group.rotation.y = Math.atan2(tmpB.x - tmpA.x, tmpB.z - tmpA.z);
+    f.group.rotation.z = Math.sin(time * 3 + i) * 0.06;
+    f.wake -= dt;
+    if (f.wake <= 0) { f.wake = 0.06; emit(f.group.position, new THREE.Color(0.55, 0.65, 0.7), 2, 0.4, 0.9, 0.2, 0.2); }
+    if (f.t >= 1) { arrive(f); scene.remove(f.group); f.el.remove(); fleets.splice(i, 1); }
+  }
+}
+
+// =====================================================================
+//  SPIEL-LOGIK
+// =====================================================================
+const users = new Map();
+let timeLeft = CONFIG.roundSeconds, roundOver = false, roundNo = 0;
+
+function resetRound() {
+  roundNo++;
+  roundOver = false; timeLeft = CONFIG.roundSeconds;
+  fleets.forEach(f => { scene.remove(f.group); f.el.remove(); }); fleets.length = 0;
+  islands.forEach(i => { i.owner = -1; i.troops = i.startTroops; });
+  TEAMS.forEach(t => {
+    t.reserve = 0; t.target = null; t.launchT = CONFIG.launchEvery * (0.5 + t.id * 0.25); t.likes = 0;
+    const h = islandByName[t.home]; h.owner = t.id; h.troops = 30;
+  });
+  users.forEach(u => u.pts = 0);
+  islands.forEach(paintIsland);
+  document.getElementById('win').classList.remove('on');
+  feed(`⚔ Runde ${roundNo} beginnt! Schreib 1, 2, 3 oder 4!`, '#fff', true);
+}
+
+const teamIslands = t => islands.filter(i => i.owner === t.id);
+const cornerPos = t => new THREE.Vector3(t.corner[0], 0, t.corner[1]);
+
+function pickTarget(t) {
+  if (t.target && t.target.owner !== t.id) return t.target;
+  const mine = teamIslands(t);
+  const origins = mine.length ? mine.map(i => i.pos) : [cornerPos(t)];
+  let best = null, bs = Infinity;
+  for (const isl of islands) {
+    if (isl.owner === t.id) continue;
+    const d = Math.min(...origins.map(o => o.distanceTo(isl.pos)));
+    const s = d + isl.troops * 0.08 + (isl.owner === -1 ? 0 : 2);
+    if (s < bs) { bs = s; best = isl; }
+  }
+  t.target = best;
+  return best;
+}
+function frontIsland(t) {
+  const target = pickTarget(t), mine = teamIslands(t);
+  if (!mine.length || !target) return null;
+  return mine.reduce((a, b) => (a.pos.distanceTo(target.pos) - a.troops * 0.02 <= b.pos.distanceTo(target.pos) - b.troops * 0.02 ? a : b));
+}
+function launchPos(from, target) {
+  const ang = Math.atan2(target.pos.z - from.pos.z, target.pos.x - from.pos.x);
+  return from.pos.clone().add(new THREE.Vector3(Math.cos(ang), 0, Math.sin(ang)).multiplyScalar(ellipseR(from, ang) + 0.5));
+}
+
+function arrive(f) {
+  const isl = f.target, team = f.team;
+  const hitPos = f.end.clone(); hitPos.y = 0.4;
+  if (isl.owner === team.id) {
+    isl.troops += f.troops;
+    emit(hitPos, team.color, 12, 1.5, 0.8, 2);
+    return;
+  }
+  isl.troops -= f.troops;
+  emit(hitPos, new THREE.Color(1, 0.55, 0.15), 30 + Math.min(f.troops, 80), 4, 1.1, 4);
+  emit(hitPos, team.color, 20, 3, 1, 3);
+  shake = Math.min(shake + 0.15 + f.troops * 0.004, 0.8);
+  if (isl.troops < 0) {
+    const prev = TEAMS[isl.owner];
+    isl.owner = team.id; isl.troops = -isl.troops; isl.pulse = 1;
+    paintIsland(isl);
+    const top = isl.pos.clone(); top.y = 1.5;
+    emit(top, team.color, 140, 6, 1.6, 7, 1);
+    shake = Math.min(shake + 0.5, 1);
+    banner(`<span style="color:${team.css}">${team.name}</span> erobert ${isl.name.toUpperCase()}!`);
+    feed(`🏴 ${team.name} erobert ${isl.name}${prev ? ' von ' + prev.name : ''}`, team.css);
+    TEAMS.forEach(t => { if (t.target === isl && t !== team) {} });
+    if (team.target === isl) team.target = null;
+    if (prev && !teamIslands(prev).length) feed(`💀 ${prev.name} hat keine Inseln mehr! Likes für das Comeback!`, prev.css, true);
+  }
+}
+
+function tick(dt) {
+  if (roundOver) return;
+  timeLeft -= dt;
+  for (const isl of islands) {
+    if (isl.owner >= 0) isl.troops = Math.min(isl.troops + isl.prod * dt, 999);
+    else isl.troops = Math.min(isl.troops + 0.15 * dt, isl.startTroops * 2);
+  }
+  for (const t of TEAMS) {
+    const front = frontIsland(t);
+    if (t.reserve > 0 && front) { front.troops += t.reserve; t.reserve = 0; }
+    if (!front && t.reserve >= CONFIG.comebackTroops) {
+      const target = pickTarget(t);
+      if (target) { launchFleet(t, cornerPos(t), target, t.reserve, true); feed(`🔥 ${t.name} startet ein Comeback mit ${Math.floor(t.reserve)} Kriegern!`, t.css, true); t.reserve = 0; }
+    }
+    t.launchT -= dt;
+    if (t.launchT <= 0 && front) {
+      t.launchT = CONFIG.launchEvery;
+      if (front.troops >= CONFIG.minLaunch) {
+        const n = front.troops * CONFIG.launchShare;
+        front.troops -= n;
+        launchFleet(t, launchPos(front, t.target), t.target, n);
+      }
+    }
+  }
+  const alive = TEAMS.filter(t => teamIslands(t).length || fleets.some(f => f.team === t));
+  const owners = new Set(islands.map(i => i.owner));
+  if (owners.size === 1 && !owners.has(-1)) endRound(TEAMS[[...owners][0]]);
+  else if (timeLeft <= 0) {
+    const ranked = [...TEAMS].sort((a, b) => teamIslands(b).length - teamIslands(a).length ||
+      teamIslands(b).reduce((s, i) => s + i.troops, 0) - teamIslands(a).reduce((s, i) => s + i.troops, 0));
+    endRound(ranked[0]);
+  }
+}
+
+function endRound(winner) {
+  roundOver = true;
+  const mvp = [...users.values()].filter(u => u.team === winner.id).sort((a, b) => b.pts - a.pts)[0];
+  document.getElementById('winT').innerHTML = `<span style="color:${winner.css}">${winner.name}</span><br>BEHERRSCHT DIE ÄGÄIS`;
+  document.getElementById('winP').textContent = mvp ? `⭐ MVP: ${mvp.nick} (${Math.floor(mvp.pts)} Punkte)` : '';
+  document.getElementById('win').classList.add('on');
+  for (let k = 0; k < 6; k++) setTimeout(() => emit(new THREE.Vector3((rnd() - .5) * 30, 2, (rnd() - .5) * 30), winner.color, 150, 7, 2, 8, 1), k * 350);
+  setTimeout(resetRound, 10000);
+}
+
+// --- Viewer events ---------------------------------------------------
+function getUser(e) {
+  const id = e.user || e.nick || 'anon';
+  let u = users.get(id);
+  if (!u) { u = { id, nick:e.nick || id, team:-1, pts:0 }; users.set(id, u); }
+  if (e.nick) u.nick = e.nick;
+  return u;
+}
+const members = t => { let n = 0; users.forEach(u => { if (u.team === t.id) n++; }); return n; };
+function ensureTeam(u) {
+  if (u.team >= 0) return TEAMS[u.team];
+  const t = [...TEAMS].sort((a, b) => members(a) - members(b))[0];
+  u.team = t.id;
+  return t;
+}
+
+function handleEvent(e) {
+  if (roundOver) return;
+  const u = getUser(e);
+  switch (e.type) {
+    case 'chat': {
+      const tokens = norm(e.comment || '').split(/[^a-z0-9]+/).filter(Boolean);
+      const joined = TEAMS.find(t => tokens.some(k => t.keys.includes(k)));
+      if (joined && joined.id !== u.team) { u.team = joined.id; feed(`🛡 ${u.nick} tritt ${joined.name} bei`, joined.css); }
+      const t = ensureTeam(u);
+      const isl = islands.find(i => tokens.some(k => i.aliases.includes(k)));
+      if (isl && isl.owner !== t.id && isl !== t.target) { t.target = isl; feed(`🎯 ${u.nick}: ${t.name} greift ${isl.name} an!`, t.css); }
+      t.reserve += CONFIG.commentTroops; u.pts += 1;
+      break;
+    }
+    case 'like': {
+      const t = ensureTeam(u), n = Math.max(1, e.count | 0);
+      t.reserve += n * CONFIG.likeTroops; t.likes += n; u.pts += n;
+      const h = frontIsland(t); if (h) emit(new THREE.Vector3(h.pos.x, h.top - 1, h.pos.z), t.color, Math.min(n, 8), 1, 0.7, 2.5);
+      break;
+    }
+    case 'gift': {
+      const t = ensureTeam(u), troops = Math.max(1, e.diamonds || 1) * Math.max(1, e.count || 1) * CONFIG.troopsPerDiamond;
+      u.pts += troops;
+      const target = pickTarget(t), front = frontIsland(t);
+      if (target) launchFleet(t, front ? launchPos(front, target) : cornerPos(t), target, troops, true);
+      feed(`🎁 ${u.nick} schickt ${e.giftName || 'Geschenk'}${e.count > 1 ? ' x' + e.count : ''} → ${troops} Krieger für ${t.name}!`, t.css, true);
+      if (troops >= 100) banner(`🎁 ${u.nick}<br><span style="color:${t.css}">MEGA-FLOTTE (${troops})</span>`);
+      break;
+    }
+    case 'follow': { const t = ensureTeam(u); t.reserve += CONFIG.followTroops; u.pts += 10; feed(`⭐ ${u.nick} folgt → +${CONFIG.followTroops} für ${t.name}`, t.css); break; }
+    case 'share':  { const t = ensureTeam(u); t.reserve += CONFIG.shareTroops;  u.pts += 5;  feed(`🔁 ${u.nick} teilt → +${CONFIG.shareTroops} für ${t.name}`, t.css); break; }
+  }
+}
+
+// --- HUD -------------------------------------------------------------
+const teamsEl = document.getElementById('teams');
+teamsEl.innerHTML = TEAMS.map(t => `<div class="team" id="tm${t.id}" style="--c:${t.css}">
+  <div class="row"><b>${t.id + 1} · ${t.name}</b><span class="k" id="tk${t.id}"></span></div>
+  <div class="s"><span id="ts${t.id}"></span><span id="tt${t.id}"></span></div><div class="bar" id="tb${t.id}"></div></div>`).join('');
+function updateHud() {
+  const m = Math.max(0, Math.ceil(timeLeft));
+  document.getElementById('timer').textContent = `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`;
+  for (const t of TEAMS) {
+    const mine = teamIslands(t), troops = mine.reduce((s, i) => s + i.troops, 0);
+    document.getElementById('tk' + t.id).textContent = `🏝 ${mine.length}`;
+    document.getElementById('ts' + t.id).textContent = `👥 ${members(t)} · ⚔ ${Math.floor(troops)}`;
+    document.getElementById('tt' + t.id).textContent = t.target ? `→ ${t.target.name}` : '';
+    document.getElementById('tb' + t.id).style.width = (mine.length / islands.length * 100) + '%';
+    document.getElementById('tm' + t.id).classList.toggle('out', !mine.length);
+  }
+  const top = [...users.values()].filter(u => u.pts > 0).sort((a, b) => b.pts - a.pts).slice(0, 5);
+  document.getElementById('toplist').innerHTML = top.map(u => `<li style="--c:${TEAMS[u.team]?.css || '#fff'}"><span>${esc(u.nick)}</span><span>${Math.floor(u.pts)}</span></li>`).join('');
+}
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+const feedEl = document.getElementById('feed');
+function feed(text, color, big) {
+  const d = document.createElement('div');
+  d.className = 'ev' + (big ? ' big' : ''); d.style.setProperty('--c', color); d.textContent = text;
+  feedEl.prepend(d);
+  while (feedEl.children.length > 4) feedEl.lastChild.remove();
+  setTimeout(() => d.remove(), 9000);
+}
+let bannerT;
+function banner(html) {
+  const b = document.getElementById('banner');
+  b.innerHTML = html; b.classList.add('on');
+  clearTimeout(bannerT); bannerT = setTimeout(() => b.classList.remove('on'), 2200);
+}
+
+// --- Target lines ----------------------------------------------------
+const lines = TEAMS.map(t => {
+  const geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
+  const l = new THREE.Line(geo, new THREE.LineDashedMaterial({ color:t.color, dashSize:0.6, gapSize:0.4, transparent:true, opacity:0.85 }));
+  l.frustumCulled = false; scene.add(l); return l;
+});
+function updateLines() {
+  TEAMS.forEach((t, k) => {
+    const f = frontIsland(t), l = lines[k];
+    l.visible = !!(f && t.target);
+    if (!l.visible) return;
+    const a = launchPos(f, t.target), b = t.target.pos;
+    const p = l.geometry.attributes.position;
+    p.setXYZ(0, a.x, 0.35, a.z); p.setXYZ(1, b.x, 0.35, b.z); p.needsUpdate = true;
+    l.computeLineDistances();
+  });
+}
+
+// =====================================================================
+//  VERBINDUNG ZU TIKTOK (über server.js) + DEMO-MODUS
+// =====================================================================
+let demo = CONFIG.forceDemo, connected = false;
+const statusEl = document.getElementById('status');
+function setDemo(on) { demo = on; document.getElementById('demo').style.display = on ? 'block' : 'none'; }
+function connect() {
+  if (CONFIG.forceDemo) { setDemo(true); return; }
+  let ws;
+  try { ws = new WebSocket(CONFIG.wsUrl); } catch { setDemo(true); return; }
+  ws.onopen = () => { connected = true; setDemo(false); statusEl.textContent = '● LIVE verbunden'; };
+  ws.onmessage = m => { try { const e = JSON.parse(m.data); if (e.type === 'status') statusEl.textContent = e.text; else handleEvent(e); } catch {} };
+  ws.onclose = () => { connected = false; statusEl.textContent = 'Keine Verbindung zu server.js – Demo läuft'; setDemo(true); setTimeout(connect, 4000); };
+}
+const FAKE = Array.from({ length:70 }, (_, i) => `${['krieger','pirat','hoplit','seefahrer','kapitaen','spartan','held','legende'][i % 8]}_${100 + Math.floor(rnd() * 900)}`);
+const FAKE_CHAT = ['1', '2', '3', '4', 'los!', 'angriff!!', 'naxos', 'kreta', 'rhodos', 'samos', 'lesbos', 'santorini', 'mykonos', 'chios', 'kos', 'limnos', 'GO GO GO', '🔥🔥🔥'];
+const FAKE_GIFTS = [['Rose', 1], ['Rose', 1], ['TikTok', 1], ['Finger Heart', 5], ['Doughnut', 30], ['Galaxy', 1000]];
+let demoAcc = 0;
+function demoTick(dt) {
+  demoAcc += dt;
+  while (demoAcc > 0.12) {
+    demoAcc -= 0.12;
+    const user = FAKE[Math.floor(rnd() * FAKE.length)], r = rnd();
+    if (r < 0.55) handleEvent({ type:'like', user, nick:user, count:1 + Math.floor(rnd() * 12) });
+    else if (r < 0.85) handleEvent({ type:'chat', user, nick:user, comment:FAKE_CHAT[Math.floor(rnd() * FAKE_CHAT.length)] });
+    else if (r < 0.88) { const g = FAKE_GIFTS[Math.floor(rnd() * (rnd() < 0.97 ? 5 : 6))]; handleEvent({ type:'gift', user, nick:user, giftName:g[0], diamonds:g[1], count:1 + Math.floor(rnd() * 3) }); }
+    else if (r < 0.885) handleEvent({ type:'follow', user, nick:user });
+    else if (r < 0.889) handleEvent({ type:'share', user, nick:user });
+  }
+}
+// Testtasten: Q/W/E/R = Geschenk für Team 1–4, D = Demo an/aus
+addEventListener('keydown', ev => {
+  const i = 'qwer'.indexOf(ev.key.toLowerCase());
+  if (i >= 0) { const user = 'test_' + i; users.set(user, { id:user, nick:'Tester ' + (i + 1), team:i, pts:0 }); handleEvent({ type:'gift', user, nick:'Tester ' + (i + 1), giftName:'Test-Galaxy', diamonds:30, count:1 }); }
+  if (ev.key.toLowerCase() === 'd') setDemo(!demo);
+});
+
+// =====================================================================
+//  LOOP
+// =====================================================================
+const waveH = (x, z, t) => Math.sin(x * 0.35 + t * 1.1) * 0.11 + Math.cos(z * 0.3 + t * 1.4) * 0.09 + Math.sin((x + z) * 0.8 + t * 2) * 0.03;
+function updateWater(t) {
+  const p = waterGeo.attributes.position.array;
+  for (let i = 0; i < p.length; i += 3) p[i + 1] = waveH(waterBase[i], waterBase[i + 2], t);
+  waterGeo.attributes.position.needsUpdate = true;
+}
+function updateFlags(t) {
+  for (const isl of islands) {
+    const a = isl.flag.geometry.attributes.position, b = isl.flagBase;
+    for (let i = 0; i < a.count; i++) a.setZ(i, Math.sin(b[i * 3] * 6 - t * 6 + isl.phase) * 0.06 * b[i * 3] * 2);
+    a.needsUpdate = true;
+    if (isl.pulse > 0) { isl.pulse -= 0.016; const s = 1 + isl.pulse * 0.25; isl.ring.scale.set(isl.rx * s, isl.rz * s, 1); }
+  }
+}
+function resize() {
+  const w = innerWidth, h = innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  const tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  camDist = Math.max(25 / tanV, 18.5 / (tanV * camera.aspect));
+  scene.fog.near = camDist + 15; scene.fog.far = camDist + 140;
+  camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize); resize();
+
+const v = new THREE.Vector3();
+function updateLabels() {
+  const w = innerWidth, h = innerHeight;
+  for (const isl of islands) {
+    v.set(isl.pos.x, isl.top, isl.pos.z).project(camera);
+    isl.el.style.left = ((v.x + 1) / 2 * w) + 'px';
+    isl.el.style.top = ((1 - v.y) / 2 * h) + 'px';
+    isl.elT.textContent = Math.floor(isl.troops);
+  }
+  for (const f of fleets) {
+    v.copy(f.group.position); v.y += 1; v.project(camera);
+    f.el.style.left = ((v.x + 1) / 2 * w) + 'px';
+    f.el.style.top = ((1 - v.y) / 2 * h) + 'px';
+  }
+}
+
+const clock = new THREE.Clock();
+let hudAcc = 0;
+function frame() {
+  const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
+  if (demo) demoTick(dt);
+  tick(dt);
+  updateWater(t); updateFlags(t); updateFleets(dt, t); updateParticles(dt); updateLines();
+  shake *= 0.9;
+  const sway = new THREE.Vector3(Math.sin(t * 0.13) * 0.8, 0, Math.cos(t * 0.11) * 0.5);
+  camera.position.copy(camTarget).add(sway).addScaledVector(camDir, camDist);
+  camera.position.x += (rnd() - .5) * shake; camera.position.y += (rnd() - .5) * shake;
+  camera.lookAt(camTarget.clone().add(sway));
+  renderer.render(scene, camera);
+  updateLabels();
+  hudAcc += dt; if (hudAcc > 0.25) { hudAcc = 0; updateHud(); }
+  requestAnimationFrame(frame);
+}
+resetRound();
+connect();
+frame();
+</script>
+</body>
+</html>
