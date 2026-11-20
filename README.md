@@ -9,7 +9,7 @@ Zypern ist der Hauptpreis (5 Punkte). **Am Ende jeder Runde gewinnt immer der Fr
 Der Link läuft im Demo-Modus mit simulierten Zuschauern, auch auf dem Handy. Am Handy tippst du auf die Knöpfe rechts. Am PC gehen auch Tasten: `Q` / `W` = Geschenk, `U` / `C` = Helden, `K` = Legendenschiff, `F` = Waffenruhe, `P` = Finale, `L` = Sprache, `M` = Ton.
 Die alte Götter-Version: https://cembot90.github.io/aegean-island-live/goetter.html?demo=1
 
-![Karte](screenshot.png) ![Schiffe](screenshot-schiffe.png) ![Versenkt](screenshot-versenkt.png) ![Feuerwerk](screenshot-feuerwerk.png) ![POV](screenshot-pov.png) ![POV Griechisch](screenshot-pov-el.png) ![Held](screenshot-held.png) ![Friedensgipfel](screenshot-frieden.png)
+![Anleitung](screenshot-anleitung.png) ![Karte](screenshot.png) ![Schiffe](screenshot-schiffe.png) ![Versenkt](screenshot-versenkt.png) ![Feuerwerk](screenshot-feuerwerk.png) ![POV](screenshot-pov.png) ![POV Griechisch](screenshot-pov-el.png) ![Held](screenshot-held.png) ![Friedensgipfel](screenshot-frieden.png)
 
 ## Neu: Extras für mehr Beteiligung
 | Extra | So funktioniert es |
@@ -26,6 +26,26 @@ Die alte Götter-Version: https://cembot90.github.io/aegean-island-live/goetter.
 | 📊 **Deine Statistik** | `http://localhost:8787/stats` zeigt Geschenkwert, geschätzte Diamanten und Dollar sowie die Top-Unterstützer. Die Seite ist nur für dich und nur auf deinem Rechner erreichbar. |
 | 📱 **Demo-Knöpfe** | Im Demo-Modus gibt es rechts Knöpfe zum Antippen (Geschenk, Helden, Legendenschiff, Frieden, Finale), damit man die Demo auch am Handy spielen kann. |
 
+## So spielt man (einfacher Modus, Standard)
+Das Spiel erklärt sich selbst: Zu Beginn jeder Runde und danach alle 75 Sekunden erscheint die Karte **„Nasıl oynanır?“** mit vier Schritten:
+1. **1** oder **2** schreiben → Team 🇬🇷 oder 🇹🇷
+2. ❤️ **Liken** → Soldaten fürs eigene Team
+3. 🎁 **Geschenk** → ein eigenes Schiff mit dem eigenen Namen fährt los
+4. 🕊 **barış / frieden / ειρήνη** schreiben → Friedensbalken füllen
+
+Die Schiffe fahren von selbst zu den Inseln. Ziel ist es, möglichst viele Inseln zu erobern, der größte Preis ist ★ Zypern. Die Runde endet nach 6 Minuten oder wenn der Friedensbalken voll ist, und am Ende gewinnt immer der Frieden.
+Wer `ugurcan` oder `cem` schreibt, ruft einen Helden (die Leiste oben füllt sich).
+
+**Was du als Streamer sagen kannst:** „Schreibt 1 für Griechenland oder 2 für die Türkei, liked für Soldaten, und wer ein Geschenk schickt, segelt mit seinem eigenen Schiff!“
+
+Im einfachen Modus sind Legendenschiff, Geschenkziel, Waffenruhe, Hafen-Schilder und die Insel-Ansage per Chat ausgeblendet bzw. abgeschaltet. **Alle Extras** bekommst du mit `?mode=full`.
+
+## Leistung
+- **Automatik:** Das Spiel misst alle 3 Sekunden die Bildrate. Unter 40 Bildern pro Sekunde schaltet es schrittweise herunter: erst das Glühen, dann die Auflösung, dann die Schatten. Ausschalten mit `?auto=0`.
+- **Qualitätsstufen:** `?q=low`, `?q=mid` (Standard am PC) oder `?q=high`. Auf Handys startet das Spiel automatisch mit `low`.
+- **Glühen:** Es ist nur bei `q=high` an, oder mit `?fx=1`.
+- **Weniger Zeichenaufwand:** Häuser, Burgen, Türme und Masten sind zu wenigen Teilen zusammengefasst (211 statt vorher 593 Zeichenaufrufe pro Bild).
+
 ## Grafik, Kamera und Sprachen
 - **Kamera (Knopf 🗺/🎥/🔄 oben rechts, Taste `V`, oder `?cam=map|pov|auto`):**
   - 🗺 **Karte**: Blick von oben auf die ganze Ägäis.
@@ -37,7 +57,6 @@ Die alte Götter-Version: https://cembot90.github.io/aegean-island-live/goetter.
 - **Versenkte Schiffe**: Sie kippen zur Seite, brennen und sinken. Planken treiben auf den Wellen, Luftblasen steigen auf, dazu gibt es ein Knarz- und Wassergeräusch.
 - **Feuerwerk**: Bei jeder Eroberung steigen Raketen mit Leuchtspur auf und zerplatzen in der Teamfarbe (Rot oder Blau mit Weiß). Wertvolle Inseln bekommen mehr Raketen. Auch das Geschenkziel und das Friedensfinale werden mit Feuerwerk gefeiert.
 - **Wasser und Himmel**: Wellen und Schaum an den Stränden, Abendhimmel mit Sonne am Horizont und ein dezentes Glühen (`?fx=0` schaltet es aus).
-- **Langsamer Rechner?** Mit `?q=low` gibt es weniger Bäume, keine Effekte und eine geringere Auflösung.
 - **Sprachen**: 🇹🇷 Türkisch (Standard), 🇩🇪 Deutsch, 🇬🇷 Griechisch. Umschalten mit dem Knopf, der Taste `L` oder `?lang=tr|de|el`.
 
 ## Rechtliches & Lizenz

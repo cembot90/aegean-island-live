@@ -97,6 +97,23 @@
   #help { position:fixed; left:6px; right:6px; bottom:calc(8px + var(--bi)); pointer-events:none; }
   #help .set { display:flex; flex-wrap:wrap; justify-content:center; gap:4px; animation:fade .5s; }
   #help .set[hidden] { display:none; }
+  #help .simpleHelp { display:none; flex-wrap:wrap; justify-content:center; gap:5px; }
+  #help .simpleHelp span { font:800 12.5px var(--fb); padding:6px 11px; border-radius:999px; background:rgba(3,20,35,.82); border:1px solid rgba(255,255,255,.18); }
+  body.simple #help .simpleHelp { display:flex; }
+  body.simple #helpA, body.simple #helpB, body.simple #goal, body.simple #cease, body.simple .port, body.simple [data-tap="k"], body.simple #status { display:none !important; }
+  body.simple .lbl:not(.named) .n { display:none; }
+  body.simple #board { bottom:calc(52px + var(--bi)); }
+  body.simple #feed { bottom:calc(152px + var(--bi)); }
+  body.simple #help .simpleHelp span { font-size:11.5px; padding:5px 9px; }
+  body.simple #feed .ev:nth-child(n+3) { display:none; }
+  #how { position:fixed; left:50%; top:50%; transform:translate(-50%,-46%) scale(.92); width:min(88vw,420px); padding:18px 18px 16px; border-radius:18px; background:rgba(3,20,35,.9); border:2px solid rgba(255,255,255,.25); box-shadow:0 10px 40px rgba(0,0,0,.5); opacity:0; pointer-events:none; transition:opacity .35s, transform .35s; z-index:4; }
+  #how.on { opacity:1; transform:translate(-50%,-50%) scale(1); }
+  #how h2 { font:italic 900 26px var(--fd); text-align:center; margin-bottom:10px; letter-spacing:.02em; }
+  #how ol { list-style:none; display:flex; flex-direction:column; gap:8px; }
+  #how li { display:flex; align-items:center; gap:10px; font:700 15px/1.3 var(--fb); }
+  #how li i { flex:none; width:28px; height:28px; border-radius:50%; display:grid; place-items:center; font:italic 900 16px var(--fd); background:var(--gold); color:#2a1a00; }
+  #how li b { color:var(--gold); }
+  #how p { margin-top:12px; text-align:center; font:700 13px/1.35 var(--fb); opacity:.9; }
   #help .set.gifts span { background:rgba(70,45,0,.82); border:1px solid rgba(255,213,74,.5); }
   #help span { font-size:10px; font-weight:800; padding:4px 8px; border-radius:999px; background:rgba(3,20,35,.75); }
 
@@ -167,7 +184,9 @@
   <div class="col" style="--c:var(--gr)"><h4>🇬🇷 <span data-i="topCaps"></span></h4><div id="lbGr"></div></div>
   <div class="col" style="--c:var(--tr)"><h4>🇹🇷 <span data-i="topCaps"></span></h4><div id="lbTr"></div></div>
 </div>
+<div id="how"></div>
 <div id="help">
+  <div class="simpleHelp"><span data-i="sJoin"></span><span data-i="sLike"></span><span data-i="sGift"></span><span data-i="sPeace"></span></div>
   <div class="set" id="helpA"><span data-i="helpJoin"></span><span data-i="helpTarget"></span><span data-i="helpLike"></span><span data-i="helpGift"></span><span data-i="helpHero"></span><span data-i="helpPeace"></span></div>
   <div class="set gifts" id="helpB" hidden><span data-i="giftMenu1"></span><span data-i="giftMenu2"></span><span id="giftMenu3"></span><span data-i="giftMenu4"></span><span data-i="giftMenu5"></span></div>
 </div>
@@ -220,6 +239,7 @@ const CONFIG = {
   bottomInset: +(params.get('bottom') || 0), // Pixel Abstand unten, falls der TikTok-Chat das Spiel verdeckt
   sound: params.get('sound') !== '0',
   defaultLang: 'tr',      // 'tr' oder 'de'
+  simple: params.get('mode') !== 'full', // Standard: einfacher Modus mit 4 Regeln. ?mode=full zeigt alle Extras
   wsUrl: params.get('ws') || `ws://${location.hostname || 'localhost'}:${params.get('port') || 8787}`,
   // Auf einer Webseite (z. B. GitHub Pages) gibt es keinen lokalen server.js: dann direkt Demo-Modus
   forceDemo: params.get('demo') === '1' || (!params.get('ws') && location.protocol === 'https:'),
@@ -273,6 +293,8 @@ const I18N = {
     ceasefire:'🕊 ATEŞKES! 🕊<small>İki taraf da barış istedi</small>', ceaseBar:'🕊 ATEŞKES: gemiler bekliyor 🕊', ceaseFeed:'🕊 Ateşkes: iki taraf da barış yazdı!',
     heroMaster:'sağ kolu', topSupporter:'🎁 Turun destekçisi · {n} 🪙', tapPeace:'barış', tapFinale:'final',
     camMap:'🗺 HARİTA', camPov:'🎥 POV', camAuto:'🔄 OTO',
+    howTitle:'NASIL OYNANIR?', how1:'<b>1</b> veya <b>2</b> yaz → 🇬🇷 ya da 🇹🇷 takımına katıl', how2:'❤️ Beğen → takımına asker gönder', how3:'🎁 Hediye → adınla kendi gemin yola çıkar', how4:'🕊 <b>barış</b> yaz → barış çubuğunu doldur',
+    howGoal:'Adaları fethedin, en büyük ödül ★ Kıbrıs. Sonunda hep barış kazanır!', sJoin:'💬 1 / 2 = takım', sLike:'❤️ beğeni = asker', sGift:'🎁 hediye = senin gemin', sPeace:'🕊 barış yaz',
   },
   de: {
     gr:'GRIECHENLAND', tr:'TÜRKEI', grShort:'Griechenland', trShort:'Türkei',
@@ -310,6 +332,8 @@ const I18N = {
     ceasefire:'🕊 WAFFENRUHE! 🕊<small>Beide Seiten wollen Frieden</small>', ceaseBar:'🕊 WAFFENRUHE: die Schiffe warten 🕊', ceaseFeed:'🕊 Waffenruhe: beide Seiten schreiben Frieden!',
     heroMaster:'rechte Hand', topSupporter:'🎁 Top-Unterstützer·in der Runde · {n} 🪙', tapPeace:'Frieden', tapFinale:'Finale',
     camMap:'🗺 KARTE', camPov:'🎥 POV', camAuto:'🔄 AUTO',
+    howTitle:'SO SPIELST DU', how1:'Schreib <b>1</b> oder <b>2</b> → Team 🇬🇷 oder 🇹🇷', how2:'❤️ Liken → Soldaten für dein Team', how3:'🎁 Geschenk → dein eigenes Schiff mit deinem Namen', how4:'🕊 Schreib <b>frieden</b> → Friedensbalken füllen',
+    howGoal:'Erobert die Inseln, der größte Preis ist ★ Zypern. Am Ende gewinnt immer der Frieden!', sJoin:'💬 1 / 2 = Team', sLike:'❤️ Like = Soldaten', sGift:'🎁 Geschenk = dein Schiff', sPeace:'🕊 frieden schreiben',
   },
   el: {
     gr:'ΕΛΛΑΔΑ', tr:'ΤΟΥΡΚΙΑ', grShort:'Ελλάδα', trShort:'Τουρκία',
@@ -347,6 +371,8 @@ const I18N = {
     ceasefire:'🕊 ΕΚΕΧΕΙΡΙΑ! 🕊<small>Και οι δύο πλευρές θέλουν ειρήνη</small>', ceaseBar:'🕊 ΕΚΕΧΕΙΡΙΑ: τα πλοία περιμένουν 🕊', ceaseFeed:'🕊 Εκεχειρία: και οι δύο πλευρές γράφουν ειρήνη!',
     heroMaster:'δεξί χέρι', topSupporter:'🎁 Υποστηρικτής του γύρου · {n} 🪙', tapPeace:'ειρήνη', tapFinale:'φινάλε',
     camMap:'🗺 ΧΑΡΤΗΣ', camPov:'🎥 POV', camAuto:'🔄 AUTO',
+    howTitle:'ΠΩΣ ΠΑΙΖΕΙΣ', how1:'Γράψε <b>1</b> ή <b>2</b> → ομάδα 🇬🇷 ή 🇹🇷', how2:'❤️ Like → στρατιώτες για την ομάδα σου', how3:'🎁 Δώρο → το δικό σου πλοίο με το όνομά σου', how4:'🕊 Γράψε <b>ειρήνη</b> → γέμισε τη μπάρα ειρήνης',
+    howGoal:'Κατακτήστε τα νησιά, το μεγαλύτερο έπαθλο είναι ★ η Κύπρος. Στο τέλος κερδίζει πάντα η ειρήνη!', sJoin:'💬 1 / 2 = ομάδα', sLike:'❤️ like = στρατιώτες', sGift:'🎁 δώρο = το πλοίο σου', sPeace:'🕊 γράψε ειρήνη',
   },
 };
 let lang = (() => {
@@ -466,15 +492,17 @@ const TURKEY = [[26.4,45],[45,45],[45,36.5],[36,36.0],[35.5,36.6],[34.62,36.8],[
 // =====================================================================
 //  SZENE
 // =====================================================================
-const QUALITY = params.get('q') === 'low' ? 'low' : 'high';
+// Qualität: low / mid / high. Standard: mid am PC, low auf Handys. Dazu schaltet eine Automatik herunter, wenn es ruckelt.
+const QUALITY = (() => { const q = params.get('q'); if (['low', 'mid', 'high'].includes(q)) return q; try { if (matchMedia('(pointer: coarse)').matches) return 'low'; } catch {} return 'mid'; })();
+const QV = (lo, mi, hi) => QUALITY === 'low' ? lo : QUALITY === 'mid' ? mi : hi;
 const canvas = document.getElementById('c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, powerPreference:'high-performance' });
-renderer.setPixelRatio(Math.min(devicePixelRatio, QUALITY === 'low' ? 1 : 2));
+renderer.setPixelRatio(Math.min(devicePixelRatio, QV(1, 1.5, 2)));
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.08;
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = QUALITY === 'low' ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = QV(THREE.PCFShadowMap, THREE.PCFShadowMap, THREE.PCFSoftShadowMap);
 const scene = new THREE.Scene();
 const HORIZON = '#f3cfa0', SKY_TOP = '#2d6fb8';
 const lin = hex => new THREE.Color(hex).convertSRGBToLinear();
@@ -487,7 +515,7 @@ let camDist = 80, zoom = 1, shake = 0, focus = null;
 const hemi = new THREE.HemisphereLight(0xd9ecff, 0x2a4f5e, 0.72); scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xffe4bf, 1.35);
 sun.position.set(-30, 48, 22); sun.castShadow = true;
-sun.shadow.mapSize.set(QUALITY === 'low' ? 1024 : 2048, QUALITY === 'low' ? 1024 : 2048);
+sun.shadow.mapSize.set(QV(1024, 1024, 2048), QV(1024, 1024, 2048));
 Object.assign(sun.shadow.camera, { left:-34, right:34, top:34, bottom:-34, near:1, far:160 });
 sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.02;
 scene.add(sun); scene.add(sun.target);
@@ -648,8 +676,8 @@ function buildTerrain(x0, x1, z0, z1, step, hole) {
   return { H, nx, nz, x0, z0, step };
 }
 const CORE = { x0:-27, x1:27, z0:-24, z1:24 };
-const coreT = buildTerrain(CORE.x0, CORE.x1, CORE.z0, CORE.z1, QUALITY === 'low' ? 0.32 : 0.22);
-buildTerrain(-70, 52, -52, 40, 0.9, CORE);
+const coreT = buildTerrain(CORE.x0, CORE.x1, CORE.z0, CORE.z1, QV(0.36, 0.28, 0.22));
+buildTerrain(-70, 52, -52, 40, QV(1.4, 1.1, 0.9), CORE);
 // schnelles Nachschlagen der Höhe (Kern) für Bäume, Häuser, Kamera
 function hAt(x, z) {
   const T = coreT, fx = (x - T.x0) / T.step, fz = (z - T.z0) / T.step;
@@ -706,7 +734,7 @@ function buildWater(size, seg, detailed) {
   const m = new THREE.Mesh(g, waterMaterial()); m.receiveShadow = true; scene.add(m);
   return m;
 }
-buildWater(60 * 2.2, QUALITY === 'low' ? 120 : 200, true);
+buildWater(60 * 2.2, QV(100, 140, 200), true);
 const farWater = buildWater(1300, 40, false); farWater.position.y = -0.5;
 
 // --- Himmel (sichtbar in der POV-Ansicht) ---
@@ -729,7 +757,7 @@ sky.renderOrder = -1; sky.frustumCulled = false; scene.add(sky);
 {
   const cyp = new THREE.ConeGeometry(0.09, 0.55, 6); cyp.translate(0, 0.27, 0);
   const oli = new THREE.IcosahedronGeometry(0.16, 0); oli.scale(1, 0.75, 1); oli.translate(0, 0.16, 0);
-  const N = QUALITY === 'low' ? 1200 : 3000;
+  const N = QV(800, 1700, 3000);
   const mC = new THREE.InstancedMesh(cyp, new THREE.MeshStandardMaterial({ color:lin('#2f5a2a'), flatShading:true, roughness:1 }), N);
   const mO = new THREE.InstancedMesh(oli, new THREE.MeshStandardMaterial({ color:lin('#5f8a3c'), flatShading:true, roughness:1 }), N);
   const dm = new THREE.Object3D(); let nc = 0, no = 0;
@@ -768,7 +796,7 @@ function addFlag(parent, y, scale = 1) {
 function addWindmill(x, z) {
   const y = hAt(x, z), g = new THREE.Group(); g.position.set(x, y, z);
   const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.32, 10), houseMat); tower.position.y = 0.16; tower.castShadow = true; g.add(tower);
-  const cap = new THREE.Mesh(new THREE.ConeGeometry(0.095, 0.1, 10), new THREE.MeshStandardMaterial({ color:lin('#6b4a2b') })); cap.position.y = 0.37; g.add(cap);
+  const cap = new THREE.Mesh(new THREE.ConeGeometry(0.095, 0.1, 10), poleMat); cap.position.y = 0.37; g.add(cap);
   const hub = new THREE.Group(); hub.position.set(0, 0.3, 0.1); g.add(hub);
   for (let i = 0; i < 4; i++) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.26, 0.005), houseMat); b.position.y = 0.13; const arm = new THREE.Group(); arm.rotation.z = i * Math.PI / 2; arm.add(b); hub.add(arm); }
   g.rotation.y = rnd() * 6; scene.add(g); windmills.push(hub);
@@ -838,6 +866,20 @@ function buildPort(o) {
   labelsEl.appendChild(el); o.el = el;
 }
 ports.forEach(buildPort);
+// Alle unbeweglichen Häuser, Burgen, Türme und Masten zu wenigen großen Meshes zusammenfassen (spart hunderte Zeichenaufrufe)
+(function mergeStatic() {
+  scene.updateMatrixWorld(true);
+  const mats = new Set([houseMat, roofMat, roofRed, stoneMat, poleMat]), moving = new Set(windmills), byMat = new Map(), done = [];
+  scene.traverse(o => {
+    if (!o.isMesh || !mats.has(o.material)) return;
+    for (let q = o.parent; q; q = q.parent) if (moving.has(q)) return;
+    const g = o.geometry.clone(); g.applyMatrix4(o.matrixWorld);
+    if (!byMat.has(o.material)) byMat.set(o.material, []);
+    byMat.get(o.material).push(g); done.push(o);
+  });
+  done.forEach(o => o.parent.remove(o));
+  byMat.forEach((list, mat) => { const m = new THREE.Mesh(mergeGeos(list), mat); m.castShadow = m.receiveShadow = true; scene.add(m); });
+})();
 const landLabels = [[0, 23.5, 39.65, '#dbe8ff'], [1, 28.9, 38.9, '#ffe0e0']].map(([side, lo, la, c]) => {
   const el = document.createElement('div'); el.className = 'land'; el.style.color = c; labelsEl.appendChild(el);
   return { el, side, pos:P(lo, la) };
@@ -851,6 +893,7 @@ function paintIsland(o) {
   o.elT.style.borderColor = s ? s.css : '#ddd';
   o.elT.style.color = s ? s.css : '#fff';
   o.elN.textContent = (o.value > 1 ? '★'.repeat(Math.min(o.value, 3)) + ' ' : '') + islandName(o);
+  o.el.classList.toggle('named', o.value > 1);
   if (o.governor && s) { o.elG.style.display = 'flex'; o.elG.innerHTML = avatar(o.governor, 15) + '👑 ' + esc(short(o.governor.nick, 12)); }
   else o.elG.style.display = 'none';
 }
@@ -1245,6 +1288,7 @@ function resetRound() {
   document.getElementById('finale').classList.remove('on'); document.body.classList.remove('fin');
   document.getElementById('round').textContent = t('round', { n:roundNo });
   feed(t('roundStart', { n:roundNo }), '#fff', null, 'big');
+  showHow(9);
 }
 
 function pickTarget(s, exclude) {
@@ -1636,14 +1680,14 @@ function handleEvent(e) {
       if (isPeace) {
         peaceWin[s.id].push(now);
         for (const w of peaceWin) while (w.length && now - w[0] > 10) w.shift();
-        if (ceaseT <= 0 && ceaseCool <= 0 && peaceWin[0].length >= CONFIG.ceasefireNeed && peaceWin[1].length >= CONFIG.ceasefireNeed) startCeasefire();
+        if (!CONFIG.simple && ceaseT <= 0 && ceaseCool <= 0 && peaceWin[0].length >= CONFIG.ceasefireNeed && peaceWin[1].length >= CONFIG.ceasefireNeed) startCeasefire();
       }
       const hero = HEROES.find(h => toks.some(k => h.keys.includes(k)));
       if (hero && now > u.heroT) { u.heroT = now + 2; chargeHero(hero, s, u, 1); }
       const isl = islands.find(i => toks.some(k => i.aliases.includes(k)) || rtoks.some(k => i.strict.includes(k)));
       if (isl && isl.owner !== s.id && isl !== s.target && crisisOn <= 0 && now > s.voteT) {
         s.target = isl; s.voteT = now + 4;
-        feed(t('target', { nick:u.nick, flag:s.flag, isl:islandName(isl) }), s.css, u);
+        if (!CONFIG.simple) feed(t('target', { nick:u.nick, flag:s.flag, isl:islandName(isl) }), s.css, u);
       }
       s.reserve += CONFIG.commentTroops; addPts(u, 1);
       break;
@@ -1663,7 +1707,7 @@ function handleEvent(e) {
       addPts(u, troops); SFX.gift();
       u.roundDia = (u.roundDia || 0) + dia * cnt; roundDia += dia * cnt;
       const tg = pickTarget(s), fr = front(s);
-      if (tg && fr && u.roundDia >= CONFIG.patronDiamonds && !u.patronDone) {
+      if (!CONFIG.simple && tg && fr && u.roundDia >= CONFIG.patronDiamonds && !u.patronDone) {
         u.patronDone = true;
         povFollow(launchFleet(s, fr, tg, troops, u, true, null, u), 10); // trifft doppelt so hart (siehe arrive)
         banner(t('patron', { nick:esc(u.nick), flag:s.flag })); feed(t('patronFeed', { nick:u.nick, flag:s.flag }), '#ffd54a', u, 'hero');
@@ -1673,8 +1717,8 @@ function handleEvent(e) {
         if (hero0) chargeHero(hero0, s, u, dia * cnt);
         break;
       }
-      if (tg && fr) launchFleet(s, fr, tg, troops, u, true);
-      if (!goalDone && roundDia >= CONFIG.giftGoal) goalReached();
+      if (tg && fr) povFollow(launchFleet(s, fr, tg, troops, u, true), troops >= 50 ? 8 : 0);
+      if (!CONFIG.simple && !goalDone && roundDia >= CONFIG.giftGoal) goalReached();
       const gift = (e.giftName || t('giftDefault')) + (cnt > 1 ? ' x' + cnt : '');
       showcase(u, `${rankLabel(rankOf(u))} · ${u.nick}`, t('giftShow', { gift, n:troops, flag:s.flag }));
       feed(t('giftFeed', { nick:u.nick, gift, n:troops }), s.css, u, 'big');
@@ -1718,6 +1762,11 @@ function nextShowcase() {
   setTimeout(() => { el.classList.remove('on'); setTimeout(nextShowcase, 300); }, scQueue.length > 2 ? 1400 : 2600);
 }
 const heroesEl = document.getElementById('heroes');
+// „So spielst du“: zu Rundenbeginn und im einfachen Modus alle 75 s kurz für neue Zuschauer
+let howT = null;
+function renderHow() { document.getElementById('how').innerHTML = `<h2>${t('howTitle')}</h2><ol>${[1, 2, 3, 4].map(i => `<li><i>${i}</i><span>${t('how' + i)}</span></li>`).join('')}</ol><p>${t('howGoal')}</p>`; }
+function showHow(sec) { if (roundOver) return; renderHow(); const el = document.getElementById('how'); el.classList.add('on'); clearTimeout(howT); howT = setTimeout(() => el.classList.remove('on'), sec * 1000); }
+setInterval(() => { if (CONFIG.simple && !roundOver && timeLeft < CONFIG.roundSeconds - 30) showHow(6); }, 75000);
 function updateHud() {
   const m = Math.max(0, Math.ceil(timeLeft));
   document.getElementById('timer').textContent = `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`;
@@ -1759,6 +1808,7 @@ function applyLang() {
   fleets.forEach(f => { f.shown = -1; updateFleetLabel(f); });
   if (lastFinale && roundOver) renderFinale();
   if (statusInfo) showStatus(statusInfo);
+  renderHow(); document.body.classList.toggle('simple', CONFIG.simple);
   document.getElementById('giftMenu3').textContent = t('giftMenu3', { n:CONFIG.patronDiamonds });
   document.getElementById('btnTr').classList.toggle('on', lang === 'tr');
   document.getElementById('btnDe').classList.toggle('on', lang === 'de');
@@ -1972,7 +2022,8 @@ function updateLabels(w) {
 // --- Effekte: Glühen (Bloom) + Farbabschluss, nur wenn die Zusatzskripte geladen sind ---
 let composer = null;
 function setupFX() {
-  if (QUALITY === 'low' || params.get('fx') === '0') return;
+  // Glühen nur in hoher Qualität oder mit ?fx=1 (kostet am meisten Leistung)
+  if (params.get('fx') === '0' || (QUALITY !== 'high' && params.get('fx') !== '1')) return;
   if (!THREE.EffectComposer || !THREE.RenderPass || !THREE.ShaderPass || !THREE.UnrealBloomPass) return;
   try {
     const size = renderer.getDrawingBufferSize(new THREE.Vector2());
@@ -1998,8 +2049,27 @@ function setupFX() {
 }
 
 const clock = new THREE.Clock(); let hudAcc = 0;
+// Leistungsautomatik: misst alle 3 s die Bildrate; unter 40 fps wird schrittweise heruntergeschaltet
+let perfAcc = 0, perfN = 0, perfLevel = 0;
+function perfWatch(raw) {
+  if (params.get('auto') === '0' || now < 6 || raw > 0.5 || perfLevel >= 4) return;
+  perfAcc += raw; perfN++;
+  if (perfAcc < 3) return;
+  const fps = perfN / perfAcc; perfAcc = 0; perfN = 0;
+  if (fps >= 40) return;
+  for (;;) {
+    perfLevel++;
+    if (perfLevel === 1) { if (!composer) continue; composer = null; sky.material.uniforms.toLin.value = 0; }
+    else if (perfLevel === 2) { if (renderer.getPixelRatio() <= 1) continue; renderer.setPixelRatio(1); resize(); }
+    else if (perfLevel === 3) { renderer.shadowMap.enabled = false; scene.traverse(o => { if (o.material) [].concat(o.material).forEach(m => m.needsUpdate = true); }); }
+    else { renderer.setPixelRatio(0.75); resize(); }
+    break;
+  }
+  console.info('Leistung angepasst: Stufe', perfLevel, '(' + Math.round(fps) + ' fps)');
+}
 function frame() {
-  const dt = Math.min(clock.getDelta(), 0.05), tt = clock.elapsedTime; now = tt;
+  const raw = clock.getDelta(), dt = Math.min(raw, 0.05), tt = clock.elapsedTime; now = tt;
+  perfWatch(raw);
   if (demo) demoTick(dt);
   tick(dt);
   waterUniforms.uTime.value = tt; updateFlags(tt, dt); updateSmoke(dt); updateWrecks(dt, tt); updateRockets(dt); updateBursts(dt, tt);
